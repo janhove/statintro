@@ -1,0 +1,168 @@
+\documentclass[oneside, 11pt]{book}
+
+\usepackage[a4paper]{geometry}
+\usepackage{tipa}
+
+% Headers and footers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\setlength{\headheight}{14pt}
+\lhead{\nouppercase{\leftmark}}
+\rhead{}
+\cfoot{\thepage}
+
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+
+% For writing German
+\usepackage[ngerman]{babel, varioref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage[sort]{natbib}
+
+\usepackage{parskip} % verticale afstand ipv indent
+
+\usepackage{tgpagella}
+\usepackage[sc]{mathpazo}
+\linespread{1.1}
+\normalfont
+
+\usepackage[margin=10pt,font=small,labelfont=bf]{caption}
+
+\usepackage{enumerate}
+\usepackage{booktabs}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+
+\usepackage{framed}
+\usepackage{hyperref} % put subject here
+
+\interfootnotelinepenalty=10000
+
+\title{{\Huge Statistische Grundlagen} \vspace{0.3 cm}\\{\huge Eine Einführung mit Beispielen\\ aus der Sprachforschung}}
+\author{{\LARGE Jan Vanhove} \vspace{1.5 cm} \\ Universität Freiburg/Fribourg, Schweiz\\ Departement für Mehrsprachigkeitsforschung und Fremdsprachendidaktik \vspace{1.5 cm} \\\href{mailto:jan.vanhove@unifr.ch}{\texttt{jan.vanhove@unifr.ch}}\\\href{http://janhove.github.io}{\texttt{https://janhove.github.io}}}
+\date{letzte Änderung: August 2021}
+
+
+% KNITR options -----------------------------------
+<<setup, include=FALSE, cache=FALSE>>=
+library(knitr)
+# set global chunk options
+opts_chunk$set(fig.path='figs/',
+               fig.align='center',
+               fig.show='hold',
+               tidy = FALSE,
+               cache = FALSE,
+               fig.width = 4,
+               fig.height = 2)
+
+options(formatR.arrow=TRUE,width=60, show.signif.stars = FALSE, digits = 5)
+
+set.seed(1986-09-08)
+@
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\mainmatter
+
+\part{Vorbereitung}
+
+<<Ziele, child='01_ziele.Rnw'>>=
+@
+
+
+<<Software, child='02_software.Rnw'>>=
+@
+
+
+<<DatenOrganisieren, child='03_daten_organisieren.Rnw'>>=
+@
+
+
+\part{Populationen und Stichproben}\label{pt:stichproben}
+
+<<EinzelneVariablen, child='04_eine_variable_beschreiben.Rnw'>>=
+@
+
+
+<<RechnenMitWahrscheinlichkeiten, child='05_wahrscheinlichkeitsrechnung.Rnw'>>=
+@
+
+<<Stichproben, child='06_stichproben.Rnw'>>=
+@
+
+<<Unsicherheit, child='07_unsicherheit.Rnw'>>=
+@
+
+\part{Das allgemeine lineare Modell}\label{pt:lm}
+
+<<LinearesModell, child='08_lineares_modell.Rnw'>>=
+@
+
+<<EinfacheRegression, child='09_regression.Rnw'>>=
+@
+
+<<Gruppenunterschiede, child='10_gruppenunterschiede.Rnw'>>=
+@
+
+<<Interaktionen, child='11_interaktionen.Rnw'>>=
+@
+
+
+<<MehrfacheRegression, child='12_mehrfache_regression.Rnw'>>=
+@
+
+\part{Signifikanztests}\label{pt:signifikanz}
+
+<<Logik, child='13_logik_signifikanz.Rnw'>>=
+@
+
+
+<<ANOVA, child='14_varianzanalyse.Rnw'>>=
+@
+
+
+<<Power, child='15_power.Rnw'>>=
+@
+
+<<Unsinn, child='16_unsinn.Rnw'>>=
+@
+
+<<QRP, child='17_QRP.Rnw'>>=
+@
+
+\part{Übers allgemeine lineare Modell hinaus}\label{pt:beyond}
+
+<<Logistisch, child='18_logistische_regression.Rnw'>>=
+@
+
+<<Komplexer, child='19_weiterbildung.Rnw'>>=
+@
+
+\appendix
+\part{Anhang}\label{pt:anhang}
+
+<<Fehlermeldungen, child='99_Fehlermeldungen.Rnw'>>=
+@
+
+\chapter{Softwareversionen}\label{app:versions}
+<<>>=
+sessionInfo()
+@
+
+\bibliographystyle{../Documents/Literature/unified}
+\bibliography{../Documents/Literature/bibliography}
+
+\end{document}

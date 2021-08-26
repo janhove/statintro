@@ -1,0 +1,195 @@
+\chapter{Software}\label{ch:software}
+
+\section{R installieren}
+Um alle Schritte in diesem Skript mitverfolgen zu
+können, brauchen Sie die Gratis-Software R.
+
+Laden Sie dieses Programm unter \url{https://www.r-project.org} herunter und installieren Sie es.
+
+\section{RStudio installieren}
+Es lohnt sich, zusätzlich zu R auch RStudio herunterzuladen.
+Dies ist ein benutzerfreundlicheres Interface,
+in dem Sie mit R arbeiten können. RStudio ist
+ebenfalls kostenlos. Laden Sie es unter 
+\url{https://rstudio.com} herunter und installieren Sie es.
+
+Öffnen Sie RStudio. Ihr Bildschirm soll jetzt
+so aussehen wie in Abbildung \ref{fig:rstudio}.
+Wenn Sie statt vier Quadranten nur drei sehen, 
+klicken Sie auf \texttt{File, New File, R Script}.
+
+\begin{figure}[ht]
+ \includegraphics[max width = \textwidth]{figs/RStudio.png}
+ \caption{RStudio mit links unten der R-Konsole, links oben einem Texteditor, rechts oben dem Verzeichnis über die Arbeitsumgebung und rechts unten Hilfeseiten und Grafiken.}
+ \label{fig:rstudio}
+\end{figure}
+
+Eine kurze Beschreibung:
+
+\begin{itemize}
+ \item Links unten sehen Sie die R-Konsole. 
+ Befehle, die hier eingetragen werden, 
+ werden von R ausgeführt.
+ Auch der Output dieser Befehle erscheint hier.
+ 
+ \item Links oben sehen Sie einen Texteditor.
+ Anstatt Ihre Befehle direkt in die Konsole (links unten) 
+ einzutragen, sollten Sie diese zunächst hier eintragen. 
+ Dies macht es einfacher, die Befehle klar zu strukturieren
+ und zu formattieren und
+ Tippfehler aufzudecken. Ausserdem können Sie diese
+ Skripts als .R-Datei
+ speichern, sodass Sie Ihre Analyse nachher 
+ reproduzieren können.
+ 
+ \item Rechts oben werden alle Objekte in der R-Arbeitsumgebung aufgelistet. 
+ Da Sie noch keine Daten eingelesen oder kreiert haben, 
+ ist diese Umgebung momentan leer.
+ 
+ \item Wenn Sie eine Grafik zeichnen, sehen Sie diese rechts unten. Wenn Sie eine Hilfeseite abfragen, erscheint diese ebenfalls hier. Dieses Fenster kann auch als Dateimanager
+ (wie Windows-Explorer) verwendet werden.
+\end{itemize}
+
+\medskip
+
+\begin{framed}
+Tippen Sie Befehle nicht direkt in die Konsole, 
+sondern zuerst in den Texteditor ein!
+\end{framed}
+
+\section{Erweiterungspakete installieren}
+
+Es gibt für R jede Menge Erweiterungspakete,
+mit denen man z.B.\ informative Grafiken
+gestalten kann oder spezialisierte statistische
+Modelle rechnen kann.
+Mit dem folgenden Befehl installieren Sie das
+\texttt{tidyverse}-Bündel: eine
+Sammlung unterschiedlicher Pakete, die alle
+auf der gleichen Philosophie basieren und 
+die das Arbeiten mit Datensätzen wesentlich
+erleichtern.
+Tippen Sie diesen Befehl in RStudio ins
+Fenster links oben ein.
+Und ich meine tatsächlich `tippen', nicht `selektieren und kopieren': 
+Sie werden viel mehr lernen, wenn Sie die Befehle in diesem Skript
+abtippen als wenn Sie diese einfach aus dem PDF kopieren und einkleben!
+Selektieren Sie dann die Zeilen, klicken
+Sie auf \texttt{Code, Run Selected Line(s)}
+oder drücken Sie \textsc{ctrl + enter}
+(Mac: \textsc{cmd + enter}).
+Der Befehl wird nun der Konsole (links unten)
+weitergeleitet.
+Im Prinzip können Sie diese kurzen Befehl auch
+sofort in die Konsole eintragen, aber Sie sollten es sich angewöhnen,
+im Texteditor zu arbeiten.
+
+<<eval = FALSE>>=
+# Installiere Erweitung "tidyverse".
+# Zeilen, denen ein '#' vorangestellt sind, gelten übrigens als 
+# Kommentare. Diese werden von R ignoriert - aber sie sind extrem 
+# praktisch, um Befehle zu dokumentieren, sodass man selber ein 
+# paar Wochen später noch nachvollziehen kann, was man genau 
+# gemacht hat!
+install.packages("tidyverse")
+@
+
+Für die Erweitungspakete, die im \texttt{tidyverse}-Bündel
+zusammengepackt wurden, finden Sie unter \url{https://www.tidyverse.org/}
+Anleitungen und weitere Informationen.
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{\textit{Your closest collaborator is you six months ago, but you don't reply to email.}}
+Kommentieren Sie Ihren Code ausführlich,
+gerne auch in Vollsätzen! Beschränken Sie sich dabei nicht darauf,
+einfach die Kommentare aus diesem Skript zu übernehmen, sondern
+fügen Sie auch Ihre eigenen Kommentare und Gedächtnishilfen hinzu.
+\end{framed}
+
+\section{R-Projekte}
+Es ist sinnvoll, wenn die Skripts, Datensätze, Grafiken, usw.,
+die Sie für ein Forschungsprojekt brauchen und kreiert haben,
+alle im gleichen Ordner (`Arbeitsordner') stehen.
+Am besten richten Sie dazu für jedes Forschungsprojekt, an dem Sie beteiligt
+sind (inklusive Seminar- und Masterarbeiten), ein R-Projekt ein.
+Auch für diesen Kurs sollten Sie ein solches Projekt einrichten.
+Klicken Sie dazu in RStudio auf \texttt{File, New Project..., New directory, Empty project} und geben Sie dem
+Projekt einen Namen (z.B.\ Statistikkurs).
+Die Optionen \texttt{Create a git repository}
+und \texttt{Use renv with this project} brauchen Sie für diesen
+Kurs nicht einzuschalten.\footnote{Erstere kann aber nützlich sein, wenn Sie 
+mit anderen am gleichen R-Projekt arbeiten. Siehe dazu
+\url{https://happygitwithr.com/}. Zum Nutzen
+von \texttt{renv} erfahren Sie im nächsten Abschnitt mehr.}
+Es wird jetzt ein Ordner kreiert, der eine Datei
+mit der Endung \texttt{.Rproj} enthält.
+Um das R-Projekt zu öffnen, können Sie diese Datei
+öffnen oder das Projekt in RStudio unter
+\texttt{File, Open Project...} auswählen.
+
+Wenn Sie das Projekt geöffnet haben,
+sollten Sie im Fenster rechts unten noch die Registerkarte
+\texttt{Files} öffnen und mit \texttt{New Folder}
+die Unterordner \texttt{data} und \texttt{figs} kreieren.
+Die Datensätze, mit denen wir arbeiten werden, sollten Sie
+in \texttt{data} ablegen; in \texttt{figs} werden wir Abbildungen
+speichern.
+
+\section{Softwareversionen und Updates}
+R und seine Erweiterungspakete sind in ständiger Entwicklung.
+Um ein Update der installierten R-Packages durchzuführen,
+können Sie den Befehl \texttt{update.packages()} verwenden.
+Um R selber auf den neusten Stand zu bringen, finde ich es
+eigentlich am einfachsten, die alte Version komplett zu löschen
+und die neue zu installieren. Danach muss ich dann aber die
+Packages, die ich brauche, erneut installieren.
+
+Aber Achtung: Es kommt nicht selten vor, dass alter R-Code
+nach einem Update nicht mehr oder etwas anders funktioniert.
+Für grössere Forschungsprojekte empfiehlt es sich daher,
+die Option \texttt{Use renv with this project} anzukreuzen.
+Diese sorgt dafür, dass die Versionen der Packages, die Sie 
+im Projekt verwenden, als Teil des Projekts gespeichert werden.
+Auch wenn Sie nachher für ein anderes Projekt eine neuere
+Version des Packages verwenden, werden die Befehle im ersten Projekt
+noch mit der alten Version ausgeführt. Dies verringert die 
+Gefahr, dass Ihr alter Code ein paar Jahre später nicht mehr funktioniert.
+Für mehr Informationen, siehe \url{https://rstudio.github.io/renv/articles/renv.html}.
+
+Für dieses Skript wurde R-Version 4.1.0 verwendet.
+Eine Übersicht über die Packageversionen finden Sie im Anhang \ref{app:versions}.
+
+\section{Software zitieren}
+R und R-Pakete sind gratis und werden mehrheitlich
+von anderen Forschenden entwickelt. Wenn Sie bei
+Ihrer Arbeit sehr von R oder einem Erweiterungspaket
+profitiert haben, ziehen Sie es dann bitte in Erwägung,
+diesen Freiwilligen mit einer Referenz zu danken.
+
+Eine Referenz für R erhalten Sie, wenn Sie 
+den folgenden Befehl in die Konsole eintippen:
+
+<<eval = FALSE>>=
+citation()
+@
+
+Wenn Sie ein bestimmtes Erweiterungspaket zitieren
+möchten, stellen Sie den Namen des Pakets zwischen
+Klammern und Anführungszeichen, etwa so:
+
+<<eval = FALSE>>=
+citation("tidyverse")
+@
+
+Falls Sie genaue Softwareversionen brauchen,
+können Sie den folgenden Befehl verwenden:
+
+<<eval = FALSE>>=
+sessionInfo()
+@
+
+\section{Aufgabe}
+Ein weiteres nützliches Paket, das wir bald verwenden werden, 
+ist das \texttt{here}-Package. Installieren Sie dieses.
