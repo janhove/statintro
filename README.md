@@ -5,4 +5,4 @@ die Prinzipien, die es behandelt, sind allgemeiner gültig.
 
 Sie können das Skript [hier](https://github.com/janhove/statintro/raw/main/main.pdf) herunterladen.
 
-Letzte Änderung: August 2021.
+Letzte Änderung: September 2022.
