@@ -1,0 +1,261 @@
+\chapter{Wahrscheinlichkeitsaussagen über Zufallsvariablen}\label{ch:wahrscheinlichkeiten}
+
+Dieses Kapitel dient als Auffrischung der Wahrscheinlichkeitsrechnung.
+Konkret besprechen wir, wie wir Wahrscheinlichkeitsaussagen über 
+\textbf{Zufallsvariablen} machen können, wenn wir schon wissen, 
+aus welcher Verteilung diese Variable stammt. Was Zufallsvariablen
+sind, wird aus den Beispielen klar. Die Fähigkeit, 
+Wahrscheinlichkeitsaussagen über Zufallsvariablen zu machen, 
+ist an sich schon praktisch, aber zudem muss man die 
+hinterliegende Logik kennen, wenn man Inferenzstatistik verstehen will.
+
+\section{Beispiel: kontinuierliche Gleichverteilung}\label{sec:continuousuniform}
+Die Kreislinie eines Rads ist wie in Abbildung \ref{fig:kreis} 
+mit Zahlen von 0 bis 360 vermerkt. Jedes Mal, wenn der Pfeil 
+gedreht wird, bleibt er an einer zufälligen Stelle auf der 
+Kreislinie stehen. Dies entspricht einer kontinuierlichen 
+Gleichverteilung mit einem Bereich von 0 bis 360; siehe Abbildung
+\ref{fig:kreisdichte}.
+Da die Verteilung von 0 bis 360 geht und die Fläche zwischen der Wahrscheinlichkeitsdichte und der $x$-Achse 1 betragen muss,
+ist die Wahrscheinlichkeitsdichte überall $\frac{1}{360} \approx 0.0028$,
+denn $(360-0) \cdot \frac{1}{360} = 1$.
+
+\begin{figure}[tp]
+\begin{center}
+  \includegraphics[width = .33\textwidth]{figs/kreis}
+\caption{Ein Rad mit einem Pfeil, um eine Gleichverteilung zu generieren.}
+\label{fig:kreis}
+\end{center}
+\end{figure}
+
+<<fig.cap = "Wahrscheinlichkeitsdichte einer kontinuierlichen Gleichverteilung mit Bereich 0 bis 360.\\label{fig:kreisdichte}", echo = FALSE, fig.height = 2, fig.width = 4>>=
+ggplot(data.frame(x = c(-30, 390)),
+       aes(x)) +
+  stat_function(fun = function(x) dunif(x, min = 0, max = 360)) +
+  ylim(0, 0.004) +
+  ylab("Wsk.-Dichte") +
+  geom_rect(xmin = 45, xmax = 93, ymin = 0, ymax = 1/360,
+            fill = "lightgrey", colour = "darkgrey")
+@
+
+\subsection{Wahrscheinlichkeit = Fläche unter der Wahrscheinlichkeitsdichte}
+Wie wahrscheinlich ist es, dass wir den Pfeil drehen und er irgendwo
+zwischen 45 und 93 stehen bleibt? Zwischen den Werten 45 und 93
+liegt etwa 13.3\% der ganzen  Wahrscheinlichkeitsverteilung:
+$\frac{93-45}{360} = 0.133$.
+Die Wahrscheinlichkeit liegt also bei 13.3\%.
+
+Diese Berechnungsmethode lässt sich aber nur bei Gleichverteilungen
+anwenden, also bei Verteilungen, bei denen jeder Wert genauso
+wahrscheinlich ist. Eine Methode, die auch für andere Verteilungen
+gilt, besteht darin, \textbf{die Fläche unter der Wahrscheinlichkeitsdichte
+zwischen den beiden Werten} -- das `Integral' aus dem Gymnasium -- zu berechnen.
+Diese Fläche wurde in der obigen Grafik grau eingefärbt.
+Bei einer Gleichverteilung ist dies ein Rechteck, dessen Fläche wir einfach berechnen können: $\textrm{Breite} \cdot \textrm{Höhe} = (93-45) \cdot \frac{1}{360} = 0.133$.
+
+\subsection{Kumulative Verteilungsfunktion}
+Abbildung \ref{fig:uniformcumulative} zeigt,
+wie wahrscheinlich es ist, einen Wert kleiner als $x$ zu beobachten.
+Diese Grafik nennt man eine
+\textbf{kumulative Verteilungsfunktion};
+die kumulative Wahrscheinlichkeit variiert von 0 bis 1.
+
+<<fig.cap = "Kumulative Verteilungsfunktion einer kontinuierlichen Gleichverteilung mit Bereich 0 bis 360.\\label{fig:uniformcumulative}", echo = FALSE, fig.height = 2.4, fig.width = 2.4/2*2.5, out.width=".33\\textwidth">>=
+library(RColorBrewer)
+ggplot(data.frame(x = c(-30, 390)),
+       aes(x)) +
+  stat_function(fun = function(x) punif(x, min = 0, max = 360)) +
+  ylab("kumulative\nWahrscheinlichkeit") +
+  geom_segment(x = 0, xend = 93, y = punif(93, 0, 360), yend = punif(93, 0, 360), linetype = 2, col = brewer.pal(3, "Set1")[1]) +
+  geom_segment(x = 93, xend = 93, y = punif(93, 0, 360), yend = 0, linetype = 2, col = brewer.pal(3, "Set1")[1]) +
+  geom_segment(x = 0, xend = 45, y = punif(45, 0, 360), yend = punif(45, 0, 360), linetype = 2, col = brewer.pal(3, "Set1")[2]) +
+  geom_segment(x = 45, xend = 45, y = punif(45, 0, 360), yend = 0, linetype = 2, col = brewer.pal(3, "Set1")[2])
+@
+
+Mit \texttt{punif()} können wir die Wahrscheinlichkeit
+berechnen, dass wir einen Wert zwischen 45 und 93 beobachten
+(\textit{p} für \textit{probability},
+\textit{unif} für \textit{uniform distribution}).
+Zuerst berechnen wir die Wahrscheinlichkeit, dass wir einen
+Wert kleiner als 93 beobachten. Diese Wahrscheinlichkeit
+entspricht dem Wert auf der $y$-Achse für die rote Linie
+in Abbildung \ref{fig:uniformcumulative}
+(Handgelenk mal Pi: etwa 25\%). Mit \texttt{punif()} berechnen
+wir die genaue Wahrscheinlichkeit, dass man einen Wert
+niedriger als 93 antrifft, wenn die Verteilung eine Gleichverteilung
+zwischen 0 und 360 ist:
+<<>>=
+punif(93, min = 0, max = 360)
+@
+
+Ebenso können wir die Wahrscheinlichkeit berechnen,
+dass wir einen Wert kleiner als 45 beobachten (blau):
+<<>>=
+punif(45, min = 0, max = 360)
+@
+
+Der Unterschied ist die Wahrscheinlichkeit, dass
+wir einen Wert zwischen 45 und 93 beobachten:
+<<>>=
+0.2583 - 0.125
+
+# oder direkt:
+punif(93, min = 0, max = 360) - punif(45, min = 0, max = 360)
+@
+
+\section{Beispiel Normalverteilung}
+IQ-Werte sind normalverteilt mit---per Definition---Mittel 100
+und Standardabweichung 15. Abbildung \ref{fig:iqdistribution}
+zeigt die Wahrscheinlichkeitsdichte und die kumulative
+Wahrscheinlichkeit dieser Normalverteilung.
+
+<<fig.cap = "Wahrscheinlichkeitsdichte und kumulative Wahrscheinlichkeit einer Normalverteilung mit Mittel 100 und Standardabweichung 15.\\label{fig:iqdistribution}", echo = FALSE, fig.height = 2, fig.width = 5, out.width=".7\\textwidth">>=
+library(RColorBrewer)
+p1 <- ggplot(data.frame(x = c(40, 160)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, mean = 100, sd = 15)) +
+  ylab("Wsk.-Dichte") +
+  stat_function(fun = function(x) {
+    y <- dnorm(x, 100, 15)
+    y[x > 115] <- NA
+    return(y)
+  }, geom = "area", fill = "red", alpha = 0.2) +
+  stat_function(fun = function(x) {
+    y <- dnorm(x, 100, 15)
+    y[x > 95.42] <- NA
+    return(y)
+  }, geom = "area", fill = "blue", alpha = 0.2)
+
+p2 <- ggplot(data.frame(x = c(40, 160)),
+             aes(x)) +
+  stat_function(fun = function(x) pnorm(x, mean = 100, sd = 15)) +
+  ylab("kumulative\nWahrscheinlichkeit") +
+  geom_segment(x = 0, xend = 115, y = pnorm(115, 100, 15), yend = pnorm(115, 100, 15), linetype = 2, col = "red") +
+  geom_segment(x = 115, xend = 115, y = pnorm(115, 100, 15), yend = 0, linetype = 2, col = "red") +
+  geom_segment(x = 0, xend = 95.42, y = pnorm(95.42, 100, 15), yend = pnorm(95.42, 100, 15), linetype = 2, col = "blue") +
+  geom_segment(x = 95.42, xend = 95.42, y = pnorm(95.42, 100, 15), yend = 0, linetype = 2, col = "blue")
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+@
+
+Wenn wir zufällig eine Person aus der Gesamtpopulation wählen,
+wie wahrscheinlich ist es dann, dass ihr IQ niedriger als 115 ist?
+Diese Wahrscheinlichkeit entspricht der Fläche unter
+der Wahrscheinlichkeitsdichte zwischen $-\infty$ (minus unendlich) und 115;
+diese Fläche wurde in der linken Grafik rötlich eingefärbt.
+Mit der \texttt{pnorm()}-Funktion können wir diesen Wert genau berechnen
+(roter Wert in der rechten Grafik; visuell geschätzt: 85\%):
+<<>>=
+pnorm(115, mean = 100, sd = 15)
+@
+
+Die Wahrscheinlichkeit, dass eine zufällig ausgewählte Person
+einen IQ von 115 oder niedriger hat liegt also bei 84\%.
+
+Mit der Option \texttt{lower.tail = FALSE} können wir das Komplement
+dieses Werts berechnen, d.h., die Wahrscheinlichkeit, einen Wert höher
+als 115 anzutreffen:
+<<>>=
+pnorm(115, mean = 100, sd = 15, lower.tail = FALSE)
+# oder:
+1 - pnorm(115, mean = 100, sd = 15)
+@
+
+Wir können die Frage auch andersherum stellen,
+z.B.: Für welchen IQ-Wert gilt, dass 38\% der Population einen
+niedrigeren IQ haben? Hierzu verwenden wir die
+\texttt{qnorm()}-Funktion (\textit{q} für \textit{quantile};
+blauer $x$-Wert in der obigen Grafik):
+<<>>=
+qnorm(0.38, mean = 100, sd = 15)
+@
+
+38\% der Population hat also einen IQ niedriger als 95.4.
+Anders gesagt: Das 38.\ \textbf{Perzentil} der IQ-Verteilung
+(einer Normalverteilung mit Mittel 100 und einer Standardabweichung von 15) ist 95.4.
+
+Eine andere Frage könnte sein: Zwischen welchen zwei Werten, die symmetrisch
+um das Mittel liegen, befinden sich 80\% der IQ-Werte in der Population?
+Symmetrisch ums Mittel liegen 80\% der Daten zwischen dem 10.\ und 90.\ Perzentil, daher:
+<<>>=
+qnorm(0.10, mean = 100, sd = 15)
+qnorm(0.90, mean = 100, sd = 15)
+@
+Oder mithilfe der \texttt{c()}-Funktion:
+<<>>=
+qnorm(c(0.10, 0.90), mean = 100, sd = 15)
+@
+
+\section{Aufgaben}\label{sec:uebungenprobability}
+
+Die folgenden Übungen dienen dazu,
+Sie mit dem Rechnen mit Wahrscheinlichkeiten und mit
+den \texttt{p...()}- und \texttt{q...()}-Funktionen 
+besser vertraut zu machen.
+
+\begin{enumerate}
+
+\item M{\&}Ms kommen in sechs Farben vor; in Tabelle \vref{tab:mandms} werden ihre relativen Frequenzen aufgelistet. (Für diese Übungen brauchen Sie nicht mit R zu arbeiten.)
+
+\begin{enumerate}
+\item Wie wahrscheinlich ist es, dass ein zufällig ausgewähltes M{\&}M rot \emph{oder} orange ist?
+\item Wie wahrscheinlich ist es, dass zwei zufällig ausgewählte M{\&}Ms \emph{beide} rot oder orange (also zwei rote, zwei orange oder ein rotes und ein oranges) sind?
+\item Wie wahrscheinlich ist es, dass von zwei zufällig ausgewählten M{\&}Ms ein rotes und ein oranges dabei sind?
+\item Wie wahrscheinlich ist es, dass wenn 5 M{\&}Ms zufällig ausgewählt werden, alle blau sind?
+\item Wie wahrscheinlich ist es, dass wenn 5 M{\&}Ms zufällig ausgewählt werden, kein einziges blau ist?\label{ex:mm}
+\end{enumerate}
+
+\begin{table}[tbp]
+\centering
+\caption{Relative Frequenzen von M\&Ms nach Farbe.}
+\label{tab:mandms}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Farbe  & relative Frequenz \\ \midrule
+blau   & 23\%              \\
+orange & 23\%              \\
+gelb   & 15\% \\
+grün   & 15\% \\
+braun  & 12\% \\
+rot    & 12\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\item In diesem Kapitel haben Sie die IQ-Verteilung kennengelernt.
+\begin{enumerate}
+\item Wie wahrscheinlich ist es, dass eine zufällig ausgewählte Person einen IQ niedriger als 90 hat?
+\item Wie wahrscheinlich ist es, dass eine zufällig ausgewählte Person einen IQ grösser als 85 hat?
+\item Wie wahrscheinlich ist es, dass eine zufällig ausgewählte Person einen IQ zwischen 110 und 120 hat?
+\item Wie wahrscheinlich ist es, dass eine zufällig ausgewählte Person einen IQ hat, der mehr als zwei Standardabweichungen vom Populationsmittel entfernt liegt?
+\item Durchschnittliche Intelligenz ist definiert als der IQ der mittleren 45\% der Bevölkerung. Zwischen welchen zwei Werten liegt er?
+\item Die folgenden Übungen sind etwas schwieriger und haben als Ziel, Sie über kombinierte Wahrscheinlichkeiten nachdenken zu lassen.\\
+Wie wahrscheinlich ist es, dass, wenn zwei Personen zufällig ausgewählt werden, keine der beiden einen IQ niedriger als 105 hat?\\
+(Tipp: Wie wahrscheinlich ist es, dass eine einzige Person einen IQ höher als 105 hat?)
+\item Wie wahrscheinlich ist es, dass, wenn drei Personen zufällig ausgewählt werden, \emph{genau} eine Person einen IQ niedriger als 90 hat?\\
+(Tipp: Wie wahrscheinlich ist es, dass die erste Person einen IQ niedriger als 90 hat, die zweite und die dritte aber nicht? Was ist nun die Wahrscheinlichkeit, dass die zweite Person einen IQ niedriger als 90 hat, die erste und die dritte aber nicht? Und wie wahrscheinlich ist es, dass die dritte Person einen IQ niedriger als 90 hat, die ersten zwei aber nicht?)
+\item Wie wahrscheinlich ist es, dass, wenn drei Personen zufällig ausgewählt werden, \emph{mindestens} eine Person einen IQ niedriger als 90 hat?\\
+(Tipp: Wie wahrscheinlich ist es, dass keine einzige Person einen IQ niedriger als 90 hat?)
+\end{enumerate}
+
+\item Wie wahrscheinlicht ist es, bei einer normalverteilten Variable (\emph{egal welcher!}) einen zufällig ausgewählten Wert, der weniger als 1; 1,5; und 2 Standardabweichungen vom Mittel entfernt ist, anzutreffen?\\
+(Tipp: Zeichnen Sie ein paar Normalverteilungen mit anderen Mitteln und Standardabweichungen und beantworten Sie diese Frage für jede Verteilung separat.)
+
+\item Poker wird mit 52 Spielkarten gespielt: 13 Werte (2, 3, \dots, Bube, Dame, König, Ass) in vier Farben (Kreuz, Pik, Herz und Karo).
+\begin{enumerate}
+\item Wie wahrscheinlich ist es, dass eine zufällig ausgewählte Karte ein Ass ist?
+\item Sie ziehen zufällig zwei Karten aus dem Blatt. Die erste Karte ist ein Ass. Wie wahrscheinlich ist es, dass auch die zweite Karte ein Ass ist?
+\item Sie ziehen zufällig eine Karte aus dem Blatt, schauen sich diese an, stecken sie wieder ins Blatt und mischen das Blatt. Dann ziehen Sie erneut eine Karte aus dem Blatt. Wie wahrscheinlich ist es, dass Sie zwei Mal ein Ass gezogen haben?
+\item Sie ziehen zufällig eine Karte aus dem Blatt und legen diese auf die Seite. Dann ziehen Sie nochmals eine Karte aus dem gleichen Blatt.
+Wie wahrscheinlich ist es, dass Sie zwei Asse gezogen haben?
+\item Sie ziehen zufällig fünf Karten aus dem Blatt. Wie wahrscheinlich ist es, dass Sie einen \textit{flush} (5 Karten der gleichen Spielfarbe) gezogen haben? (Beachten Sie, dass Sie die gleiche Karte nicht zwei Mal ziehen können.)
+\item Schwierig: Ein \textit{straight} besteht aus fünf aufeinander folgenden Werten wie zum Beispiel 8-9-10-Bube-Dame oder 3-4-5-6-7. Die Farben sind dabei unerheblich.
+Der niedrigste \textit{straight}
+ist Ass-2-3-4-5; der höchste 10-Bube-Dame-König-Ass. Bube-Dame-König-Ass-2 ist kein \textit{straight}.
+Wie gross ist die Wahrscheinlichkeit, dass fünf zufällig gezogene Karten einen \textit{straight} bilden? Beachten Sie, dass es nichts ausmacht, in welcher Reihenfolge man die Karten zieht. 8-4-5-7-6 ist auch ein \textit{straight}, da man mit diesen Karten 4-5-6-7-8 bilden kann.%\\
+% (Tipp: Was ist die Wahrscheinlichkeit, dass man genau Ass-2-3-4-5, in dieser Reihenfolge, zieht? In wie vielen Reihenfolgen kann man einen solchen \textit{straight} ziehen?)
+% \item Wie wahrscheinlich ist es, dass fünf zufällig gezogene Karten ein \textit{three of a kind} (z.B.\ 3 Asse oder 3 Sechse) enthalten? Die restlichen
+% zwei Karten sind egal.\\
+% \item Wie wahrscheinlich ist es, dass fünf zufällig gezogene Karten ein \textit{full house} (ein \textit{three of a kind} und ein weiteres \textit{pair}) bilden?
+\end{enumerate}
+\end{enumerate}

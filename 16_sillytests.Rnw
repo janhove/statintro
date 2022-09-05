@@ -1,0 +1,191 @@
+\chapter{Überflüssige Signifikanztests}\label{ch:sinnlos}
+Wann und ob Signifikanztests sinnvoll sind,
+darüber scheiden sich die Geister. Was weniger
+umstritten ist, ist, dass Signifikanztests
+oft in Kontexten eingesetzt werden, in denen
+sie überflüssig sind (sog.\ \textit{silly tests}, \citealp{Abelson1995}). 
+Überflüssige Tests führen dazu, dass Forschungsberichte
+schwerer zugänglich werden, da Lesende noch mehr als sonst
+die relevanten Informationen von den irrelevanten trennen müssen.
+Im Folgenden werden daher fünf Arten überflüssiger Signifikanztests
+besprochen, sodass Sie diese in Ihren eigenen Arbeiten nicht
+verwenden. Siehe auch \citet{Vanhove2020b}.
+
+\section{RM-ANOVA für Prätest/Posttest-Designs}
+Ein nützliches Forschungsdesign ist das Prätest/Posttest-Design
+mit einer Kontroll- und Experimentalgruppe. Alle Teilnehmenden
+erledigen zuerst eine Aufgabe (Prätest), werden dann nach dem
+Zufallsprinzip der Experimental- oder Kontrollgruppe zugewiesen
+und erledigen nach Ablauf der Intervention die gleiche oder eine
+ähnliche Aufgabe (Posttest). Solche Daten werden oft mit
+einer Varianzanalyse mit Messwiederholungen (\textsc{rm-anova})
+ausgewertet. Die Ergebnisse könnten dann etwa wie folgt berichtet
+werden:
+\begin{quote}
+``A repeated-measures \textsc{anova} yielded a nonsignificant
+main effect of Condition ($F(1, 48) < 1$) but a significant
+main effect of Time ($F(1, 48) = 154.6$, $p < 0.001$). In
+addition, the Condition $\times$ Time interaction was significant
+($F(1, 48) = 6.2$, $p = 0.016$).'' [Nach einem fiktiven Beispiel
+von \citealp{Vanhove2015}.]
+\end{quote}
+
+Das Problem mit dieser Analyse ist, dass drei Tests berichtet
+werden (`main effect of Condition', `main effect of Time' und
+`Condition $\times$ Time interaction'), aber nur die Interaktion von
+Interesse ist: Interessant ist nur, ob sich die
+Leistung in der Experimentalgruppe mehr verbessert hat
+als jene in der Kontrollgruppe.
+\begin{itemize}
+ \item Dass die Posttestleistung über die beiden Gruppen hinweg
+ besser ist als die Prätestleistung (`main effect of Time'), 
+ ist uninteressant: 
+ Vielleicht handelt es sich um einen Übungseffekt, vielleicht
+ ist der Posttest einfacher als der Prätest, vielleicht haben
+ die Teilnehmenden in beiden Gruppen etwas aus dem Experiment
+ gelernt.
+ 
+ \item Dass sich die Leistung der beiden Gruppen über die
+ beiden Messpunkte hinweg unterscheidet oder nicht (`main effect
+ of Condition'), ist auch nicht relevant für unsere Frage:
+ Vielleicht gibt es im Schnitt tatsächlich kaum einen Unterschied,
+ aber haben die Teilnehmenden in der Experimentalgruppe trotzdem
+ mehr gelernt (z.B.\ wenn ihre Leistung beim Prätest niedriger war
+ als jene der Kontrollgruppe, aber dafür beim Posttest höher).
+ 
+ \item Nur der Interaktionseffekt ist hier interessant:
+ Ist der Effekt von `Time' unterschiedlich gross je nach `Condition'?
+\end{itemize}
+
+Diese Analyse kann wesentlich vereinfacht werden, indem nicht
+die Rohdaten, sondern die \emph{Unterschiede} zwischen der
+Posttest- und dem Prätestleistung jeder Versuchsperson
+mit einem $t$-Test ausgewertet werden. Am Ergebnis würde
+sich nichts ändern, aber die Analyse ist jetzt besser
+nachvollziehbar und berichtet wird nur ein einziger (relevanter) Test.
+
+Eine noch bessere Alternative besteht darin, ein lineares
+Modell zu konstruieren, in dem die Posttestergebnisse
+als outcome gelten und sowohl die Gruppenzugehörigkeit
+als auch die Prätestergebnisse als Prädiktoren mitmodelliert
+werden (= \textsc{ancova}). Dies führt zu einer grosseren
+power bzw.\ zu mehr Präzision und hat den Vorteil,
+dass Prä- und Posttest nicht einmal auf der gleichen Skala
+ausgedrückt werden müssen. Siehe \citet{Vanhove2015}
+für mehr Informationen.
+
+\section{\textit{Balance tests}}
+Auch wenn sie die Teilnehmenden nach dem Zufallsprinzip
+den unterschiedlichen Gruppen zugeordnet haben, beschreiben
+Forschende oft, wie sich die Gruppen voneinander unterscheiden,
+was etwa das Alter, die Fremdsprachenkenntnisse oder den IQ
+der Versuchspersonen betrifft. Hierzu werden dann oft Signifikanztests
+eingesetzt. In \citet{Vanhove2015} bespreche ich drei Gründe,
+weshalb solche Signifikanztests überflüssig sind; diese
+sind die zwei wichtigsten:
+\begin{itemize}
+ \item Solche Signifikanztests überprüfen die Nullhypothese,
+ dass sich (etwa) das Durchschnittsalter in den unterschiedlichen
+ Gruppen nur aufgrund von Zufall unterscheidet.
+ Da die Versuchspersonen den Gruppen aber nach dem Zufallsprinzip
+ zugewiesen wurden, \emph{wissen} wir, dass diese Nullhypothese
+ tatsächlich stimmt. Entweder sagt der Test dann, dass der
+ Unterschied zwischen den Gruppen rein zufallsbedingt ist---was 
+ wir schon wussten---oder 
+ er sagt, dass es schon einen systematischen Unterschied gibt---was falsch wäre
+ (Fehler der ersten Art). Der Test kann uns also nichts sagen,
+ was wir noch nicht wussten und was gleichzeitig auch noch stimmt.
+ 
+ \item Die Verwendung solcher \textit{balance tests} lässt vermuten,
+ dass Forschende denken, dass das Ziel von Randomisierung ist,
+ perfekt balanzierte Gruppen zu generieren. Wie wir in Kapitel
+ \ref{ch:logik} bereits gesehen haben, ist dies eben nicht das
+ Ziel. Vielmehr ist das Ziel von Randomisierung, eine 
+ \emph{systematische} Verzerrung vorzubeugen. In den $p$-Werten
+ und Konfidenzintervallen sind Gruppenunterschiede, die aufgrund
+ von Zufall zu Stande kommen, bereits berücksichtigt. Es ist also
+ nicht nötig, dass Gruppen hinsichtlich der Hintergrundsvariablen
+ perfekt balanziert sind.
+ \end{itemize}
+ 
+ Wichtige Hintergrundsvariablen können natürlich in der Analyse berücksichtigt werden, aber das
+ macht man besser, indem man sie dem Modell als Prädiktoren hinzufügt. Gegebenfalls kann man \emph{zusätzlich} die Randomisierung so einschränken, dass die Gruppen hinsichtlich solcher Variablen vergleichbarer sind (\textit{blocking}, siehe \citealp{Imai2008}, \citealp{Vanhove2015}
+ und die Funktion \texttt{walkthrough\_blocking()} im \texttt{cannonball}-Package).
+
+
+\section{Tautologische Tests}
+\begin{quote}
+``The 70 participants were divided into three proficiency groups 
+according to their performance on a 20-point French-language test. 
+The high-proficiency group consisted of participants with a score of 
+16 or higher ($n = 20$); 
+the mid-proficiency group of participants with
+a score between 10 and 15 ($n = 37$); 
+and the low-proficiency group of 
+participants with a score of 9 or lower ($n = 13$). 
+An ANOVA showed 
+significant differences in the test scores between the high-, mid- 
+and low-proficiency groups ($F(2, 67) = 133.5$, $p < 0.001$).''
+[Fiktives Beispiel aus dem Blogeintrag \href{https://janhove.github.io/reporting/2014/10/15/tautological-tests}{\textit{Silly significance tests: Tautological tests}} (15.10.2014)]
+\end{quote}
+
+Das Problem mit diesem Signifikanztest ist, dass er
+vollkommen tautologisch ist. Ähnlich wie \textit{balance tests}
+können solche tautologischen Tests uns nichts sagen, was wir
+noch nicht wussten und was gleichzeitig auch stimmt: 
+Wir haben die Gruppen absichtlich so konstruiert,
+dass sie sich hinsichtlich einer bestimmten Variablen
+nicht überlappen. Selbstverständlich stimmt die Nullhypothese
+(`Jeglicher Unterschied beruht rein auf Zufall.') hier nicht.
+
+Tautologische Tests sind symptomatisch für
+ein wichtigeres Problem: die Vorstellung, dass Prädiktoren
+unbedingt kategorisch sein sollten bzw.\ dass man immer
+Grüppchen bilden sollte. Indem man aus kontinuierlichen
+Daten Gruppen bildet, verliert man Information und
+dadurch auch statistische Genauigkeit. Siehe hierzu
+weiter \href{https://janhove.github.io/analysis/2015/10/16/nonlinear-relationships}{\textit{The problem with cutting up continuous variables and what to do when things aren't linear}} (16.10.2015).
+
+\section{Tests, die nichts mit der Forschungsfrage zu tun haben}
+Erstaunlich häufig sind Signifikanztests, die eigentlich
+gar nichts mit der Forschungsfrage zu tun haben. Ein fiktives
+Beispiel hierfür ist, 
+wenn man eine Interventionsstudie durchführt und nicht nur
+die Leistung der Kontroll- und Interventionsgruppe vergleicht,
+sondern auch noch die Leistung der Jungen und der Mädchen,
+oder die Leistung bei unterschiedlichen Sozialschichten usw.
+Faktoren wie Geschlecht und Sozialschicht mögen die Leistung
+beeinflüssen, aber nur deswegen müssen diese Faktoren nicht
+nochmals mit einem Signifikanztest überprüft werden. 
+Wenn man davon ausgeht, dass solche Faktoren wichtig sind,
+ist es sinnvoller, wenn man sie sofort im Modell mitberücksichtigt
+anstatt separate Analysen mit ihnen durchzuführen.
+
+Für weitere Empfehlungen, siehe den Blogeintrag
+(siehe \href{https://janhove.github.io/analysis/2015/06/08/unrelated-tests}{\textit{Silly significance tests: Tests unrelated to the genuine research questions}}, 8.6.2015).
+
+\section{Tests für Haupteffekte, während man sich für die Interaktion interessiert}
+Oft interessiert man sich für die Interaktion zwischen
+zwei oder mehreren Prädiktoren. Wenn man diese Interaktion in einer
+Varianzanalyse testet, erhält man aber auch Signifikanztests
+für die Haupteffekte. Aber wichtig sind diese letzteren Tests
+nicht. M.E.\ tragen sie im Gegenteil dazu bei, 
+dass Forschungsberichte schwer verdaulich werden.
+Wenn es aus irgendeinem Grund unbedingt nötig sein sollte,
+dass Signifikanztests für uninteressante Haupteffekte 
+berichtet werden, sollten diese m.E.\ in einer Tabelle
+stehen, deren Beschriftung dann deutlich macht, dass
+eigentlich nur die Interaktion relevant ist.
+
+\section{Fazit}
+Nur weil man einen Signifikanztest durchführen könnte
+oder weil die Software einen ausspuckt, heisst das noch
+nicht, dass man ihn auch berichten sollte. Fragen Sie sich
+immer, wie relevant jeder Signifikanztest wäre, und zwar für
+die Fragen, die Sie beantworten wollen.
+
+Missverstehen Sie den letzten Absatz bitte nicht:
+Ich schlage \emph{nicht} vor, dass man nur jene Signifikanztests
+berichten soll, die einen signifikanten $p$-Wert ergeben.
+Ausserdem denke ich auch nicht, dass jede Analyse
+mit einem $p$-Wert belegt werden sollte.

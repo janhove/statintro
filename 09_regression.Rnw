@@ -1,0 +1,1738 @@
+\chapter{Einen Prädiktor hinzufügen}\label{ch:simpleregression}
+In diesem Kapitel beschäftigen wir uns mit der Frage,
+wie der Zusammenhang zwischen einem einzigen kontinuierlichen
+Prädiktor und einem einzigen kontinuierlichen Outcome erfasst
+werden kann. Eine \textbf{kontinuierliche} Variable ist eine
+eher feinkörnige Variable, deren Werte geordnet werden können
+(z.B.\ von klein nach gross oder von schlecht nach gut). Ausserdem
+können Unterschiede auf der Skala sinnvoll miteinander verglichen
+werden: Der Unterschied zwischen 15 und 20 °C ist gleich dem
+Unterschied zwischen $-10$ und $-5$ °C,
+und beide Unterschiede sind halb so gross wie jener
+zwischen 50 und 60 °C. Diese Eigenschaften haben sowohl die
+GJT- als auch die AOA-Variable im Datensatz von \citet{DeKeyser2010}.
+
+In den letzten zwei Kapiteln haben wir uns mit der zentralen Tendenz
+der GJT-Daten beschäftigt. Eigentlich interessierten sich \citet{DeKeyser2010}
+aber nicht sosehr für diese, sondern für den Zusammenhang zwischen GJT und AOA.
+Diesen Zusammenhang schauen wir uns hier an. Wie immer ist es eine gute
+Idee, die Daten zunächst grafisch darzustellen.
+Wenn man sich für den
+Zusammenhang zwischen zwei kontinuierlichen Variablen interessiert,
+bietet sich das \textbf{Streudiagramm} (\textit{scatterplot}) an;
+siehe Abbildung \ref{fig:dekeyser}. Beim Zeichnen eines
+Streudiagramms muss man spezifizieren, welche Variable entlang
+der $x$-Achse und welche entlang der $y$-Achse dargestellt wird.
+Wenn es naheliegender ist, dass Variable $A$ Variable $B$ beeinflusst
+als umgekehrt, empfiehlt es sich, Variable $A$ entlang der $x$-Achse
+darzustellen und Variable $B$ entlang der $y$-Achse. Hier ist es
+unmöglich, dass die Grammatikalitätsurteile das Erwerbsalter
+beeinflussen, aber sehr wohl, dass das Erwerbsalter die Grammatikalitätsurteile beeinflussen.
+
+<<echo = TRUE, fig.cap = "Zusammenhang zwischen AOA und GJT in der Studie von \\citet{DeKeyser2010}. Die AOA-Werte stehen entlang der x-Achse und die GJT-Werte entlang der y-Achse, da es plausibler ist, dass das Erwerbsalter die Grammatikalitätsurteile beeinflusst als umgekehrt.\\label{fig:dekeyser}", fig.width = 4, fig.height = 2.4, out.width=".7\\textwidth">>=
+ggplot(data = d,
+       aes(x = AOA,
+           y = GJT)) +
+  # 'shape = 1' zeichnet leere Kreischen
+  geom_point(shape = 1) +
+  xlab("Erwerbsalter (Jahre)") +
+  ylab("Ergebnis\nGrammatikalitätsurteile")
+@
+
+Das Streudiagramm zeigt, dass die Leistung beim
+GJT mit steigendem Erwerbsalter allmählich abnimmt.
+Diese Senkung scheint auch ungefähr linear zu sein;
+zum Vergleich zeigt Abbildung \ref{fig:nichtlinear} vier
+deutliche Beispiele von nicht-linearen Zusammenhängen.
+Ausserdem gibt es keine einzelnen
+Punkte, die sehr weit von der Punktwolke entfernt liegen,
+und alle Daten sind plausibel: Es gibt keine 207-Jährigen
+und in \citet{DeKeyser2010} kann man lesen, dass
+das GJT-Instrument aus 204 binären Items bestand.
+Das höchstmögliche Ergebnis von 204 wird hier nicht überschritten.
+
+<<fig.width = 6, fig.height = 1.4, echo = FALSE, fig.cap = "Beispiele von nicht-linearen Zusammenhängen.\\label{fig:nichtlinear}", out.width="\\textwidth">>=
+par(mar = c(3, 4, 2, 1), mgp=c(2,.7,0), tck = -0.01, las = 1, cex = 0.65, cex.main = 1.1)
+par(mfrow = c(1, 4), cex.main = 0.8)
+par(cex = 0.65)
+x <- seq(from = 0.01, to = 10, length.out = 50)
+y1 <- sin(x) + rnorm(50, sd = 0.4) + 5
+plot(x, y1, axes = FALSE, main = "Sinusoid", xlab = "", ylab = "")
+curve(sin(x)+5, add = TRUE)
+
+x2 <- seq(from = 1, to = 100, length.out = 50)
+y2 <- log2(x2) + rnorm(50, sd = 0.5)
+plot(x2, y2, axes = FALSE, main = "logarithmische Zunahme", xlab = "", ylab = "")
+curve(log2(x), add = TRUE)
+
+y3 <- x - ((x-6)*50)^2 + rnorm(50, sd = 14000)
+plot(x, y3, axes = FALSE, main = "Parabel\n(quadratische Funktion)", xlab = "", ylab = "")
+curve(x - ((x-6)*50)^2, add = TRUE)
+
+y4 <- pmin(x - rnorm(50, sd = 1.5), 5.5)
+plot(x, y4, axes = FALSE, main = "Deckeneffekt", xlab = "", ylab = "")
+lines(seq(0, 10, 0.01), pmin(seq(0, 10, 0.01), 5.5))
+@
+
+\section{Zwei Fragen}
+
+Im Folgenden werden wir eine Antwort auf diese beiden Fragen geben:
+\begin{enumerate}
+ \item \emph{Wie perfekt} ist der Zusammenhang zwischen den GJT- und AOA-Variablen?
+ Wie genau `perfekt' in diesem Kontext zu verstehen ist, sollte in Kürze klar werden.
+ Um diese Frage zu beantworten, verwendet man oft \textbf{Korrelationsanalyse}.
+
+ \item \emph{Was} ist der Zusammenhang zwischen den beiden Variablen?
+ Anders gesagt, wenn wir den Wert einer Variablen kennen,
+ \emph{wie} können wir dann den Wert der anderen Variablen schätzen?
+ (\textbf{Regressionsanalyse})
+\end{enumerate}
+
+Beide Fragen werden oft miteinander verwechselt, was manchmal zu
+Verwirrungen führt \citep[siehe][]{Vanhove2013}. Zwei Beispiele, um den
+Unterschied klar zu machen:
+\begin{itemize}
+ \item Wenn man die Temperatur in Grad Celsius kennt, kann man die Temperatur in Grad Fahrenheit perfekt `schätzen':
+ Die Korrelation ist also äusserst stark (Frage 1). Damit wissen wir aber noch nicht, wie wir die Temperatur in Grad Fahrenheit berechnen können, wenn wir die Temperatur in Grad Celsius kennen. Eine Regressionsanalyse würde zeigen, dass wir dazu die folgende Formel anwenden müssten:
+\begin{equation}\label{eq:fahrenheit}
+ \textrm{Grad Fahrenheit} = 32 + \frac{9}{5} \cdot \textrm{Grad Celsius}.
+\end{equation}
+\item Wenn man die Körpergrösse eines Menschen kennt, kann man
+sein Gewicht wesentlich besser schätzen, als wenn man die
+Körpergrösse nicht kennt. Die Schätzung ist aber nicht perfekt,
+denn Menschen mit der gleichen Körpergrösse variieren ja in ihrem Gewicht.
+Die Korrelation ist folglich zwar positiv, aber nicht so hoch wie im letzten
+Beispiel (Frage 1). Um zu wissen, wie man das Gewicht am besten
+anhand der Grösse schätzt (z.B.\ $\textrm{Gewicht in kg} = 0.6 \cdot \textrm{Grösse in cm} - 40 \textrm{~kg}$ für Frauen zwischen 145 und 185 cm), braucht es Regressionsanalyse.
+\end{itemize}
+
+Die zweite Frage ist m.E.\ in der Regel (nicht immer!) viel sinnvoller.
+In unserem Beispiel wäre das Ziel also, eine Gleichung
+wie Gleichung \ref{eq:fahrenheit} zu finden, anhand derer
+man Unterschiede im GJT-Ergebnis mit Unterschieden
+im AOA verknüpfen kann. Um diese Gleichung zu finden,
+brauchen wir zuerst aber eine Antwort auf die erste Frage.
+
+\paragraph{Nicht-lineare Zusammenhänge.}
+Korrelation- und Regressionsanalyse
+können sinnvoll sein, um lineare Zusammenhänge zu
+untersuchen. Ist der Zusammenhang zwischen
+den Variablen nicht \emph{ungefähr} gerade, dann kann
+man die Berechnung noch immer ausführen.
+Diese würde dann aber sinnlose (nicht `falsche'!) Ergebnisse liefern.
+Bei einem verantwortungsvollen Umgang mit quantitativen Forschungsdaten
+sollte die Frage der \textbf{Relevanz} immer im Vordergrund stehen.
+
+Manchmal kann man übrigens
+Daten sinnvoll transformieren, sodass der Zusammenhang
+linear wird (Beispiele in etwa \citealp{Baayen2008} und \citealp{Gelman2007}).
+Ist dies nicht möglich, dann dürften komplexere Verfahren
+geeignet sein. Siehe hierzu \citet{Clark2018}, \citet{Wieling2018} und \citet{Baayen2020}.
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Empfehlung: Fragen und Werkzeuge.}
+Korrelations-, Regressions- und sonstige Analysen,
+Modelle und Tests sind lediglich Werkzeuge. Je nach
+Fragestellung sind diese Werkzeuge nützlich oder nutzlos.
+Anstatt sich etwa vorzunehmen, eine Korrelationsanalyse
+oder einen $t$-Test durchzuführen (vielleicht, weil dies
+in einer bestimmten Forschungsliteratur gang und gäbe ist),
+ist es sinnvoller, die Frage ohne ablenkenden
+technischen Wortschatz (z.B.\ 
+\textit{Korrelation}, \textit{signifikant}, \textit{Interaktion})
+zu formulieren und sich dann zu überlegen, welches Werkzeug
+für deren Beantwortung am nützlichsten ist.
+Das Ziel einer Datenerhebung und einer Analyse ist es,
+eine Frage zu beantworten, nicht ein bestimmtes Werkzeug zu benutzen.
+\end{framed}
+
+\section{Antwort auf Frage 1: Kovarianz und Korrelation}
+
+\subsection{Kovarianz}
+Um numerisch zu beschreiben, wie stark zwei Variablen
+miteinander zusammenhängen, brauchen wir ein Mass,
+dessen absoluter Wert gross ist, wenn kleine Unterschiede
+in $x$ mit kleinen Unterschieden in $y$ zusammenhängen
+und grosse Unterschiede in $x$ mit grossen Unterschieden
+in $y$, und dessen absoluter Wert klein ist, wenn grosse
+Unterschiede in der einen Variablen mit nur kleinen Unterschieden
+in der anderen Variablen zusammenhängen. Ein solches Mass
+ist die Kovarianz:
+\begin{equation}\label{eq:covariance}
+\textrm{Cov}(x, y) = \frac{1}{n-1} \sum_{i = 1}^{n} (\bar{x} - x_i)(\bar{y}-y_i).
+\end{equation}
+
+Die Summe der Produkte ($\sum(\bar{x} - x_i)(\bar{y}-y_i)$) wird durch
+$n-1$ statt durch $n$ geteilt aus dem gleichen Grund, weshalb
+dies bei der Varianzberechnung gemacht wird. Eine intuitivere
+Erklärung ist, dass man ja nicht über den Zusammenhang von zwei
+Variablen sprechen kann, wenn man nur eine Beobachtung pro Variable
+hat. Das Streudiagramm würde dann nur einen Punkt zeigen.
+Wenn $n = 1$, ist $n-1=0$ und dann ergibt die Gleichung keine Antwort,
+denn durch 0 kann nicht geteilt werden.
+
+In R:
+<<>>=
+# kompliziert:
+sum((mean(d$AOA) - d$AOA) * (mean(d$GJT) - d$GJT)) / (nrow(d) - 1)
+
+# einfacher:
+cov(d$AOA, d$GJT)
+@
+
+Ist die Kovarianz positiv, dann besteht ein
+positiver linearer Zusammenhang zwischen den beiden
+Variablen (je grösser $x$, desto grösser $y$);
+ist die Kovarianz negativ, dann gibt es einen negativen linearen
+Zusammenhang (je grösser $x$, desto kleiner $y$).
+Abgesehen von diesen zwei Richtschnuren ist das
+Kovarianzmass schwierig zu interpretieren, weshalb
+Sie es in der Literatur nur selten antreffen
+werden. Aber Kovarianz ist ein wichtiges Konzept in der
+Mathe hinter komplexeren Verfahren,
+weshalb es sich trotzdem lohnt, zumindest zu wissen,
+dass es besteht.
+
+\paragraph{Aufgabe 1.} Seien $x$ und $y$ zwei numerische Variablen.
+Macht es etwas aus, ob man
+$\textrm{Cov}(x,y)$ oder $\textrm{Cov}(y,x)$ berechnet? Beantworten Sie diese Frage,
+indem Sie sich Formel \ref{eq:covariance} genauer anschauen.
+
+\paragraph{Aufgabe 2.} Was ist die Kovarianz zwischen $x$ und $y$, wenn
+es zwar unterschiedliche $x$-Werte gibt, aber alle $y$-Werte einander gleich sind?
+Beantworten Sie diese Frage,
+indem Sie sich Formel \ref{eq:covariance} genauer anschauen.
+
+\paragraph{Aufgabe 3.} Sei $x$ eine numerische Variable. Was berechnen Sie
+eigentlich genau, wenn Sie $\textrm{Cov}(x,x)$ berechnen?
+Beantworten Sie diese Frage,
+indem Sie sich Formel \ref{eq:covariance} genauer anschauen.
+
+\subsection{Korrelation}
+Da das Kovarianzmass nicht einfach zu interpretieren ist,
+wird meistens Pearsons \textbf{Produkt-Moment-Korrelationskoeffizient}
+($r$) (oder einfach Pearsons Korrelation) verwendet.
+Diese Zahl drückt aus, wie gut der Zusammenhang durch eine gerade Linie
+beschrieben werden kann. Es wird ähnlich zum Kovarianzmass
+berechnet, aber die Variablen werden in Standardabweichungen zum
+Stichprobemittel ausgedrückt. Dies ergibt dann immer eine Zahl
+zwischen $-1$ und $1$:
+\[
+r_{xy} = \frac{1}{n-1} \sum_{i = 1}^{n} \frac{\bar{x} - x_i}{s_x} \frac{\bar{y}-y_i}{s_y} = \frac{\textrm{Cov}(x, y)}{s_x s_y}.
+\]
+<<>>=
+# kompliziert:
+cov(d$AOA, d$GJT) / (sd(d$AOA) * sd(d$GJT))
+
+# einfach:
+cor(d$AOA, d$GJT)
+@
+
+Sobald irgendein Wert fehlt, ergibt die \texttt{cor()}-Funktion
+das Ergebnis `NA` (\textit{not available}). Eine Möglichkeit
+ist dann, die Beobachtungen mit einem oder zwei fehlenden Werten zu ignorieren:
+<<>>=
+cor(d$AOA, d$GJT, use = "pairwise.complete.obs")
+@
+Ist $r = 1$, dann liegen alle Datenpunkte perfekt auf einer geraden, steigenden Linie.
+Dies deutet fast ausnahmslos auf eine Tautologie hin.
+Zum Beispiel sind Körpergrössen in Zentimetern und in Zoll perfekt korreliert,
+aber dieser Zusammenhang ist nicht spektakulär sondern höchst langweilig.
+Ist $r = -1$, dann liegen alle Datenpunkte auf einer geraden, senkenden Linie.
+Dies deutet wohl darauf hin, dass die beiden Variablen perfekt komplementär sind.
+Zum Beispiel wird die Anzahl richtiger Antworten bei einem Test oft zu $r = -1$ mit der Anzahl falscher Antworten korrelieren; auch dies ist wenig spektakulär.
+Ist $r = 0$, dann ist die Linie perfekt senkrecht, d.h., es gibt überhaupt keinen linearen Zusammenhang zwischen den beiden Variablen.
+Je grösser der absolute Wert von $r$, desto näher befinden sich die Datenpunkte bei der geraden Linie.
+Anders ausgedrückt: Je grösser der absolute $r$-Wert, desto präziser kann man $y$ bestimmen, wenn man $x$ schon kennt (und umgekehrt) als wenn man $x$
+nicht gekannt hätte.
+% Die Korrelation zwischen $x$ und $y$ ist gleich der Korrelation zwischen $y$ und $x$.
+% Es macht also nichts aus, ob man \texttt{cor(dat\$AOA, dat\$GJT)} oder \texttt{cor(dat\$GJT, dat\$AOA)} eintippt.
+
+Abbildung \ref{fig:correlation} zeigt vier Zusammenhänge,
+um die Bedeutung von Pearsons $r$ besser zu illustrieren.
+\begin{itemize}
+\item \textit{Oben links:} Es gibt wenig Streuung entlang der $y$-Achse.
+Die Streuung, die es gibt, wird grösstenteils von einer Geraden erfasst.
+$r$ ist daher sehr hoch.
+\item \textit{Oben rechts:} Es gibt nun mehr Streuung entlang der $y$-Achse;
+diese wird aber weniger gut von einer Geraden erfasst, daher der niedrigere Korrelationskoeffizient.
+Die Form der Geraden ist zwar gleich wie in der linken Grafik, der Korrelationskoeffizient aber nicht.
+\item \textit{Unten links:} Es gibt zwar sehr viel Streuung entlang der $y$-Achse, aber diese wird grösstenteils von einer Geraden erfasst. $r$ ist daher wiederum sehr hoch. Der Korrelationskoeffizient ist zwar gleich wie in der Grafik oberhalb,
+die Form der Geraden aber nicht.
+\item \textit{Unten rechts:} Die gleiche Gerade erfasst die Streuung entlang der $y$-Achse weniger gut, daher ist die Form der Geraden zwar gleich, der Korrelationskoeffizient aber niedriger.
+\end{itemize}
+
+<<fig.width = 3.5, fig.height = 3.5, echo = FALSE, fig.cap = "Korrelationskoeffizienten erzählen einem wenig über die Form eines Zusammenhangs.\\label{fig:correlation}", out.width=".5\\textwidth">>=
+par(mar = c(3, 4, 2, 1), mgp=c(2,.7,0), tck = -0.01, las = 1, cex = 0.65, cex.main = 1.1)
+par(mfrow = c(2,2), cex.main = 0.9)
+par(cex = 0.65, cex.main = 1)
+set.seed(15926)
+x <- 1:30
+noise <- rnorm(30,sd=3.5)
+y1 <- 15 + 1*x + noise
+y2 <- 15 + 1*x + 4*noise
+y3 <- 15 + 5*x + 5*noise
+y4 <- 15 + 5*x + 20*noise
+
+plot(x,y1,xlim=range(x),
+ylim=range(y4),ylab="y",
+main=paste("y = 15 + x, r = ", round(cor(x,y1),2),sep=""))
+abline(a=15, b=1)
+
+plot(x,y2,xlim=range(x),
+ylim=range(y4),ylab="y",
+main=paste("y = 15 + x, r = ", round(cor(x,y2),2),sep=""))
+abline(a=15, b=1)
+
+plot(x,y3,xlim=range(x),
+ylim=range(y4),ylab="y",
+main=paste("y = 15 + 5x, r = ", round(cor(x,y3),2),sep=""))
+abline(a=15, b=5)
+
+plot(x,y4,xlim=range(x),
+ylim=range(y4),ylab="y",
+main=paste("y = 15 + 5x, r = ", round(cor(x,y4),2),sep=""))
+abline(a=15, b=5)
+@
+\subsubsection{Welche Frage beantwortet $r$ (und welche nicht)?}
+Wie wir gerade gesehen haben, drückt Pearsons $r$ aus,
+welcher Anteil der Streuung der Datenpunkte in einer Punktwolke durch
+eine \emph{gerade Linie} erfasst wird.
+Es gibt keine direkte Antwort auf die Frage, wie diese Linie ausschaut
+(ausser: steigend oder senkend);
+siehe die vier obigen Beispiele.
+
+Ausserdem ist es möglich, dass es einen sehr starken (nicht-linearen) Zusammenhang zwischen zwei Variablen gibt,
+dieser aber in Pearsons $r$ nicht zum Ausdruck kommt (Abbildung \ref{fig:nonlinearcorrelation}, links).
+Umgekehrt kann $r$ den Eindruck geben, dass es sich um einen ziemlich starken linearen Zusammenhang handelt, während ein solcher Zusammenhang für die meisten Datenpunkte kaum vorliegt (Mitte),
+oder während der Zusammenhang sogar eigentlich in die umgekehrte Richtung geht.
+So gibt es in der rechten Grafik zwei Gruppen, in denen der Zusammenhang negativ ist.
+Der Koeffizient ist jedoch positiv, wenn die beiden Gruppen gleichzeitig betrachtet werden.
+Das Problem ist hier nicht, dass $r$ falsch berechnet wird,
+sondern, dass die Berechnung von $r$ hier kaum Sinn ergibt.
+Bevor man sich mit der Richtigkeitsfrage auseinandersetzt,
+sollte man sich eben zuerst mit der Relevanzfrage befassen.
+
+<<fig.width = 5, fig.height = 1.5, echo = FALSE, fig.cap = "Ein Korrelationskoeffizient nahe 0 muss nicht heissen, dass es keinen Zusammenhang zwischen den Variablen gibt, und ein Korrelationskoeffizient nahe 1 muss nicht heissen, dass das Muster in den Daten am besten durch einen starken positiven Zusammenhang beschrieben wird.\\label{fig:nonlinearcorrelation}", out.width=".9\\textwidth">>=
+par(mar = c(3, 4, 2, 1), mgp=c(2,.7,0), tck = -0.01, las = 1, cex = 0.65, cex.main = 1.1)
+par(mfrow = c(1, 3), cex.main = 0.9)
+par(cex = 0.65, cex.main = 1)
+x <- seq(-2*pi, pi, by = 0.2)
+y1 <- sin(x) + rnorm(length(x), sd = 0.15)
+x <- (x - min(x))/(max(x)-min(x))
+y1 <- (y1 - min(y1))/(max(y1)-min(y1))
+plot(x, y1, ylab="", xlab="",
+main=paste("r = ", round(cor(x,y1),2),sep=""))
+
+x <- c(seq(1, 20, by = 2), 80)
+y1 <- sin(x) + rnorm(length(x), sd = 2)
+y1[length(y1)] <- 100
+x <- (x - min(x))/(max(x)-min(x))
+y1 <- (y1 - min(y1))/(max(y1)-min(y1))
+plot(x, y1, ylab="", xlab="",
+main=paste("r = ", round(cor(x,y1),2),sep=""))
+
+x <- c(seq(1, 30, by = 3), seq(81, 100, length.out = 10))
+y2 <- 5-2*x + rnorm(length(x), sd = 8)
+y2[11:20] <- 500-2*x[11:20] + rnorm(10, sd = 8)
+x <- (x - min(x))/(max(x)-min(x))
+y2 <- (y2 - min(y2))/(max(y2)-min(y2))
+plot(x, y2, ylab="", xlab="",
+main=paste("r = ", round(cor(x,y2),2),sep=""))
+@
+
+Mit der \texttt{plot\_r()}-Funktion im \texttt{cannonball}-Paket
+können Sie selber Streudiagramme zeichnen, die alle anders aussehen,
+aber den gleichen Korrelationskoeffizienten haben.
+Unter \url{https://github.com/janhove/cannonball} finden Sie
+Anweisungen, wie Sie dieses Paket installieren können.
+Der Blogeintrag \href{https://janhove.github.io/teaching/2016/11/21/what-correlations-look-like}{\textit{What data patterns can lie behind a correlation coefficient?}} (21.11.2016)
+beschreibt die \texttt{plot\_r()}-Funktion.
+Abbildung \ref{fig:plotr} zeigt 16 Zusammenhänge mit je 50 Beobachtungen, die
+alle eine Korrelation von $r = -0.72$ aufzeigen:
+<<fig.width = .8*10, fig.height = .8*10, echo = TRUE, fig.cap = "Alle sechzehn Zusammenhänge zeigen eine Korrelation von $-0.72$ auf, sehen jedoch zum Teil ganz unterschiedlich aus.\\label{fig:plotr}", out.width="\\textwidth">>=
+library(cannonball)
+plot_r(n = 50, r = -0.72)
+@
+Spielen Sie mit der \texttt{plot\_r()}-Funktion herum,
+um besser zu verstehen, was ein Korrelationskoeffizient eben alles nicht bedeutet
+und was der Einfluss von nicht-linearen Zusammenhängen und Ausreissern sein kann:
+<<eval = FALSE>>=
+plot_r(n = 15, r = 0.9)
+plot_r(n = 80, r = 0.0)
+plot_r(n = 30, r = 0.4)
+@
+Die Funktionsdokumentation können Sie wie gehabt abrufen:
+<<eval = FALSE>>=
+?plot_r
+@
+
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Merksatz: Ein Korrelationskoeffizient kann einer Vielzahl von Zusammenhängen entsprechen.}
+Schauen Sie sich, bevor Sie Korrelationskoeffizienten berechnen, immer die Daten \textbf{grafisch}
+(Streudiagramm) an.
+Nehmen Sie diese Streudiagramme in Ihre Papers, Arbeiten und Vorträge auf.
+Ein Korrelationskoeffizient ohne Streudiagramm ist m.E.\ wertlos.
+\end{framed}
+
+\subsubsection{Andere Korrelationsmasse}
+Ab und zu trifft man in der Forschungsliteratur
+Spearmans $\rho$-Koeffizienten (oder manchmal: $r_s$) an.
+Hierfür drückt man die Daten in \textbf{Rängen} aus,
+d.h., man ordnet die Daten von klein nach gross und schaut,
+auf welchem Platz die einzelnen Datenpunkte stehen.
+Der Datenpunkt auf Rang 1 ist übrigens der niedrigste Datenpunkt,
+das heisst, die Reihenfolge der ursprünglichen Werte wird behalten und nicht umgedreht.
+Dann berechnet man einfach die Pearsonkorrelation für die Ränge statt für die Rohwerte:
+<<>>=
+cor(rank(d$AOA), rank(d$GJT))
+
+# einfacher:
+cor(d$AOA, d$GJT, method = "spearman")
+@
+
+Spearmans $\rho$ kann nützlich sein, wenn der Zusammenhang zwischen zwei Variablen monoton aber nicht-linear ist (Monoton heisst: Tendenziell steigend oder tendenziell senkend; nicht etwa zuerst steigend und dann senkend.) oder wenn ein \textbf{Ausreisser} das Globalbild zerstört, aber man ihn aus irgendwelchem Grund nicht aus dem Datensatz entfernen kann.
+Wenn Spearmans $\rho = 1$, dann ist der Zusammenhang perfekt monoton steigend (höhere Werte
+in $x$ entsprechen immer höheren Werten in $y$),
+wenn Spearmans $\rho = -1$, dann ist der Zusammenhang perfekt monoton senkend,
+und wenn $\rho = 0$, dann gibt es keinen monotonen Zusammenhang in den Daten.
+Bemerken Sie, dass man mit $\rho$ eine andere Frage beantwortet als mit $r$:
+\textit{Wie perfekt ist der monotone Zusammenhang?} vs. \textit{Wie perfekt ist der lineare Zusammenhang?}
+
+Ein anderes Mass ist Kendalls $\tau$ (\texttt{method = "kendall"}).
+Dieses wird aber nur höchst selten verwendet. Die Berechnung ist
+konzeptuell relativ einfach \citep[siehe][]{Noether1981}, aber schaut in R-Code schwierig aus,
+weshalb ich sie hier nur in Worten zusammenfasse:
+
+\begin{enumerate}
+ \item Vergleiche jeden $x$-Wert mit jedem anderen $x$-Wert und
+ notiere, ob Ersterer grösser oder kleiner als Letzterer ist.
+ Wenn die $x$-Werte zum Beispiel 5, 3, 8 und 7 sind,
+ erhält man folgende Vergleiche:
+ \begin{itemize}
+  \item 5 vs.\ 3: grösser,
+  \item 5 vs.\ 8: kleiner,
+  \item 5 vs.\ 7: kleiner,
+  \item 3 vs.\ 8: kleiner,
+  \item 3 vs.\ 7: kleiner,
+  \item 8 vs.\ 7: grösser.
+ \end{itemize}
+ \item Vergleiche jeden $y$-Wert mit jedem anderen $y$-Wert.
+ Für die $y$-Werte 8, $-2$, $-4$, $-3$ erhält man:
+ grösser, grösser, grösser, grösser, grösser, kleiner.
+ \item Zähle, wie viele Vergleiche in die gleiche
+ Richtung gehen:
+ \begin{itemize}
+  \item 1.~Vergleich: grösser--grösser: gleich,
+  \item 2.~Vergleich: kleiner--grösser: anders,
+  \item 3.~Vergleich: kleiner--grösser: anders,
+  \item 4.~Vergleich: kleiner--grösser: anders,
+  \item 5.~Vergleich: kleiner--grösser: anders,
+  \item 6.~Vergleich: grösser--kleiner: anders.
+ \end{itemize}
+ Also 1 Vergleich, der in die gleiche Richtung geht (`konkordant'),
+ und 5, die in die andere Richtung gehen (`diskordant').
+ \item Schätze jetzt Kendalls $\tau$ wie folgt:
+ \begin{equation*}
+ \hat{\tau} = \frac{\textrm{Anzahl konkordant} - \textrm{Anzahl diskordant}}{\textrm{Anzahl Vergleiche}}.
+ \end{equation*}
+ Das Hütchen zeigt, dass wir es mit einer Schätzung auf der Basis
+ einer Stichprobe zu tun haben.
+ Also:
+  \begin{equation*}
+ \hat{\tau} = \frac{1 - 5}{6} = -0.67.
+ \end{equation*}
+\end{enumerate}
+
+<<>>=
+# Für unser kleines Beispiel
+x <- c(5, 3, 8, 7)
+y <- c(8, -2, -4, -3)
+cor(x, y, method = "kendall")
+
+# Für die AOA-GJT-Daten
+cor(d$AOA, d$GJT, method = "kendall")
+@
+
+Kendalls $\hat{\tau}$ schätzt den Unterschied zwischen
+der Proportion konkordanter Vergleiche und der Proportion
+diskordanter Vergleiche. Diese Interpretation finde ich
+selber schwierig, aber es gibt eine einfachere Interpretation:
+Nimm zwei beliebige $(x, y)$-Paare (also ($x_1, y_1$) und ($x_2, y_2$)).
+Wenn $x_2$ grösser ist als $x_1$, dann ist es $\frac{1 + \hat{\tau}}{1 - \hat{\tau}}$
+Mal wahrscheinlicher, dass auch $y_2$ grösser als $y_1$ ist als dass er kleiner ist.
+Für die AOA--GJT-Daten: Wenn eine Person einen höheren AOA-Wert als
+eine andere hat, dann ist es $\frac{1+(-0.60)}{1-(-0.60)} = 0.25$ Mal
+wahrscheinlicher, dass sie auch einen höheren GJT-Wert als einen kleineren hat.
+Oder anders gesagt: Es ist 4 Mal wahrscheinlicher, dass sie einen kleineren GJT-Wert
+als einen grösseren hat.
+
+In der Praxis ist die Anwendung von Spearmans $\rho$ und Kendalls
+$\tau$ ist eher beschränkt.
+Statt automatisch auf $\rho$ oder $\tau$ zurückzugreifen,
+wenn ein Zusammenhang nicht-linear ist
+oder wenn man einen Ausreisser vermutet,
+lohnt es sich m.E.\ eher, darüber nachzudenken,
+ob (a) man sich tatsächlich für Frage 1
+(Stärke des Zusammenhangs) interessiert (die Relevanzfrage),
+(b) man eine oder beide Variablen nicht
+sinnvoll transformieren kann, sodass
+sich ein linearerer Zusammenhang ergibt,
+oder (c) der vermutete Ausreisser
+überhaupt ein legitimer Datenpunkt ist.
+
+\subsubsection{Starke und schwache Korrelationen}
+Korrelationskoeffizienten werden oft---ohne
+Berücksichtigung der Forschungsfrage oder des
+Kontextes---als klein, mittelgross oder gross
+eingestuft. Ich halte dies für wenig sinnvoll,
+weshalb ich diese Einstufungen hier nicht
+reproduziere.
+% Wer mehr über sie erfahren möchte,
+% kann sich bei \citet{Cohen1992} und \citet{Plonsky2014}
+% selber schlau machen. Dazu empfiehlt sich auch
+% die Lektüre von \citet{Baguley2009}.
+Selber finde ich, dass
+Korrelationskoeffizienten überverwendet werden.
+Blogeinträge zu diesem Thema:
+\begin{itemize}
+\item \href{https://janhove.github.io/reporting/2015/02/05/standardised-vs-unstandardised-es}{\textit{Why I don't like standardised effect sizes}} (5.2.2015)
+\item \href{https://janhove.github.io/design/2015/03/16/standardised-es-revisited}{\textit{More on why I don't like standardised effect sizes}} (16.3.2015)
+\item \href{https://janhove.github.io/design/2017/07/14/OtherRoadsToPower}{\textit{Abandoning standardised effect sizes and opening up other roads to power}} (14.7.2017)
+\end{itemize}
+Siehe weiter auch \citet{Baguley2009}.
+
+\subsection{Die Ungenauigkeit eines Korrelationskoeffizienten einschätzen}
+Da sie auf der Basis von Stichproben berechnet werden,
+sind auch Korrelationskoeffizienten vom Stichprobenfehler betroffen:
+Andere Stichproben aus der gleichen Population werden Korrelationskoeffizienten
+ergeben, die mehr oder weniger voneinander abweichen.
+Die Ungenauigkeit bzw.\ die Variabilität eines auf einer Stichprobe
+basierenden Korrelationskoeffizienten kann in einem Konfidenzintervall
+ausgedrückt werden. Besprochen werden hier eine Bootstrap-Methode
+und eine Methode, die auf $t$-Verteilungen basiert.
+
+\paragraph{Mit dem Bootstrap.}\label{sec:r_bootstrap}
+Das Vorgehen ist analog zum Bootstrap aus Kapitel \ref{ch:uncertainty}:
+Aus der Stichprobe
+werden neue Bootstrap-Stichproben generiert und für jede Stichprobe
+wird die Statistik von Interesse (hier: die Korrelation zwischen AOA und GJT)
+berechnet. Die Streuung der Schätzungen in den Bootstrap-Stichproben
+gibt uns ein Indiz über die Variabilität des Korrelationskoeffizienten
+in Stichproben dieser Grösse.
+<<cache = TRUE>>=
+n_bootstraps <- 20000
+bootstraps <- vector(length = n_bootstraps)
+
+for (i in 1:n_bootstraps) {
+  # Sampling with replacement aus der beobachteten Stichprobe
+  bootstrap_sample <- d |>
+    slice_sample(prop = 1, replace = TRUE)
+
+  # Korrelation im bootstrap sample berechnen und speichern
+  bootstraps[[i]] <- cor(bootstrap_sample$GJT, bootstrap_sample$AOA)
+}
+@
+
+<<eval = FALSE>>=
+# Histogramm mit den Bootstrap-Schätzungen
+# (nicht gezeigt)
+hist(bootstraps, breaks = 20)
+@
+
+Da das Histogramm nicht normalverteilt ist, verzichten
+wir hier auf die Berechnung eines Standardfehlers.
+% (Die Verteilung von Stichproben-Korrelationskoeffizienten
+% kann nicht normalverteilt sein, da Korrelationskoeffizienten
+% zwischen $-1$ und $1$ begrenzt sind.)
+Anhand der Perzentile der Verteilung können wir aber durchaus
+ein Konfidenzintervall konstruieren. Hier berechne ich
+ein 90\%-Konfidenzintervall:
+<<>>=
+quantile(bootstraps, probs = c(0.05, 0.95))
+@
+
+\medskip
+\begin{framed}
+\noindent \textbf{Einschub: 80, 90, 95?}
+Mittlerweile fragen Sie sich vielleicht, wieso wir
+mal ein 80\%-Konfidenzintervall berechnen,
+mal ein 90\%-Konfidenzintervall und mal ein
+95\%-Konfidenzintervall. Das ist lediglich mein
+Versuch, Ihnen zu zeigen, dass die übliche Wahl von
+95\% recht arbiträr ist. Zum gleichen Zweck
+berechnet \citet{McElreath2020} immer 89\%-Intervalle!
+\end{framed}
+
+\paragraph{Mit $t$-Verteilungen.}
+Die Formel, mit der man anhand von einer $t$-Verteilung
+ein Konfidenzintervall um einen Korrelationskoeffizienten
+konstruiert, werde ich hier nicht reproduzieren, da sie
+erstens abschreckt und zweitens keinen konzeptuellen
+Mehrwert bietet. Sie basiert auf der Annahme, dass
+die Population, aus der die beiden Variablen gezogen wurden,
+`bivariat normal' ist. Grundsätzlich heisst dies, dass---insofern
+es einen Zusammenhang zwischen den Variablen gibt---dieser Zusammenhang
+linear ist und beide Variablen normalverteilt sind.
+Wenn diese Annahmen plausibel sind,
+kann das Konfidenzinterval (hier wiederum ein 90\%-Konfidenzintervall)
+mit der \texttt{cor.test()}-Funktion berechnet werden:
+<<>>=
+cor.test(d$AOA, d$GJT, conf.level = 0.9)
+@
+
+Mit dieser Methode erhalten wir ein 90\%-Konfidenzintervall
+von $[-0.86, -0.72]$. Dieses unterscheidet sich nur minimal
+vom Konfidenzintervall, das wir mit dem Bootstrap berechnet haben.
+Beim Bootstrap sind wir jedoch nicht davon ausgegangen, dass
+die Population, aus der die Stichprobe stammt, bivariat normalverteilt war.
+Insbesondere bei kleineren Stichproben können die Ergebnisse
+der Bootstrap- und der $t$-Methode erheblich voneinander abweichen.
+Wenn ihre Annahmen stimmen, ist die $t$-Methode in solchen Fällen zweifellos
+besser, aber gerade bei kleinen Stichproben sind diese Annahmen schwierig
+zu überprüfen.
+Die Leistung der Bootstrapmethode kann noch etwas verbessert
+werden, indem die Konfidenzintervalle anders konstruiert werden
+\citep[siehe hierzu][]{DiCiccio1996}, aber diese Konstruktionsmethoden
+sind schwieriger und weniger intuitiv.
+Für unsere Zwecke reicht es
+m.E., die Warnung von \citet{Hesterberg2015} zu wiederholen:
+``Bootstrapping does not overcome the weakness of small samples
+as a basis for inference.'' (S. 379)
+
+Was `$t = -11.6$' und '$\textrm{p-value} < 2.2\textrm{e}-16$' heissen,
+werden wir in einem späteren Kapitel besprechen.
+
+\paragraph{Konfidenzintervalle um Korrelationskoeffizienten rekonstruieren?}
+Das Konfidenzintervall um einen Korrelationskoeffizienten
+hängt von nur drei Faktoren ab:
+\begin{itemize}
+ \item ob das Konfidenzintervall ein 50\%-, 80\%-, 87\%- usw.-Konfidenzintervall sein soll;
+ \item dem Korrelationskoeffizienten selber;
+ \item der Anzahl beobachteter Paare.
+\end{itemize}
+Wenn man weiss, was der Korrelationskoeffizient ist, und wie gross die Stichprobe
+war, kann man also selber das Konfidenzintervall berechnen.
+Selber finde ich dies nützlich, wenn das Konfidenzintervall um $r$ in
+einer Studie nicht berichtet wurde. Mit der Funktion \texttt{r.test()}
+aus dem \texttt{psych}-Package ist dies ein Kinderspiel, allerdings
+werden nur 95\%-Konfidenzintervalle berechnet.
+Gegebenenfalls müssen Sie das \texttt{psych}-Paket noch installieren.
+<<>>=
+psych::r.test(r12 = -0.80, n = 76)
+@
+Übrigens: Mit der Notation \texttt{psych::r.test()} brauchen Sie das
+\texttt{psych}-Package nicht mit dem Befehl \texttt{library(psych)} zu laden.
+Dies ist nützlich, wenn man aus einem Paket eh nur eine Funktion
+braucht.
+
+Das 95\%-Konfidenzintervall eines Korrelationskoeffizienten
+von $r = -0.80$ in einer Stichprobe mit 76 Datenpunkten ist also
+$[-0.87, -0.70]$. Dabei gehen wir zwar davon aus, dass die Stichprobe
+aus einer bivariaten Normalverteilung stammt, aber bei 76 Beobachtungen
+würden andere Methoden wohl ein sehr ähnliches Ergebnis liefern.
+
+Falls Sie lieber 80\%- oder 90\%-Konfidenzintervalle
+um Korrelationskoeffizienten berechnen, können Sie die
+unten stehende Funktion übernehmen. Sie kreiert mithilfe
+der \texttt{plot\_r()}-Funk\-tion aus dem \texttt{cannonball}-Package
+einen Datensatz mit den gewünschten Merkmalen und berechnet dann
+das Konfidenzintervall um den Korrelationskoeffizienten in diesem Datensatz.
+Auch die von dieser Funktion
+berechneten Konfidenzintervalle basieren auf der
+Annahme, dass die Daten aus einer bivariaten Normalverteilung
+stammen.
+<<>>=
+ci_r <- function(r, n, conf_level = 0.90) {
+  dat <- cannonball::plot_r(r = r, n = n, showdata = 1, plot = FALSE)
+  ci <- cor.test(dat$x, dat$y, conf.level = conf_level)$conf.int[1:2]
+  ci
+}
+
+# 95%-Konfidenzintervall
+ci_r(r = -0.80, n = 76, conf_level = 0.95)
+# 80%-Konfidenzintervall
+ci_r(r = -0.80, n = 76, conf_level = 0.80)
+# 50%-Konfidenzintervall
+ci_r(r = -0.80, n = 76, conf_level = 0.50)
+@
+
+\subsection{Aufgaben zu Korrelationskoeffizienten}
+  Es gibt mittlerweile
+  eine ausführliche Literatur zur Frage, inwieweit Zweisprachigkeit zu kognitiven
+  Vorteilen führt. Ein kognitives \textbf{Konstrukt}, das oft in diesem Zusammenhang erwähnt
+  wird, ist die kognitive Kontrolle. Dieses Konstrukt lässt sich nur indirekt
+  messen, nämlich mithilfe von kognitiven Tests: Die Leistung beim Test ist
+  nicht die kognitive Kontrolle einer Person, sondern lediglich ein imperfekter
+  \textbf{Indikator} hierfür. Wenn unterschiedliche Indikatoren von kognitiver Kontrolle
+  stark miteinander korrelieren, ist es aber wahrscheinlicher, dass sich Befunde,
+  die auf dem einen Indikator basieren, auch zu anderen Indikatoren generalisieren lassen.
+
+  Die Datei \texttt{poarch2018.csv} enthält Angaben zu zwei kognitiven Tests,
+  von denen angenommen wird, dass sie Indikatoren von kognitiver Kontrolle sind:
+  dem Flanker-Test \citep{Eriksen1974} und dem Simon-Test \citep{Simon1969b}.
+  In beiden Tests müssen die Versuchspersonen manchmal irrelevante Informationen ignorieren.
+  Die Daten stammen aus einer kleinen Studie von \citet{Poarch2018}, in der den
+  Probanden beide Tests vorgelegt wurden.
+  Die Ergebnisse stellen dar, wie viel schneller die Versuchspersonen reagierten, wenn die
+  irrelevante In\-for\-ma\-tion `kongruent' mit der relevanten Information ist als, wenn
+  die irrelevante Information `inkongruent' mir der relevanten Information ist.
+  Ausgedrückt werden die Angaben in Stimuli pro Sekunde; ein Wert von 0.5 heisst also,
+  dass die Versuchsperson in einer kongruenten Testsituation
+  5 Stimuli mehr bewältigen kann pro 10 Sekunden,
+  als bei einer inkongruenten Testsituation.\label{aufgabe:poarch}
+
+  \begin{enumerate}
+  \item Lesen Sie diesen Datensatz ein.
+  \item Stellen Sie den Zusammenhang zwischen den Variablen \texttt{Flanker} und \texttt{Simon} grafisch dar.
+  \item Berechnen Sie den Korrelationskoeffizienten, insofern Sie dies für sinnvoll halten.
+  \item Berechnen Sie gegebenfalls das 90\%-Konfidenzintervall, und zwar sowohl anhand des Bootstraps als auch
+      mit der $t$-Verteilung.
+  \item Fassen Sie Ihre Befunde schriftlich zusammen (höchstens drei Sätze).
+  \end{enumerate}
+
+\section{Antwort auf Frage 2: Regression}
+Es ist klar, dass es im Datensatz \texttt{dekeyser2010.csv}
+einen Zusammenhang zwischen AOA und GJT gibt.
+Eine senkende gerade Linie erfasst die Tendenz in den
+GJT-Daten schon ziemlich gut. Aber wie schaut diese Linie genau aus?
+Wir könnten zwar von Hand eine Gerade durch die Punktwolke
+ziehen, aber jeder zieht die Linie wohl an einer etwas anderen Stelle,
+siehe Abbildung \ref{fig:differentregressions}.
+Eine prinzipiellere Herangehensweise wäre daher erwünscht.
+
+<<echo = FALSE, fig.cap = "Wenn man von Hand eine gerade Linie durch die Punktwolke ziehen würde, zeichnet jeder die Linie wohl an einer anderen Stelle. Wir können aber Kriterien festlegen, die bewirken, dass alle die gleiche Linie zeichnen.\\label{fig:differentregressions}", fig.width = 4, fig.height = 2.4, out.width=".6\\textwidth">>=
+ggplot(data = d,
+       aes(x = AOA,
+           y = GJT)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept = 200, slope = -1.5) +
+  geom_abline(intercept = 220, slope = -2.0) +
+  geom_abline(intercept = 190, slope = -1.1) +
+  geom_abline(intercept = 175, slope = -0.8) +
+  xlab("Erwerbsalter (Jahre)") +
+  ylab("Ergebnis\nGrammatikalitätsurteile")
+@
+
+\subsection{Die einfache Regressionsgleichung}
+Ähnlich wie im letzten Kapitel können wir eine Gleichung
+aufschreiben, die die Datenpunkte in zwei Teile zerlegt:
+einen systematischen Teil, der die Gemeinsamkeiten zwischen allen Werten ausdrückt,
+und einen unsystematischen Teil, der die individuellen Unterschiede zwischen diesen
+Gemeinsamkeiten und den Werten ausdrückt. Diesmal können
+wir den Zusammenhang zwischen AOA und GJT als eine Gemeinsamkeit
+im Datensatz betrachten. Dieser Zusammenhang scheint linear,
+weshalb er als eine gerade Linie modelliert werden kann:
+\[
+\textrm{Wert} = \textrm{Gemeinsamkeit (inkl. AOA-Zusammenhang)} + \textrm{Abweichung}.
+\]
+
+Eine gerade Linie wird definiert durch
+einen Schnittpunkt ($\beta_0$; dies ist der $y$-Wert, wenn $x = 0$)
+und eine Steigung ($\beta_1$; diese sagt, um
+wie viele Punkte $y$ steigt, wenn $x$ um eine Einheit erhöht wird);
+siehe Abbildung \ref{fig:gerade}.
+
+<<echo = FALSE, fig.cap = "Schnittpunkt und Steigung einer Geraden.\\label{fig:gerade}", fig.width = 4, fig.height = 2.5, out.width = ".6\\textwidth", warning = FALSE>>=
+par(op)
+par(las = 1, bty = "n", mar = rep(0, 4), tck = -0.01, cex = 0.6)
+plot(function(x) -3.2 + 0.7*x, xlab="", ylab="", xaxt = "n", yaxt = "n",
+     xlim = c(-2, 5), ylim = c(-5, 2))
+axis(1, pos=0)
+axis(2, pos=0)
+plotrix::draw.circle(0,-3.2,0.05,nv=100,border="black",col=NA,lty=1,density=NULL,
+  angle=45,lwd=1)
+arrows(x0 = 0.8, x1 = 0.1, y0 = -3.2, length = .12, angle = 20)
+text(x = 1, y = -3.2, expression(beta[0]), cex = 2)
+segments(x0 = 1, x1 = 2, y0 = -3.2+0.7*1, lty = 3)
+segments(x0 = 2, y0 = -3.2+0.7*1, y1 = -3.2+0.7*2, lty = 3)
+text(x = 2.15, y = -3.2+0.7*1.5, '}', cex = 2.5)
+text(x = 2.5, y = -3.2+0.7*1.5, expression(beta[1]), cex = 2)
+@
+
+Egal, wie wir $\beta_0$ und $\beta_1$ wählen: Die Linie $y_i = \beta_0 + \beta_1 x_i$ wird die
+Daten nicht perfekt beschreiben: Es wird noch einen Restfehler ($\varepsilon$) geben.
+Jeder $y$-Wert ($y_1$, $y_2$ etc.) kann also umschrieben werden
+als die Kombination eines systematischen Teils ($\beta_0+\beta_1 x_i$)
+und eines Restfehlers:
+\begin{equation}\label{eq:simpleregression}
+y_i = \beta_0 + \beta_1 x_i + \varepsilon_i.
+\end{equation}
+Diese mathematische Beschreibung ist ein einfaches lineares Modell:
+`einfach', weil $y$ nur eine Funktion einer (statt mehrerer) Variablen ($x$) ist,
+und `linear', weil $y$ als eine Summe (und nicht etwa ein
+Produkt oder etwas Komplexeres) verschiedener Terme modelliert wird.
+
+\subsection{Die Parameter schätzen}
+$\beta_0$ und $\beta_1$ sind die \textbf{Parameter} der einfachen Regressionsgleichung,
+und unsere nächste Aufgabe ist es, diese Parameter so gut wie möglich zu schätzen.
+Dass wir diese Parameter nur schätzen und nicht wissen können, zeigt sich
+in einem Gedankenexperiment: Wenn wir die gleiche Studie nochmals
+unter den gleichen Bedingungen durchführen
+würden, aber mit anderen Teilnehmenden, würde das Streudiagramm ja nicht identisch
+aussehen. Wir würden aber davon ausgehen, dass beide Studien uns Informationen
+über den `wahren' Zusammenhang zwischen AOA und GJT in dieser Population liefern.
+Dieser `wahre' Zusammenhang---so unsere Annahme---wird durch die obige Regressionsgleichung
+beschrieben, aber auf der Basis empirischer Forschung kann der
+Zusammenhang höchstens approximiert werden.
+
+Im Prinzip gibt es unendlich viele Möglichkeiten, $\beta_0$ und $\beta_1$ auszuwählen,
+sodass die Gleichung aufgeht (wie Abbildung \ref{fig:differentregressions} illustriert),
+aber uns interessieren nur die $\beta_0$- und $\beta_1$-Werte der optimalen Geraden.
+Um diese zu schätzen, müssen wir definieren, was `optimal' in diesem Kontext heisst.
+Wie im letzten Kapitel besprochen wurde, ist das am meisten verwendete Optimierungskriterion die Methode der kleinsten Quadrate, wonach die optimale Linie jene Gerade ist,
+die die Summe der quadrierten Restfehler ($\sum_{i = 1}^{n} \widehat{\varepsilon_i}^2$) minimiert.
+Wir können diese Summe für unterschiedliche Kombinationen
+von $\widehat{\beta_0}$- und $\widehat{\beta_1}$-Werten berechnen.
+\begin{itemize}
+\item Sind  $\widehat{\beta_0} = 185$ und  $\widehat{\beta_1} = -2$,
+dann ist
+\[\sum_{i = 1}^{n} \widehat{\varepsilon_i}^2 = \sum_{i = 1}^{n} (y_i - (185 - 2x_i))^2 = 107121.
+\]
+In R berechnet man dies so:
+<<>>=
+sum((d$GJT - (185 - 2*d$AOA))^2)
+@
+
+\item Sind  $\widehat{\beta_0} = 190$ und  $\widehat{\beta_1} = -1.5$,
+dann ist
+\[
+\sum_{i = 1}^{n} \widehat{\varepsilon_i}^2 = \sum_{i = 1}^{n} (y_i - (190 - 1.5x_i))^2 = 28810.
+\]
+In R:
+<<>>=
+sum((d$GJT - (190 - 1.5*d$AOA))^2)
+@
+\end{itemize}
+
+$\widehat{\beta} = (190, -1.5)$ ist also optimaler
+als $\widehat{\beta} = (180, -2)$.
+Abbildung \ref{fig:ols} zeigt die Summe der quadrierten Restfehler
+für unterschiedliche  $(\widehat{\beta_0}, \widehat{\beta_1})$-Kombinationen;
+Kombinationen nahe bei $(190, -1.2)$ haben die kleinste Summe der quadrierten Restfehler.
+
+<<cache = TRUE, echo = FALSE, fig.cap = "Die Summe der quadrierten Restfehler (geteilt durch 10'000) der GJT-Daten für unterschiedliche Parameterschätzungen. Diese Grafik kann wie eine topografische Karte gelesen werden; die Linien sind sozusagen Höhenlinien. Für Schnittpunkte nahe bei 190 und Steigungen nahe bei $-1.2$ wird diese Summe minimiert; bei diesen Koordinaten gibt es sozusagen einen Kessel.\\label{fig:ols}", fig.height = 3.8, fig.width = 3.8, fig.pos="t", out.width = ".7\\textwidth">>=
+parameter_grid <- expand.grid(beta0 = seq(185, 195, 0.2),
+                              beta1 = seq(-2, -0.5, 0.1))
+parameter_grid$SS <- NA
+
+for (i in 1:nrow(parameter_grid)) {
+  predicted <- parameter_grid$beta0[i] + parameter_grid$beta1[i] * d$AOA
+  parameter_grid$SS[i] <- sum((predicted - d$GJT)^2)
+}
+
+SS <- matrix(parameter_grid$SS,
+       nrow = length(unique(parameter_grid$beta0)),
+       ncol = length(unique(parameter_grid$beta1)),
+       byrow = FALSE)
+
+par(las = 1, col = "black", oma = c(0, 0, 0, 0), mar = c(5, 5, 1, 1),
+    tck = -0.005, cex = 0.6)
+contour(x = unique(parameter_grid$beta0),
+        y = unique(parameter_grid$beta1),
+        z = SS/10000,
+        levels = c(2, 2.05, 2.1, seq(2.2, 2.8, 0.4), seq(3, 10, 1)),
+        xlab = expression(widehat(beta[0])),
+        ylab = expression(widehat(beta[1])))
+# par(op)
+@
+
+In der Praxis ackert man nicht zig Parameterkombinationen durch,
+um die optimale zu finden. Der Vorteil der Methode der kleinsten
+Quadrate ist, dass man die optimalen Parameterschätzungen schnell
+analytisch finden kann, und zwar so:
+\begin{equation*}
+ \widehat{\beta_1} = r_{xy}\frac{s_y}{s_x},
+\end{equation*}
+\begin{equation}\label{eq:intercept}
+ \widehat{\beta_0} = \bar{y} - \widehat{\beta_1} \bar{x}.
+\end{equation}
+
+Hier steht $r_{xy}$ für die Pearsonkorrelation zwischen $x$ und $y$
+in der Stichprobe. $s_x, s_y$ stehen für die Stichprobenstandardabweichungen
+von $x$ bzw.\ $y$. $\bar{x}$ ist das Stichprobenmittel von $x$.
+Der
+\href{http://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line}{Beweis}
+für diese Formeln wird hier nicht reproduziert.
+Für die Daten von \citet{DeKeyser2010} sieht das Ergebnis
+dieser Berechnungen so aus:
+<<>>=
+beta1_hat <- cor(d$AOA, d$GJT) * sd(d$GJT) / sd(d$AOA)
+beta1_hat
+beta0_hat <- mean(d$GJT) - beta1_hat * mean(d$AOA)
+beta0_hat
+@
+
+Einfacher geht es mit der \texttt{lm()}-Funktion:
+<<>>=
+aoa.lm <- lm(GJT ~ AOA, data = d)
+aoa.lm
+@
+
+\texttt{(Intercept)} ist hier $\widehat{\beta_0}$, also
+der Schnittpunkt der Regressionsgeraden mit der $y$-Achse.
+\texttt{AOA} ist $\widehat{\beta_1}$ und zeigt, um wie viele
+Einheiten die Gerade steigt oder senkt, wenn man entlang
+der \texttt{AOA}-Achse eine Einheit nach rechts geht.
+
+\section{Regressionsgeraden zeichnen}
+Das Ergebnis einer Regressionsanalyse kann auch grafisch dargestellt
+werden, indem man dem Streudiagramm die Regressionsgerade hinzufügt
+(Abbildung \ref{fig:scatterwithreg}):
+<<fig.width = 4, fig.height = 2.3, fig.cap = "Ein Streudiagramm mit einer Regressionsgeraden. Die Regressionsgerade erfasst die modellierte zentrale Tendenz (genauer: das GJT-Mittel) für die unterschiedlichen AOA-Werte.\\label{fig:scatterwithreg}", out.width = ".6\\textwidth">>=
+ggplot(data = d,
+       aes(x = AOA,
+           y = GJT)) +
+  geom_point(shape = 1) +
+  # Mit geom_abline() wird dem Streudiagramm eine Gerade hinzugefügt.
+  geom_abline(intercept = 190.41, slope = -1.218)
+@
+
+Eine alternative Methode ist die folgende.
+Wenn man bei \texttt{geom\_smooth()} als Methode \texttt{"lm"} einstellt,
+wird das Regressionsmodell von \texttt{ggplot()} berechnet.
+Im Code unten habe ich den Parameter \texttt{se} auf \texttt{FALSE}
+gestellt; im nächsten Abschnitt wird klar warum.
+<<eval = FALSE>>=
+# Nicht gezeichnet
+ggplot(data = d,
+       aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1) +
+  geom_smooth(method = "lm", se = FALSE)
+@
+
+Aber was stellt diese Gerade genau dar?  Mit dem Regressionsmodell versuchten
+wir die GJT-Werte ($y_i$) als eine Funktion der AOA-Werte ($x_i$) und eines
+Restfehlers ($\varepsilon_i$) zu modellieren:
+\[
+y_i = \widehat{\beta_0} + \widehat{\beta_1}x_i + \widehat{\varepsilon_i}.
+\]
+
+Auf der Regressionsgeraden ($\widehat{\beta_0} + \widehat{\beta_1}x_i$)
+liegen die $y_i$-Werte abzüglich des Restfehlers, also
+\[
+\widehat{y_i} = \widehat{\beta_0} + \widehat{\beta_1}x_i.
+\]
+Wie man diese $\widehat{y_i}$-Werte konzeptuell interpretieren
+kann, ist einfacher zu erklären, wenn wir uns zuerst anschauen, wie
+man die Unsicherheit in den Parameterschätzungen quantifizieren kann.
+
+\subsection{Unsicherheit in Parameterschätzungen schätzen}
+Die Parameterschätzungen $\widehat{\beta}$ werden aufgrund
+des Stichprobenfehlers von Stichprobe zu Stichprobe mehr oder
+weniger voneinander abweichen. Da $\widehat{\beta}$ aus Schätzungen
+besteht, ist auch die Regressionsgerade nur eine Schätzung.
+Um die Unsicherheit in den Parameterschätzungen und in der Regressionsgeraden
+zu quantifizieren, können wir uns wiederum auf den Bootstrap oder
+auf algebraische Methoden verlassen.
+
+\subsubsection{Mit dem Bootstrap}
+Das Bootstrappen eines linearen Modells mit einem Prädiktor
+verläuft analog zum Bootstrappen eines linearen Modells ohne Prädiktor.
+Zuerst wird hier die Methode aus Abschnitt \ref{bootstrapoverview}
+(semi-parametrischer Bootstrap)
+aufs lineare Modell mit einem Prädiktor angewandt:
+\begin{enumerate}\label{nonparametricbsregression}
+ \item Man berechnet $\widehat{\beta}$ (also $\widehat{\beta_0}$ und $\widehat{\beta_1}$) und erhält dazu auch noch $\widehat{\varepsilon}$.
+ \item Man zieht eine Bootstrap-Stichprobe aus $\widehat{\varepsilon}$.
+ Nenne diese $\widehat{\varepsilon}^{*}$.
+ \item Man kombiniert $\widehat{\beta_0}$, $\widehat{\beta_1}x_i$  und $\widehat{\varepsilon}^{*}$. Dies ergibt
+ eine neue Reihe von $y$-Werten: $y_i^{*} = \widehat{\beta_0} + \widehat{\beta_1}x_i + \widehat{\varepsilon_i}^{*}$.
+ \item Auf der Basis von $y_i^{*}$ wird $\widehat{\beta}$ erneut geschätzt.
+ \item Schritte 2--4 werden ein paar tausend Mal ausgeführt, sodass man die Verteilung der gebootstrappten $\beta$-Schätzungen erhält.
+\end{enumerate}
+
+In R-Code:
+<<cache = TRUE>>=
+runs <- 20000
+
+# Wir werden 20'000 Bootstrapschätzungen pro Parameter haben.
+# Diese speichern wir in einer Matrix mit 20'000 Zeilen und 2 Spalten.
+bs_beta <- matrix(nrow = runs, ncol = 2)
+
+for (i in 1:runs) {
+  # Residuen des Modells bootstrappen (resampling with replacement)
+  bs_residuals <- sample(resid(aoa.lm),
+                         size = length(resid(aoa.lm)),
+                         replace = TRUE)
+
+  # Modellvorhersagen mit gebootstrappten Residuen kombinieren
+  bs_GJT <- predict(aoa.lm) + bs_residuals
+
+  # Modell neu rechnen mit gebootstrappten GJT-Daten.
+  # d$AOA enthält die AOA-Daten des ursprünglichen Datensatzes
+  # und zählt also 76 Beobachtungen.
+  resampled.lm <- lm(bs_GJT ~ d$AOA)
+
+  # Parameterschätzungen in neue Zeile der Matrix speichern:
+  bs_beta[i, ] <- coef(resampled.lm)
+}
+# Erste 6 Zeilen anzeigen:
+head(bs_beta)
+@
+Man bemerke übrigens die Verwendung von `[' statt
+`[[' in der letzten Zeile der \textit{for}-Schleife: Jetzt schreiben
+wir nämlich mehr als einen Wert in die Matrix.
+
+Die Verteilungen der Bootstrapschätzungen können wie gehabt
+mit Histogrammen gezeichnet werden; siehe Abbildung \ref{fig:bootstrapdistributiondekeyser}.\label{sec:histogrammebootstrapdekeyser}
+
+<<echo = TRUE, fig.width = 6, fig.height = 2, fig.cap = "Verteilung der Bootstrap-Schätzungen der Parameter im Regressionsmodell \\texttt{aoa.lm}.\\label{fig:bootstrapdistributiondekeyser}", out.width = ".7\\textwidth">>=
+# Ergebnisse in tibble giessen
+bs_beta_tbl <- tibble(Schnittpunkt = bs_beta[, 1],
+                      Steigung = bs_beta[, 2])
+
+# Grafik zeichnen
+bs_beta_tbl |>
+  # Schätzungen alle in gleiche Spalte
+  pivot_longer(cols = everything(),
+               names_to = "Parameter",
+               values_to = "Estimate") |>
+  ggplot(aes(x = Estimate)) +
+  geom_histogram(fill = "lightgrey", col = "black", bins = 50) +
+  # facet_wrap zeichnet separate Grafiken je nach (hier) Parameter
+  facet_wrap(vars(Parameter), scales = "free") +
+  xlab("Bootstrapschätzung") +
+  ylab("Anzahl")
+@
+
+Da diese Verteilungen normalverteilt aussehen,
+können die Konfidenzintervalle (hier: 90\%)
+sowohl mit der \texttt{quantile()}- als
+auch mit der \texttt{qnorm()}-Funktion berechnet werden;
+die Ergebnisse sind einander nahezu identisch.
+<<>>=
+# Perzentilmethode
+quantile(bs_beta_tbl$Schnittpunkt, probs = c(0.05, 0.95)) # Schnittpunkt
+quantile(bs_beta_tbl$Steigung, probs = c(0.05, 0.95)) # Steigung
+
+# Kürzer mit apply(). Die '2' heisst, dass die Funktion
+# 'quantile' pro Spalte und nicht pro Zeile ausgeführt werden soll.
+apply(bs_beta, 2, quantile, probs = c(0.05, 0.95))
+@
+
+\texttt{coef(aoa.lm)} gibt zwei Werte aus:
+die Schätzung des Schnittpunkts und die Schätzung der Steigung:
+<<>>=
+coef(aoa.lm)
+@
+
+Um den ersten Wert zu selektieren, kann auch \texttt{coef(aoa.lm)[[1]]}
+verwendet werden, daher:
+<<>>=
+# qnorm
+coef(aoa.lm)[[1]] + qnorm(c(0.05, 0.95)) * sd(bs_beta_tbl$Schnittpunkt)
+coef(aoa.lm)[[2]] + qnorm(c(0.05, 0.95)) * sd(bs_beta_tbl$Steigung)
+@
+
+Die Standardabweichungen der Bootstrapschätzungen schätzen den relevanten
+Standardfehler:
+<<>>=
+apply(bs_beta, 2, sd)
+@
+
+Die Bootstrapschätzungen können auch verwendet werden,
+um die Unsicherheit in der Regressionsgeraden grafisch darzustellen.
+Wir können zum Beispiel die Bootstrapschätzung des Schnittpunktes
+und der Steigung abrufen und anhand derer Regressionsgeraden zeichnen.
+Der Übersichtlichkeit halber werden hier nur die ersten vier Bootstrapschätzungen
+gezeigt. Bei Ihnen werden diese aufgrund der Zufälligkeit im
+Bootstrap natürlich anders aussehen.
+Die entsprechenden Regressionsgeraden sieht man in Abbildung
+\ref{fig:bootstrapregressionline}:
+<<>>=
+head(bs_beta, 4)
+@
+
+<<fig.width = 6, fig.height = 1.3, echo = FALSE, fig.cap = "Regressionsgeraden, die anhand der 1., 2., 3.\\ und 4.\\ Bootstrapschätzungen des Schnittpunktes und der Steigung gezeichnet wurden. Die Grafiken sind einander recht ähnlich, aber nicht identisch.\\label{fig:bootstrapregressionline}", out.width = "\\textwidth">>=
+plot1 <- ggplot(data = d,
+                aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept = bs_beta[1, 1],
+              slope = bs_beta[1, 2])
+plot2 <- ggplot(data = d,
+                aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept =  bs_beta[2, 1],
+              slope = bs_beta[2, 2])
+plot3 <- ggplot(data = d,
+                aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept =  bs_beta[3, 1],
+              slope = bs_beta[3, 2])
+plot4 <- ggplot(data = d,
+                aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1) +
+  geom_abline(intercept =  bs_beta[4, 1],
+              slope = bs_beta[4, 2])
+
+gridExtra::grid.arrange(plot1, plot2, plot3, plot4, ncol = 4)
+@
+
+In Abbildung \ref{fig:bootstrapregressionline100} mache ich nochmals
+das Gleiche, aber diesmal mit 100 Schätzungen.
+Für die Interessierten zeige ich diesmal auch den Code. Wie Sie sehen können,
+kommen die Regressionsgeraden
+für durchschnittliche AOA-Werte
+einander ziemlich nahe, aber nahe
+den Minimum- und Maximumwerten fächern sie sich auf.
+
+<<cache = TRUE, fig.width = 1.8*3, fig.height = 1.8*2, echo = TRUE, fig.cap = "Regressionsgeraden, die auf der Basis von 100 Bootstrapschätzungen des Schnittpunktes und der Steigung gezeichnet wurden.\\label{fig:bootstrapregressionline100}", out.width = ".7\\textwidth">>=
+plot_konfidenzband <- ggplot(data = d,
+                             aes(x = AOA, y = GJT)) +
+  geom_point(shape = 1)
+
+for (i in 1:100) {
+  plot_konfidenzband <- plot_konfidenzband +
+    geom_abline(intercept = bs_beta[i, 1],
+                slope = bs_beta[i, 2],
+                alpha = 1/30)
+}
+plot_konfidenzband
+@
+Statt diese Regressionsgeraden einzeln darzustellen,
+färbt man in der Regel das Band, in das diese Geraden mehrheitlich fallen,
+ein. Analog zum Konfidenzintervall nennt man dieses dann ein
+\textbf{Konfidenzband}. Der nächste Abschnitt erklärt, wie man
+Konfidenzbänder mittels Bootstrapping konstruieren kann, aber dieses
+können Sie gerne überspringen.
+
+\paragraph{Konfidenzbänder mit dem Bootstrap konstruieren.}
+Die Idee ist die folgende.
+Man definiert eine Reihe von $x$-Werten, an denen man
+das Konfidenzband zeichnen möchte. In unserem Fall handelt
+es sich einfach um eine Handvoll Zahlen zwischen dem AOA-Minimum
+und dem AOA-Maximum. Es spielt hier keine grosse Rolle, wie
+viele Werte man festlegt.
+<<>>=
+neue_aoa <- seq(from = min(d$AOA), to = max(d$AOA), by = 1)
+# also 5, 6, 7, etc., 69, 70, 71
+@
+
+Man nimmt die Bootstrapschätzungen des Schnittpunkts
+($\widehat{\beta_0}^{*}$) und der Steigung ($\widehat{\beta_1}^{*}$)
+und man berechnet für jedes Paar von Schätzungen
+den $\widehat{y}$-Wert für jeden $x$-Wert. Zum Beispiel
+ist (in meinem Fall) das erste Paar Bootstrapschätzungen:
+<<>>=
+bs_beta[1, ]
+@
+
+Der Vektor von $\widehat{y}$-Werten für dieses Paar
+von Bootstrapschätzungen ist daher:
+<<>>=
+# 191.82 + (-1.29) * 5, 191.82 + (-1.29) * 6, usw.
+bs_beta[1, 1] + bs_beta[1, 2] * neue_aoa
+@
+
+Diese Übung machen wir für alle Paare von
+Bootstrapschätzungen---in unserem Fall also 20'000 Mal.
+Mit einer \textit{for}-Schleife kann man dies übersichtlich tun.
+Da das Ergebnis jeder Iteration aber einen Vektor
+mit so vielen Elementen wie (hier) \texttt{neue\_aoa} ist,
+ist es praktischer, diese Werte in einer Matrix zu speichern
+als in 20'000 Vektoren. Diese Schritte kann man auch mit
+Matrizenalgebra ausführen, aber ich vermute, dass ein
+\textit{for}-Schleife das Verfahren transparenter macht.
+<<>>=
+# Matrix mit den Vorhersagen:
+# wir brauchen 20'000 Zeilen (Anzahl Bootstraps)
+# und so viele Spalten wie es vorherzusagende Werte pro Bootstrap gibt
+bs_y_hat <- matrix(nrow = runs, # die Anzahl Bootstraps
+                   ncol = length(neue_aoa)) # die Anzahl y-hat-Werte
+
+# Für jedes Paar von Bootstrapschätzungen,
+for (i in 1:runs) {
+  # berechne die 'vorhergesagten' y-Werte für
+  # jedes Element von neue_aoa und speichere diese
+  bs_y_hat[i, ] <- bs_beta[i, 1] + bs_beta[i, 2]*neue_aoa
+}
+@
+
+Sie können diese Matrix mit etwa \texttt{head(bs\_y\_hat)} inspizieren.
+Um das 95\%-Kon\-fi\-denz\-band zu konstruieren, schlagen wir nun das 2.5.\ und
+das 97.5.\ Perzentil jeder Spalte nach.
+Die 2.5.\ Perzentile bilden
+die untere Grenze des Konfidenzbandes; die 97.5.\ die obere.
+Dazu verwende ich hier die \texttt{apply()}-Funktion, mit der
+man eine Funktion (hier \texttt{quantile()} mit dem Zusatzparameter \texttt{probs = 0.025})
+bequem auf alle Spalten oder Zeilen einer Matrix (hier \texttt{bs\_y\_hat}) evaluieren kann.
+Die Zahl \texttt{2} spezifiziert, dass die Funktion pro Spalte evaluiert werden soll;
+\texttt{1} hiesse, dass sie pro Zeile zu evaluieren ist.
+<<>>=
+unten_95 <- apply(bs_y_hat, 2, quantile, probs = 0.025)
+oben_95 <- apply(bs_y_hat, 2, quantile, probs = 0.975)
+@
+
+Das 80\%-Konfidenzband würde man so konstruieren:
+<<>>=
+unten_80 <- apply(bs_y_hat, 2, quantile, probs = 0.10)
+oben_80 <- apply(bs_y_hat, 2, quantile, probs = 0.90)
+@
+
+Man kann auch noch das Mittel jeder Spalte berechnen. Dies
+ergibt ungefähr die Regressionsgerade:
+<<>>=
+mittel <- apply(bs_y_hat, 2, mean)
+@
+
+Wenn man die Grafik mit \texttt{ggplot2()} zeichnen möchte,
+muss man diese Werte noch in ein tibble giessen:
+<<>>=
+konfidenzband_tbl <- tibble(neue_aoa, mittel,
+                            unten_95, oben_95,
+                            unten_80, oben_80)
+@
+
+Zeichnen kann man das Konfidenzband dann so:
+<<fig.width = 1.8*3, fig.height = 1.8*2, echo = TRUE, fig.cap = "Regressionsgerade mit 80\\%- und 95\\%-Konfidenzbändern, die mittels Bootstrapping berechnet wurden.\\label{fig:btstrpconfidenceband}", out.width=".7\\textwidth">>=
+ggplot(data = konfidenzband_tbl,
+       aes(x = neue_aoa)) +
+  # 95% Konfidenzband leicht
+  geom_ribbon(aes(ymin = unten_95,
+                  ymax = oben_95),
+              fill = "lightgrey") +
+  # 80% Konfidenzband dunkel
+  geom_ribbon(aes(ymin = unten_80,
+                  ymax = oben_80),
+              fill = "darkgrey") +
+  # Mittel (~ Regressionsgerade)
+  geom_line(aes(y = mittel)) +
+  # ev. auch noch die Rohdaten plotten.
+  # Diese stehen in einem anderen tibble.
+  geom_point(data = d,
+             aes(x = AOA, y = GJT),
+             shape = 1) +
+  xlab("Erwerbsalter") +
+  ylab("GJT-Ergebnis")
+@
+
+\paragraph{Identisch und unabhängig verteilte Restfehler.}
+ Beim Einschätzen der Unsicherheit in den Parameterschätzungen
+ und in der Regressionsgeraden haben wir eine grundlegende Annahme
+ gemacht, die bisher noch nicht diskutiert wurde.
+ Beim Bootstrappen haben wir auf der Basis der beobachteten
+ Residuen zufällig neue Vektoren mit Residuen ($\widehat{\varepsilon}^{*}$) generiert
+ und diese dann mit den $\widehat{y}$-Werten kombiniert.
+ Dieser Schritt ist nur verteidigbar, wenn zwei Bedingungen gleichzeitig
+ erfüllt sind:
+ \begin{enumerate}
+ \item Die Verteilung des Restfehler, inklusive ihre Streuung,
+ ist für alle $\widehat{y}$-Werte gleich (`identisch verteilte Restfehler',
+ `Homoskedastizitätsannahme'). \label{homoskedasticity}
+ Zum Beispiel sollte es genauso plausibel sein, dass ein Restfehler
+ von $25$ auftaucht, wenn der $\widehat{y}$-Wert $120$ ist als
+ wenn er $180$ ist. Sonst wäre es ja nicht sinnvoll gewesen, die Restfehler
+ beim Bootstrappen komplett zufällig durcheinander zu werfen.
+
+ \item Die Restfehler bilden keine Klumpen. Anders gesagt, wenn wir
+ den Restfehler einer bestimmten Beobachtung kennen, liefert uns
+ dies nicht mehr Informationen über gewisse weitere Restfehler als über
+ andere (`unabhängig verteilte Restfehler', `Unabhängigkeitsannahme').
+ Wiederum wäre es sonst ja nicht
+ sinnvoll gewesen, die Restfehler komplett zufällig durcheinander zu werfen,
+ sondern hätten wir die Restfehler grüppchenweise neu zuordnen müssen.
+ \end{enumerate}
+
+ Ein paar Beispiele, um diese Bedingungen anschaulicher zu machen:
+ \begin{itemize}
+ \item Es kann durchaus vorkommen, dass die Streuung um die Regressionsgerade
+ systematisch zu- oder abnimmt für grössere $\widehat{y}$-Werte. Abbildung
+ \vref{fig:heteroskedasticity} zeigt zwei klare Beispiele.
+
+ \item Jemand möchte die durchschnittliche Länge von [i]-Produktionen
+ von Bernern schätzen und wählt zufällig 25 Berner aus. (So weit, so gut.)
+ Jeder Sprecher liest 50 Wörter mit einem [i:] vor.
+ Die Vokallängen eines beliebigen Sprechers sind sich aber denkbar ähnlicher
+ als die Vokallängen unterschiedlicher Sprecher: Manche Sprecher werden
+ eher überdurchschnittlich lange Vokale produzieren, manche eher unterdurchschnittlich.
+ Die Restfehler (`über-/unterdurchschnittlich') der einzelnen Produktionen
+ sind also nicht unabhängig voneinander, sondern bilden pro Sprecher Klumpen.
+
+ \item Ausserdem ist es wahrscheinlich, dass das [i:] in bestimmten
+ phonologischen Kontexten unterschiedlich schnell ausgesprochen wird. Die
+ Restfehler bilden also auch pro phonologischen Kontext (oder pro Wort) Klumpen.
+ \end{itemize}
+
+ Wenn die sogenannte `i.i.d.'-Bedingung (\textit{identically and independently distributed})
+ nicht erfüllt ist, dann ist es möglich, dass es effizientere
+ Arten und Weisen gibt, um die Modellparameter zu schätzen.
+ Damit ist Folgendes gemeint: Wenn Regressionsparameter mit
+ der Methode der kleinsten Quadrate geschätzt werden, dann
+ sind diese Schätzungen weder tendenziell Überschätzungen
+ noch tendenziell Unterschätzungen---die Schätzungen
+ sind also unverzerrt. Es gibt aber auch andere Methoden,
+ um diese Parameter unverzerrt zu schätzen.\footnote{Um einzusehen, dass es
+ vorkommen kann, dass zwei Methoden beide unverzerrte aber unterschiedliche Schätzungen
+ liefern, kann man sich die folgende Methode überlegen, um das Mittel einer Stichprobe
+ zu schätzen: Berechne das Stichprobenmittel wie gehabt und addiere bzw.\ subtrahiere
+ mit einer Wahrscheinlickheit von jeweils 50\% 1'000 Einheiten zum bzw.\ vom Mittel.
+ Das Resultat ist ebenfalls eine unverzerrte Schätzung des Populationsmittels,
+ da sich die +1'000 und -1'000 über viele Stichproben hinweg ja ausgleichen.}
+ Wenn die `i.i.d.'-Bedingung erfüllt, ist es ausserdem so,
+ dass die Methode der kleinsten Quadrate Schätzungen liefert,
+ die von Stichprobe zu Stichprobe am wenigsten voneinander
+ abweichen. Ist die `i.i.d.'-Bedingung nicht erfüllt,
+ dann ist es möglich, dass eine andere unverzerrte Schätzungsmethode
+ Schätzungen liefert, die von Stichprobe zu Stichprobe weniger
+ variieren.
+
+ Wichtiger ist aber, dass die Schätzung der Unsicherheit betroffen ist.
+ Insbesondere bei einer Verletzung der Unabhängigkeitsannahme wird die Unsicherheit
+ in den Parameterschätzungen unterschätzt. Dies gilt nicht nur beim Bootstrappen,
+ sondern auch beim Verwenden des zentralen Grenzwertzsatzes oder von $t$-Verteilungen.
+ Im Beispiel mit den [i:] könnten wir also nicht den Standardfehler
+ der durchschnittlichen Vokallänge berechnen, indem wir die Streuung in den
+ Produktionen teilen durch die Wurzel von 1'250 ($25 \cdot 50$).
+
+ Typische Verletzungen der Unabhängigkeitsannahme können
+ mit sog.\ gemischten Modellen behoben werden; siehe
+ Kapitel \ref{ch:weiterbildung} für Literaturvorschläge.
+ Für Verletzungen der Homoskedastizitätsannahme bieten sich
+ eine andere Erweiterung des linearen Modells an (siehe \citealp{Zuur2009}).
+ Eine alternative Lösung ist, den Bootstrap anders durchzuführen
+ (siehe \citealp[][Abschnitt 9.5]{Efron1993}).
+ Aber der wichtigste Grund, weshalb wir überhaupt den Bootstrap verwenden,
+ ist, um die traditionellere Methoden besser zu verstehen, und diese
+ angepassten Bootstraps sind für diesen Zweck weniger geeignet.
+
+<<fig.width = 4, fig.height = 1.4, echo = FALSE, fig.cap = "Die Streuung in beiden Streudiagrammen variiert erheblich je nach dem $x$- oder $\\widehat{y}$-Wert.\\label{fig:heteroskedasticity}", message = FALSE, out.width = ".7\\textwidth">>=
+x <- runif(100, 0, 100)
+y_hat <- 0.3*x
+error1 <- rnorm(n = 100, sd = 0.2 * x)
+error2 <- rnorm(n = 100, sd = 0.2 * (100-x))
+df <- data.frame(x,
+                 y1 = y_hat + error1,
+                 y2 = y_hat + error2)
+
+p1 <- ggplot(data = df,
+             aes(x = x, y = y1)) +
+  geom_point(shape = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  xlab("x") + ylab("y")
+p2 <- ggplot(data = df,
+             aes(x = x, y = y2)) +
+  geom_point(shape = 1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  xlab("x") + ylab("y")
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+@
+
+\subsubsection{Bootstrappen unter der Normalitätsannahme}
+Wenn wir annehmen wollen, dass die Residuen nicht nur
+identisch und unabhängig, sondern auch noch normalverteilt sind,
+können wir die $\widehat{\varepsilon}^{*}$-Vektoren auch mit der \texttt{rnorm()}-Funktion
+generieren. Das Vorgehen ist komplett analog zu dem
+in Abschnitt \vref{semiparametricbootstrap} beschriebenen.
+Unsere Annahmen können expliziter gemacht werden:
+\begin{align}\label{eq:annahmeregression}
+ y_i &= \beta_0 + \beta_1 x_i + \varepsilon_i,\\
+ \varepsilon_i &\sim N(0, \sigma_{\varepsilon}^2).\nonumber
+\end{align}
+
+Der neue Teil $\varepsilon_i \sim N(0, \sigma_{\varepsilon}^2)$ macht klar,
+dass wir annehmen, dass die Restfehler aus einer Normalverteilung
+mit Mittel 0 und Varianz $\sigma_{\varepsilon}^2$ stammen.
+$\sigma_{\varepsilon}^2$ ist ein einziger (obgleich unbekannter) Wert, sodass klar ist,
+dass wir davon ausgehen, dass die Streuung der Residuen nicht von $x$
+(und somit $\widehat{y}$ abhängt). Sowohl die Unabhängigkeits- als
+auch die Homoskedastizitätsannahme werden von dieser Annahme umfasst.
+
+$\sigma_{\varepsilon}$ ist zwar unbekannt, aber wird anhand der Stichprobe geschätzt;
+siehe Gleichung \vref{eq:sigmap}. Der folgende Code zeigt, wie die Bootstrapschätzungen
+des Schnittpunkts und der Steigung berechnet werden können. Abgesehen
+von der Konstruktion der $\widehat{\varepsilon}^{*}$-Vektoren ist die Herangehensweise
+aber identisch zu jener des Bootstraps ohne die Normalitätsannahme
+aus dem letzten Abschnitt, sodass die anderen Schritte hier nicht mehr wiederholt werden.
+<<echo = TRUE, cache = FALSE, eval = FALSE>>=
+runs <- 20000
+
+bs_beta <- matrix(nrow = runs, ncol = 2)
+
+for (i in 1:runs) {
+  # Residuen aus Normalverteilung generieren
+  bs_residuals <- rnorm(n = length(resid(aoa.lm)), # hier: 76
+                        mean = 0,
+                        sd = sigma(aoa.lm))
+
+  bs_GJT <- predict(aoa.lm) + bs_residuals
+  resampled.lm <- lm(bs_GJT ~ d$AOA)
+  bs_beta[i, ] <- coef(resampled.lm)
+}
+@
+
+\subsubsection{Mit $t$-Verteilungen}\label{sec:aoa}
+Wenn wir ohnehin davon ausgehen, dass die Residuen
+(i.i.d.) normalverteilt sind, können wir den Standardfehler,
+die Konfidenzintervalle und das Konfidenzband auch algebraisch
+anhand der $t$-Verteilungen berechnen. Dadurch wird auch
+die Unterschätzung von $\sigma_{\varepsilon}$ durch $\widehat{\sigma_{\varepsilon}}$
+mitberücksichtigt. Bei 76 Beobachtungen und bloss zwei Parameterschätzungen
+wird diese Unterschätzung aber kaum merkbar sein.
+<<>>=
+summary(aoa.lm)$coefficients
+@
+
+<<>>=
+# 95%-Konfidenzintervalle nach t-Methode
+confint(aoa.lm, level = 0.95)
+@
+
+Mit \texttt{geom\_smooth()} können $t$-basierte Konfidenzbänder
+sofort gezeichnet werden, siehe Abbildung \ref{fig:geomsmooth}.
+<<fig.width = 4.5, fig.height = 2.8, fig.cap = "Regressionsgerade mit 67\\%- und 95\\%-Konfidenzband. Konfidenzbänder von Regressionsmodellen sind übrigens am schmalsten beim durchschnittlichen x-Wert.\\label{fig:geomsmooth}", message = FALSE, out.width=".7\\textwidth">>=
+ggplot(data = d,
+       aes(x = AOA,
+           y = GJT)) +
+  geom_point(shape = 1) +
+  geom_smooth(method = "lm", level = 0.95,
+              fill = "red", col = "black") +
+  geom_smooth(method = "lm", level = 0.67,
+              fill = "darkred", col = NA)
+@
+
+\section{Regressionsgeraden interpretieren}\label{sec:regressioninterpretieren}
+Gleichung \vref{eq:annahmeregression} ist nützlich, um
+die konzeptuelle Interpretation der Regressionsgeraden zu
+verstehen.
+Nach dieser Gleichung gehen wir davon aus, dass die Restfehler
+zufällig (und `i.i.d.') aus einer Verteilung mit Mittel 0 stammen.
+Wenn wir unsere Stichprobe als Zufallsstichprobe aus einer Population
+auffassen, gehen wir also davon aus, dass in dieser Population
+die $y$-Werte für jeden $x$-Werte normalverteilt sind.
+% Wenn wir unsere Daten eher als Ergebnis eines datengenerierenden
+% Mechanismus auffassen wollen, gehen wir davon aus, dass
+% Wir gehen davon aus, dass in der Population, die
+% von Interesse ist, die $y$-Werte für jeden $x$-Wert normalverteilt sind.
+Folglich liegen auf der Geraden $\beta_0 + \beta_1 x_i$ die
+Mittel der $y$-Verteilung \textbf{konditionell} auf $x$.
+Abbildung \ref{fig:conditionalmean} stellt dieses Konzept grafisch dar.
+Die geschätzte Regressionsgerade stellt also die auf Basis der
+Stichprobe geschätzten konditionellen Mittel von $y$ dar,
+während der Querschnitt des 95\%-Konfidenzbands an einem bestimmten
+$x$-Wert das 95\%-Konfidenzintervall des $y$-Mittels für diesen $x$-Wert darstellt.
+
+<<fig.width = 4, fig.height = 3, echo = FALSE, fig.cap = "Wenn wir davon ausgehen, dass die Residuen i.i.d.\ verteilt sind, verbindet die Regressionsgerade die Mittel der $y$-Verteilungen für die unterschiedlichen $x$-Werte (`konditionelles Mittel'). In dieser Grafik sind die Residuen normalverteilt, aber dies ist keine Voraussetzung. Wenn die Residuen nicht normalverteilt sind, ist es jedoch möglich, dass das Mittel kein sehr relevantes Mass ist.\\label{fig:conditionalmean}", out.width = ".8\\textwidth">>=
+set.seed(1)
+x <- runif(200)
+dat <- data.frame(x = x,
+                  y = 0.4 + 4*x + rnorm(100, sd = 0.5))
+
+
+df1 <- data.frame(yval = seq(-0.3, 2.7, 0.1),
+                  xval = dnorm(seq(-0.3, 2.7, 0.1),
+                               0.4+4*0.2,
+                               0.5)/8+0.2)
+
+df2 <- data.frame(yval = seq(0.9, 3.9, 0.1),
+                  xval = dnorm(seq(0.9, 3.9, 0.1),
+                               2.4,
+                               0.5)/8+0.5)
+
+df3 <- data.frame(yval = seq(2.1, 5.1, 0.1),
+                  xval = dnorm(seq(2.1, 5.1, 0.1),
+                               3.6,
+                               0.5)/8+0.8)
+par(cex = 0.75, mar = c(4, 4, 2, 2), las = 1)
+plot(dat, col = "grey")
+with(df1,lines(xval,yval, col = "red"))
+with(df2,lines(xval,yval, col = "red"))
+with(df3,lines(xval,yval, col = "red"))
+segments(x0 = 0.2, x1 = 0.2+0.09973557,
+         y0 = 0.4+4*0.2, col = "red")
+segments(x0 = 0.5, x1 = 0.5+0.09973557,
+         y0 = 0.4+4*0.5, col = "red")
+segments(x0 = 0.8, x1 = 0.8+0.09973557,
+         y0 = 0.4+4*0.8, col = "red")
+abline(v = 0.2, lty = 2)
+abline(v = 0.5, lty = 2)
+abline(v = 0.8, lty = 2)
+abline(0.4, 4, col = "blue")
+par(cex = 1)
+@
+
+Beispiele:
+\begin{itemize}
+ \item Laut dem \texttt{aoa.lm}-Modell sind die geschätzten
+ $\beta$-Parameter $190.4$ und $-1.22$. Laut dem Modell ist
+ die beste Schätzung der durchschnittlichen (Mittel) GJT-Leistung
+ von Versuchspersonen mit einem AOA von 15 also $190.4 - 1.22 \cdot 15 = 172.1$.
+ Dieses Ergebnis erhält man auch mit \texttt{predict()}:
+<<>>=
+predict(aoa.lm, newdata = tibble(AOA = 15))
+@
+  Bemerken Sie aber, dass es in unserem Datensatz zwei Versuchspersonen
+  mit einem AOA von 15 gibt und dass ihr Durchschnittsergebnis nicht 172.1 ist:
+<<>>=
+d |> filter(AOA == 15)
+@
+Inwiefern unsere modellbasierte Schätzung eine zuverlässigere Schätzung des
+konditionellen Mittels darstellt als das Mittel dieser beiden Werte, hängt
+von der Gültigkeit unserer Annahmen ab. Die Annahme eines linearen Zusammenhangs
+scheint hier doch auf jeden Fall nicht wahnsinnig daneben zu liegen.
+Konzeptuell gesprochen erlaubt uns diese Annahme,
+$y$-Mittel für bestimmte $x$-Werte besser zu schätzen,
+indem wir auch Information über den $x$--$y$-Zusammenhang,
+die wir aus den restlichen Daten ableiten, mit einbeziehen.
+
+ \item Versuchspersonen mit einem AOA von 21 gibt es in der Stichprobe
+ nicht. Nach der Regressionsgleichung wäre aber das Durchschnittsergebnis
+ von Versuchspersonen mit diesem AOA in der Population etwa 165 Punkte.
+<<>>=
+predict(aoa.lm, newdata = tibble(AOA = 21))
+@
+
+  Dies ist ein Beispiel von \textbf{Intrapolation}, denn
+  es gibt sowohl Versuchspersonen mit niedrigeren als mit höheren AOA-Werten
+  in der Stichprobe.
+
+ \item Versuchspersonen mit einem AOA von 82 gibt es in der Stichprobe auch
+ nicht. Nach der Regressionsgleichung wäre aber das Durchschnittsergebnis
+ von Versuchspersonen mit diesem AOA in der Population etwa 91 Punkte.
+<<>>=
+predict(aoa.lm, newdata = tibble(AOA = 82))
+@
+
+  Dies ist ein Beispiel von \textbf{Extrapolation}, denn
+  das Maximumalter in der Stichprobe ist 71 Jahre.
+
+  \item Das durchschnittliche (Mittel) AOA in der Stichprobe ist etwa 32.5 Jahre.
+  Das geschätzte konditionelle GJT-Mittel für dieses Alter ist gleich dem Mittel
+  der Stichprobe.
+<<>>=
+predict(aoa.lm, newdata = tibble(AOA = mean(d$AOA)))
+@
+  Dies ist natürlich kein Zufall, sondern ein allgemeines Phänomen.
+  Wenn wir Gleichung \ref{eq:intercept} in die Regressiongleichung
+  einsetzen, erhalten wir ja Folgendes:
+  $$\widehat{y_i} = \underbrace{\bar{y} - \widehat{\beta_1} \bar{x}}_{= \widehat{\beta_0}} +  \widehat{\beta_1}x_i.$$
+  Für $x_i = \bar{x}$ erhalten wir also $\widehat{y_i} = \bar{y}$.
+
+  \item Konfidenzintervalle um konditionelle Mittel können
+  mit den oben beschriebenen Bootstrapmethoden berechnet werden,
+  indem man das `Konfidenzband' für nur einen $x$-Wert berechnet.
+  Man kann aber auch \texttt{predict()} verwenden; dann wird
+  das Konfidenzintervall auf der Basis der geeigneten $t$-Verteilung
+  konstruiert.
+
+<<>>=
+predict(aoa.lm, newdata = tibble(AOA = 35),
+        interval = "confidence", level = 0.80)
+@
+\end{itemize}
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Einschub: Extra- und Intrapolation.}
+Seien Sie vorsichtig mit Extrapolation:
+Wenn wir eine Stichprobe von Versuchspersonen zwischen
+8 und 26 Jahren haben, ist es gefährlich, Aussagen über 5- oder 40-Jährige zu machen.
+ Dies wird in der linken Abbildung illustriert:
+ Eine Fähigkeit, die sich im Alter zwischen 10 und 35 entwickelt, hat nicht unbedingt die gleiche Entwicklung ausserhalb dieses Bereichs.
+ Eine Extrapolierung auf der Basis der Regressionsgeraden ist hier irreführend.
+ Auch bei Intrapolation ist Vorsicht geboten.
+ Aus den Daten in der rechten Grafik könnte man zum Beispiel die Schlussfolgerung ziehen,
+ dass sich Reaktionszeiten im Alter graduell verlängern.
+ Auch diese Schlussfolgerung dürfte zu kurz greifen.
+
+<<echo = FALSE, fig.width = 6, fig.height = 2.5, out.width = ".9\\textwidth", warning = FALSE>>=
+par(mfrow = c(1, 2), cex = 0.65, cex.main = 1,
+    mar = c(4, 4, 2, 2), bg = "white")
+set.seed(123456)
+alter1 <- round(runif(40, 10, 35))
+sample1 <- (alter1-20) - 0.01 * (alter1-1)^2 + 20 + rnorm(length(alter1), sd = 2)
+plot(alter1, sample1,
+     xlim = c(10, 80), xlab = "Alter (Jahre)", yaxt = "n",
+     ylim = c(0, 50), ylab = "Fähigkeit",
+     main = "Gefahr bei Extrapolation")
+abline(lm(sample1 ~ alter1))
+text(x = 55, y = 45, "extrapolierte Schätzung\nfür Fähigkeit")
+curve(20 + (x-20) - 0.01*(x-1)^2, from = 10, to = 80,
+      xlab = "Alter (Jahre)",
+      ylab = "Fähigkeit", add = TRUE, col = "#377EB8")
+text(x = 55, y = 15, "echte Entwicklung\nvon Fähigkeit", col = "#377EB8")
+
+alter2 <- round(c(runif(20, 10, 12),
+                  runif(20, 75, 77)))
+sample2 <- 20 + (alter2-40)^2 + rnorm(length(alter2), sd = 200)
+plot(alter2, sample2,
+     xlim = c(10, 80), xlab = "Alter (Jahre)",
+     ylim = c(0, 2000), ylab = "Reaktionszeit", yaxt = "n",
+     main = "Gefahr bei Intrapolation")
+abline(lm(sample2 ~ alter2))
+text(x = 45, y = 1350, "intrapolierte Schätzung\nfür Reaktionszeit")
+curve(20 + ((x-40)^2), from = 10, to = 80,
+      xlab = "Alter (Jahre)",
+      ylab = "Fähigkeit", add = TRUE, col = "#377EB8")
+text(x = 45, y = 300, "echte Entwicklung\nvon Reaktionszeit", col = "#377EB8")
+par(op)
+@
+\end{framed}
+
+\medskip
+
+\paragraph{Den Schnittpunkt interpretierbarer machen.}
+Der geschätzte Schnittpunkt hat nicht unbedingt eine nützliche
+Interpretation. In unserem Fall stellt er die geschätzte Durchschnittsleistung
+von Versuchspersonen mit AOA 0 dar. Solche gibt es in der Stichprobe
+nicht, sodass diese Zahl eine Art Extrapolation darstellt.
+Sie können den Schnittpunkt interpretierbarer machen, indem
+Sie das Stichprobenmittel des Prädiktors von den Prädiktorwerten
+abziehen und mit diesen neuen Werten arbeiten.
+Diese Technik heisst \textbf{zentrieren} (\textit{centring}).
+Ein Vorteil des Zentrierens ist, dass der geschätzte Schnittpunkt
+einem jetzt sofort auch sagt, was das Stichprobenmittel der $y$-Variable ist.
+
+<<>>=
+# AOA zentrieren
+d$c.AOA <- d$AOA - mean(d$AOA)
+
+# Modell neu fitten
+aoa.lm <- lm(GJT ~ c.AOA, data = d)
+
+# Parameterschätzungen
+summary(aoa.lm)$coefficients
+@
+
+Achten Sie aber darauf, dass eine Versuchsperson mit einem AOA
+von 35 jetzt für das Modell eine Versuchsperson mit einem \texttt{c.AOA}
+von $35 - \bar{x}_{AOA} = 2.46$ ist:
+<<>>=
+predict(aoa.lm, newdata = tibble(c.AOA = 35 - mean(d$AOA)),
+        interval = "confidence", level = 0.80)
+@
+
+\section{Modellannahmen überprüfen}
+Die Modellresiduen sollten grafisch dargestellt werden, um
+die Modellannahmen zu überprüfen. Leitfragen dabei sind
+unter anderem:
+\begin{itemize}
+	\item Gibt es noch einen erkennbaren Zusammenhang zwischen
+	      den Residuen und den $\widehat{y}$-Werten? Ein
+	      solcher Zusammenhang deutet darauf hin, dass der
+	      Zusammenhang zwischen einem oder mehreren Prädiktoren
+	      und dem outcome nicht-linear ist.
+
+	\item Variiert die Streuung der Residuen mit $\widehat{y}$
+	      oder mit den Prädiktoren? Systematische Unterschiede
+	      in der Streuung der Residuen deuten darauf hin, dass
+	      der Restfehler `heteroskedastisch' ist.
+
+	\item Sind die Residuen ungefähr normalverteilt? Nicht-normalverteilte
+        Residuen lassen vermuten, dass die Annahme, dass der Restfehler
+        aus einer Normalverteilung stammt, nicht stimmt. Dies hätte einerseits
+        Konsequenzen für die auf $t$-Verteilungen basierten Konfidenzintervalle
+        und Konfidenzbänder. Andererseits, und wichtiger,
+        sind die konditionellen Mittel, die
+        die Regressionslinie darstellt, eventuell weniger relevant.
+
+	\item Gibt es einzelne Datenpunkte, die einen viel stärkeren
+        Einfluss aufs Regressionsmodell ausüben als die meisten?
+        Das Problem mit einflussreichen Datenpunkten ist,
+        dass sie etwa dazu führen können, dass das Modell
+        einen leichten positiven Zusammenhang zwischen den Variablen
+        findet, während für die meisten Datenpunkte ein starker
+        negativer Zusammenhang vorliegt.
+\end{itemize}
+
+Abbildung \ref{fig:modeldiagnostics} zeigt ein paar nützliche
+Grafiken, die man einfach mit \texttt{plot(aoa.lm)} generieren
+kann. Auf riesige Probleme in den Modellannahmen deuten diese
+Grafiken m.E.\ nicht hin. (Solche Probleme würde man ohnehin
+nicht erwarten, wenn man sich das Streudiagramm am Anfang dieses
+Kapitels angeschaut hat. In meiner Erfahrung stösst man selten
+auf Überraschungen, wenn man die Daten bereits ausführlich
+grafisch dargestellt hat.)
+<<fig.cap = "Grafische Modelldiagnose des \\texttt{aoa.lm}-Modells mithilfe der \\texttt{plot()}-Funktion. \\textit{Links oben:} Zusammenhang zwischen Residuen und $\\widehat{y}$. Die rote Trendlinie sollte ungefähr flach sein. Sonstige auffällige Muster wären auch unerwünscht. \\textit{Rechts oben:} Normalität der Residuen. Wenn die Residuen normalverteilt sind, liegen sie auf der gestrichelten Diagonale. \\textit{Links unten:} Streuung in den Residuen. Eine flache rote Trendlinie deutet auf Homoskedastizität hin. \\textit{Rechts unten:} Manchmal gibt es in dieser Grafik ein paar gestrichelte rote Linien. Datenpunkte, die jenseits dieser Linien liegen, dürften viel einflussreicher als andere Datenpunkte sein.\\label{fig:modeldiagnostics}", fig.width = 4, fig.height = 4, out.width=".66\\textwidth", echo = FALSE>>=
+# 4 Grafiken in 2*2-Raster zeichnen.
+# (Dies funktioniert nicht für ggplot!)
+par(mfrow = c(2, 2), cex = 0.6, mar = c(4, 4, 2, 2))
+# Modelldiagnosen darstellen
+plot(aoa.lm)
+# Ab jetzt wieder normal zeichnen.
+par(mfrow = c(1, 1))
+@
+
+<<eval = FALSE, echo = TRUE>>=
+# 4 Grafiken in 2x2-Raster zeichnen.
+# (Dies funktioniert nicht für ggplot!)
+par(mfrow = c(2, 2))
+# Modelldiagnosen darstellen
+plot(aoa.lm)
+# Ab jetzt wieder normal zeichnen.
+par(mfrow = c(1, 1))
+@
+
+
+Aufgrund des Stichprobenfehlers wird man oft---rein durch
+Zufall---Zusammenhänge und nicht-normalverteilte Residuen
+finden, sodass man ein bisschen Erfahrung braucht, um
+unbedeutende Muster in den Residuen von potenziellen
+Problemen zu unterscheiden. Ausserdem sind Modellannahmen
+gerade bei kleineren Stichproben schwieriger zu überprüfen.
+Für mehr Informationen hierzu, siehe \href{https://janhove.github.io/analysis/2018/04/25/graphical-model-checking}{\textit{Checking model assumptions without getting paranoid}} (25.4.2018)
+und \citet{Vanhove2018b}.
+Siehe ausserdem
+\href{https://janhove.github.io/analysis/2019/04/11/assumptions-relevance}{\textit{Before worrying about model assumptions, think about model relevance}} (11.4.2019).
+
+Das Thema Modellkritik wird weiter behandelt von
+unter anderem
+\citet{Baayen2008},
+\citet[][Kapitel 4]{Cohen2003},
+\citet[][Kapitel 4]{Faraway2005},
+\citet[][Kapitel 8--9]{Weisberg2005} und
+\citet[][Kapitel 2]{Zuur2009}.
+Statt sich zu sehr in technischen Details zu verlieren,
+halte ich es aber sinnvoller, sich stets die Relevanzfrage
+zu stellen (vgl.\ Blogeintrag 11.4.2019).
+
+\paragraph{Aufgabe.} Obwohl die Modelldiagnose
+nicht auf grössere Probleme hindeutet, können
+die Modellannahmen eigentlich gar nicht stimmen.
+Erklären Sie.
+
+\section{Aufgaben}
+
+\begin{enumerate}
+ \item Führen Sie folgende Analyse auf die \texttt{dekeyser2010.csv}-Daten aus:
+<<eval = FALSE>>=
+plot(AOA ~ GJT, data = d)
+gjt.lm <- lm(AOA ~  GJT, data = d)
+summary(gjt.lm)
+@
+\begin{enumerate}
+\item Erklären Sie, was Sie gerade berechnet haben. Was bedeuten die geschätzten Parameter? Wieso ist das Intercept so gross?
+Was bedeutet das Intercept?
+\item Welches Modell finden Sie am sinnvollsten: \texttt{aoa.lm} oder \texttt{gjt.lm}? Warum?
+\end{enumerate}
+
+ \item Die Datei \texttt{vanhove2014\_cognates.csv} enthält eine Zusammenfassung der Daten meiner Dissertation
+ \citep{Vanhove2014}.
+ 163 Deutschschweizer Versuchspersonen wurden gebeten, 45 geschriebene und 45 (andere) gesprochene
+ schwedische Wörter ins Deutsche zu übersetzen. Die Anzahl richtiger Antworten steht in
+ den Spalten \texttt{CorrectWritten} für geschriebene Wörter bzw.\ \texttt{CorrectSpoken} für gesprochene Wörter. Die Datei \texttt{vanhove2014\_background.csv}
+ enthält Angaben zur Leistung der Versuchspersonen bei weiteren Sprach- und kognitiven Tests.
+ Fügen Sie die beiden Datensätze zusammen.
+
+ Versuchen Sie, die folgenden Fragen zu beantworten.
+
+ \begin{enumerate}
+  \item \texttt{DS.Span} enthält die Leistung der Versuchspersonen
+  bei einem Arbeitsgedächtnistest.
+  Wie hängt die Leistung bei \texttt{DS.Span} mit \texttt{CorrectSpoken} zusammen?
+
+ \item Wie hängt die Leistung bei einem Englischtest
+ (\texttt{English.Overall}) mit der Übersetzungsleistung
+ in der geschriebenen Modalität zusammen?
+
+ \item Wie variiert die Übersetzungsleistung in den beiden
+ Modalitäten mit dem Alter (\texttt{Age}) der Versuchspersonen?
+\end{enumerate}
+\end{enumerate}

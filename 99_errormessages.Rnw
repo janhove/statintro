@@ -1,0 +1,182 @@
+\chapter{Häufige Fehlermeldungen in R}\label{ch:fehlermeldungen}
+
+\begin{framed}
+\textbf{Probleme immer der Reihe nach lösen!}
+Wenn Ihr ganzer Bildschirm voller roter Fehlermeldungen
+steht, fangen Sie dann bei der allerersten Fehlermeldung
+an. Öfters sind die anderen Fehlermeldungen Konsequenzen
+der ersten.
+\end{framed}
+
+\medskip
+
+\begin{framed}
+\textbf{Debugging.}
+Wenn Sie jemanden um Hilfe bitten, sollten Sie
+ein reproduzierbares Beispiel, das das Problem illustriert,
+schreiben. Diese Beispiele sollten möglichst \emph{kurz}
+sein, siehe \url{https://stackoverflow.com/q/5963269/1331521}.
+Oft findet man beim Herstellen eines möglichst kurzen reproduzierbaren
+Beispiels selber die Lösung.
+Eine weitere nützliche Technik, um 
+Fehler in Computercode aufzudecken, ist
+\textit{rubber duck debugging}, siehe
+\url{https://rubberduckdebugging.com/}.
+Und öfters hilft auch ein Feierabendbier oder ein Spaziergang,
+sodass Sie sich am nächsten Tag mit einem frischen Kopf mit dem Problem
+beschäftigen können.
+\end{framed}
+
+\section*{object `x' not found}
+Sie versuchen ein Objekt abzurufen, das im Arbeitsgedächtnis
+nicht vorhanden ist. Tippfehler sind hierfür ein typischer
+Auslöser. Es kann auch vorkommen, dass Sie ein Objekt nicht
+eingelesen haben oder dass das Objekt anders heisst, als Sie denken.
+
+Beispiel:
+<<>>=
+x <- c(1, 5, 4)
+mean(X)
+@
+In der ersten Zeile wird ein Objekt namens \texttt{x} kreiert,
+aber in der zweiten wird versucht, das Mittel eines Objektes namens \texttt{X}
+zu berechnen. Gross- und Kleinschreibung spielen eine Rolle!
+
+Wenn Sie sich nicht mehr sicher sind, welche Objekte alles im
+Arbeitsgedächtnis vorhanden sind, können Sie folgende Funktion
+verwenden; diese listet alle vorhandenen Objekte auf.
+
+<<eval = FALSE>>=
+ls()
+@
+
+Die gleichen Infos können Sie in RStudio im Fenster
+rechts oben nachschlagen.
+
+\section*{could not find function `x'}
+Sie wollen eine Funktion verwenden, die nicht besteht
+oder nicht zugänglich ist. Kontrollieren Sie zuerst,
+ob Sie den Namen der Funktion richtig eingetippt haben.
+Wenn es sich um eine Funktion aus einem Erweiterungspaket
+handelt, sollten Sie ausserdem dieses Paket geladen haben.
+
+Beispiel:
+<<>>=
+r.test(n = 50, r12 = 0.4)
+@
+
+Die \texttt{r.test()}-Funktion ist Teil
+des Erweiterungspakets \texttt{psych}. 
+Entweder sollten Sie das Paket zuerst
+mit \texttt{psych} laden
+oder Sie sollten dem Funktionsnamen
+noch \texttt{psych::} voranstellen.
+
+\section*{Error in library(x) : there is no package called `x'}
+Sie versuchen ein Erweiterungspaket zu laden,
+aber haben dieses noch nicht installiert.
+
+Beispiel:
+<<>>=
+library(ggjoy)
+@
+
+Lösung: Paket installieren:
+<<eval = FALSE>>=
+install.packages("ggjoy")
+@
+
+\section*{unexpected symbol}
+Häufige Auslöser für diese Fehlermeldung
+sind vergessene Kommas.
+
+Beispiel:
+\begin{verbatim}
+> library(ggplot2)
+> ggplot(data = iris
++        aes(x = Sepal.Width,
+Error: unexpected symbol in:
+"ggplot(data = iris
+       aes"
+\end{verbatim}
+Nach \texttt{data = iris} fehlt eine Komma.
+
+Beispiel:
+\begin{verbatim}
+> ggplot(data = iris)
+>        aes(x = Sepal.Width,
++            y = Sepal.Length)) +
+Error: unexpected ')' in:
+"       aes(x = Sepal.Width,
+           y = Sepal.Length))"
+\end{verbatim}
+Die Klammer nach der ersten Zeile soll eine Komma sein.
+
+Beispiel:
+\begin{verbatim}
+> ggplot(data = iris,
++        aes(x = Sepal.Width,
++            y = Sepal.Length))) +
+Error: unexpected ')' in:
+"       aes(x = Sepal.Width,
+           y = Sepal.Length)))"
+\end{verbatim}
+
+Auf der dritten Zeile steht eine Klammer zu viel.
+
+\section*{Es funktioniert nicht und es gibt nicht mal eine Fehlermeldung!}
+Vermutlich fehlt irgendwo eine Klammer oder etwas Ähnliches.
+
+Beispiel: Dieser Befehl ergibt keine Fehlermeldung, aber produziert auch keine Grafik.
+\begin{verbatim}
+> ggplot(data = iris,
++        aes(x = Sepal.Width,
++            y = Sepal.Length) +
++   geom_point()
++
+\end{verbatim}
+
+Wie Sie sehen, gibt es nach dem Befehl eine neue Zeile, die mit \texttt{+} anfängt. Das heisst, dass der Befehl noch nicht abgeschlossen ist: Nach abgeschlossenen Befehlen folgen Zeilen, die mit \texttt{>} anfangen. In diesem Fall ist der Auslöser eine fehlende Klammer auf der 3.\ Zeile: Die letzte Klammer schliesst den Befehl \texttt{aes(} ab, aber es fehlt noch eine Klammer, um den Befehl \texttt{ggplot(} abzuschliessen. So funktioniert es schon:
+\begin{verbatim}
+> ggplot(data = iris,
++        aes(x = Sepal.Width,
++            y = Sepal.Length)) +
++   geom_point()
+>
+\end{verbatim}
+
+Bemerken Sie, dass es nun eine neue Zeile mit \texttt{>} gibt: Der letzte Befehl wurde also ausgeführt.
+
+Weiteres Beispiel: Dieser Befehl ergibt auch keine Fehlermeldung, aber produziert auch keine Grafik.
+\begin{verbatim}
+> ggplot(data = iris,
++        aes(x = Sepal.Width,
++            y = Sepal.Length))
+> geom_point()
+geom_point: na.rm = FALSE
+stat_identity: na.rm = FALSE
+position_identity
+\end{verbatim}
+
+Problem: Das Plus-Zeichen nach der 3.\ Zeile fehlt.
+
+\section*{Das Ergebnis einer Berechnung ist `NA'}
+Sie wollen einen Mittelwert o.Ä. berechnen, aber die
+Datenreihe enthält \texttt{NA}-Angaben (\textit{not available}).
+R betrachtet \texttt{NA}-Angaben als unbekannte Zahlen.
+Enthält eine Datenreihe eine unbekannte Zahl,
+dann ist ihr Mittel oder ihre Standardabweichung (usw.)
+auch unbekannt (\texttt{NA}).
+<<>>=
+x <- c(5, 4, 18, NA, 3)
+mean(x)
+@
+
+Wenn Sie es für sinnvoll halten, können Sie das Mittel
+berechnen, ohne die unbekannte Zahl zu berücksichtigen:
+<<>>=
+mean(x, na.rm = TRUE)
+@
+
+Für mehr Informationen zum Umgang mit fehlenden Daten,
+siehe \citet{Graham2009}.

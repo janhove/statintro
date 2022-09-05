@@ -1,0 +1,174 @@
+\chapter{Ziele und Philosophie}
+Das vorliegende Skript hat zum Ziel,
+Studierenden und Forschenden in den Geistes- und Sozialwissenschaften
+statistische Grundkenntnisse zu vermitteln, die ihnen sowohl bei der 
+Lektüre quantitativer Forschungsberichte als auch bei der Gestaltung 
+und Auswertung eigener Studien nützlich sind.
+Zuallerst möchte ich erklären, welche Überlegungen diesem Skript
+zu Grunde liegen und was Sie von ihm erwarten können.
+
+\paragraph{Der \textit{ist}- und der \textit{soll}-Zustand.}
+Zumindest in der angewandten Linguistik, meinem eigenen Forschungsgebiet,
+existiert eine erhebliche Kluft zwischen der Art und Weise,
+wie statistische Analysen ausgeführt und berichtet werden,
+und der Art und Weise, wie sie hätten ausgeführt und berichtet werden sollen.
+Was alles zu dieser Diskrepanz gehört, ist wohl Ansichtssache;
+dies ist mein persönliches Résumé:
+\begin{itemize}
+  \item In vielen Artikeln wird einem mit Unmengen von Signifikanztests
+  um die Ohren gehaut. Die meisten von denen sind aber kaum relevant
+  für die Forschungsfragen, sodass man als LeserIn zuerst
+  die relevanten von den irrelevanten Informationen trennen muss---eine
+  Verantwortung, die eigentlich bei den AutorInnen liegen sollte. 
+  Ich vermute, dass der Überfluss von sinnlosen Informationen der Tatsache
+  zuzuschreiben ist, dass viele Forschende bei der Analyse ihrer
+  Daten nach einem Schema \textit{F} vorgehen und sich zu wenig überlegen,
+  ob die Berechnungen, die sie durchführen und berichten,
+  im Kontext ihrer Studie überhaupt einen Sinn haben.
+  
+  \item Trotz der grossen Menge an Zahlen in Forschungsberichten
+  erfährt man als LeserIn kaum, wie die Daten und Zusammenhänge
+  zwischen den Variablen überhaupt aussehen. Die Gefahren
+  von blindem Herumrechnen werden in diesem Skript an ein paar 
+  Stellen illustriert.
+  
+  \item Der Output statistischer Modelle wird vorschnell
+  hinsichtlich der Theorien und Vermutungen, die der Studie
+  zu Grunde lagen, interpretiert, ohne dass man wirklich zu wissen scheint, was
+  all diese Zahlen \emph{buchstäblich} bedeuten. Natürlich
+  ist es wünschenwert, dass ein Bezug zu Theorien
+  und Vermutungen hergestellt wird. Aber wenn man nicht weiss,
+  was die buchstäbliche Bedeutung des Outputs ist, ist die Gefahr
+  gross, dass man sich selbst nur Dinge weismacht. Entsprechend
+  gibt es in diesem Skript mehrere Übungen, in denen man die buchstäbliche
+  Bedeutung von Zahlen in einem Modelloutput erläutern muss.
+  
+  \item Einige Forschende verlieren bei der Anwendung komplexerer
+  statistischer Verfahren ihr Ziel---die Beantwortung einer
+  Forschungsfrage---aus dem Auge und scheinen die Anwendung solcher
+  Verfahren als Ziel an sich zu sehen 
+  (Ich gehöre wohl öfters auch zu dieser Gruppe.)
+\end{itemize}
+
+In diesem Skript werden wir nicht allzu viele Worte 
+an gängige fragwürdige und sinnlose Praktiken verlieren,
+aber mehrere Aufgaben sind sozusagen als Prophylaxe gegen sie
+gedacht.
+Trotzdem empfiehlt es sich, sich irgendwann mit diesen Praktiken
+auseinanderzusetzen (siehe dazu Kapitel \ref{ch:sinnlos} und \ref{ch:QRP}
+sowie einige der Literaturempfehlungen).
+
+\paragraph{\textit{Curb your enthusiasm}.}
+Viele gängige fragwürdige Praktiken verdanken ihre Omnipräsenz
+wohl der Tatsache, dass sich Geistes- und SozialwissenschaftlerInnen
+zu viel von statistischen Verfahren versprechen.
+Eine scheinbar raffinierte statistische Analyse kann eine schlecht
+geplante oder durchgeführte Datenerhebung aber nicht retten.
+Wichtiger als rein statistische Kenntnisse sind daher
+grundlegende Kenntnisse im Bereich Forschungsdesign
+(siehe dazu ein anderes Skript, \href{https://janhove.github.io/teaching/2020/12/16/quant-meth}{\textit{Quantitative methodology: An introduction}}).
+Auch sollten Sie nicht erwarten, dass eine ausgeklügelte statistische
+Analyse Ihnen eine brauchbare Antwort auf eine schlecht formulierte Forschungsfrage
+liefern wird.
+
+\paragraph{Inhalt.}
+In Kapitel \ref{ch:software} erfahren Sie, wie man die Software, die wir
+verwenden werden (R und RStudio), richtig einstellt. 
+Da die Erfahrung gezeigt hat, dass Studierende oft
+Schwierigkeiten haben, ihre eigenen Datensätze so zu gestalten,
+dass diese einfach in einem Computerprogramm ausgewertet werden können,
+ist Kapitel \ref{ch:datenaufbereiten} diesen Schritten gewidmet.
+In diesem Kapitel lernen Sie auch mehrere nützliche Befehle,
+um Datensätze in R einzulesen, diese umzuordnen und mit anderen
+zusammenzufügen.
+
+Der Fokus des Skripts liegt auf dem Schätzen
+relevanter Informationen anhand von Stichproben (z.B.\ das Mittel
+einer Population oder die Form des Zusammenhangs von zwei Variablen)
+und dem Quantifizieren der Unsicherheit dieser Schätzung.
+Kapitel \ref{ch:descriptives} bis \ref{ch:uncertainty}
+legen dafür die Fundamente.
+Konzepte wie Stichprobenfehler und Konfidenzintervalle
+werden hier hauptsächlich anhand von Simulationen
+und verwandten Methoden (\textit{bootstrapping}) illustriert.
+Hiervon verspreche ich mir, dass sie diese Konzepte besser
+veranschaulichen und die ihnen zu Grunde liegenden Annahmen
+klarer darlegen als eine rein mathematische Erklärung dies täte.
+
+In Kapiteln \ref{ch:linmod} bis \ref{ch:multimod}
+nehmen wir das wichtigste Werkzeug unter die Lupe: das allgemeine
+lineare Modell. Die allermeisten statistischen Verfahren, die
+Sie in den Sozial- und Geisteswissenschaften antreffen werden,
+sind Instanzen des allgemeinen linearen Modells oder eben
+Verallgemeinerungen von ihm.
+
+Auch wenn ich den gelegentlichen Nutzen von Signifikanztests
+nicht abstreiten will, halte ich diese vermehrt für überverwendet.
+Um zu vermeiden, dass Lesende den Eindruck erhalten, dass $p$-Werte
+das A und O einer statistischen Analyse sein sollten, werden
+diese daher erst in Kapiteln \ref{ch:logik} bis \ref{ch:QRP}, 
+unter Begleitung vieler Wenn
+und Aber, besprochen.
+
+Kapitel \ref{ch:logistic} und \ref{ch:weiterbildung} geben Ihnen Empfehlungen,
+wo Sie sich über komplexere Verfahren, die m.E.\ nicht zu den Grundlagen
+gehören, schlau machen können.
+
+Im Anhang ab Seite \pageref{ch:fehlermeldungen} finden Sie eine Erklärung der
+häufigsten Fehlermeldungen in R sowie eine Übersicht über die 
+in diesem Skript verwendeten Softwareversionen.
+
+\paragraph{Voraussetzungen.}
+Da ich an einem Departement für Mehrsprachigkeitsforschung
+und Fremdsprachendidaktik arbeite und Studierende in unseren Programmen
+höchstens geringe Erfahrung mit quantitativer Datenanalyse ins Studium
+mitbringen,
+setzt dieses Skript keine Vorkenntnisse in diesem Bereich voraus.
+Es wird aber schon davon ausgegangen, dass sich die Leserschaft nicht
+abschrecken lässt von ein bisschen mathematischer Notation. Die meisten
+Gleichungen werden in diesem Skript ohnehin in Softwarebefehle umgesetzt,
+was ihre Bedeutung auch transparenter machen sollte.
+
+\paragraph{Lernen lernen.}
+Ich gehe von einer gesunden Portion Neugier und Eigeninitiative aus.
+So habe ich zwar versucht, die meisten Einstellungen bei den verwendeten
+Softwarebefehlen zu erklären. Aber wenn Ihnen nicht klar ist, was eine bestimmte
+Einstellung bewirkt, dann sollten Sie auf der Hilfeseite des Befehls
+nachschlagen oder eben die Einstellung ändern, um zu sehen, was sich
+im Output ändert.
+
+Weiter muss ich deswegen von Neugier und Eigeninitiative ausgehen, weil
+es schlicht unmöglich ist, in einem halbwegs lesbaren Skript alle relevanten
+Einsichten zu vermitteln. Die Idee hinter diesem Skript ist es eben,
+Ihnen die Grundlagen zu vermitteln, die es Ihnen ermöglichen sollen,
+sich weiteres Wissen selber anzueignen. Sie werden in diesem Skript dazu
+viele Literaturempfehlungen finden. Tun Sie sich diese nicht alle sofort
+und aufs Mal an, sondern betrachten Sie diese Vorschläge als Leseprogramm
+für die nächsten paar Jahre. Viele der in diesem Skript behandelten Konzepte
+diskutiere ich übrigens auch auf meinem Blog unter 
+\url{https://janhove.github.io}.
+
+Ein m.E.\ überaus nützliches Werkzeug beim Statistik Lernen
+sind Simulationen. Wir werden daher nicht nur bestehende Datensätze
+analysieren, sondern auch selber Datensätze generieren und analysieren.
+Solche Simulationen bieten den Vorteil, dass man genau weiss, was
+in die Daten eingeflossen ist, sodass man feststellen kann, wie sich
+dies im Output der Modelle widerspiegelt. Spielen Sie mit diesen
+Simulationen herum und schreiben Sie sie um---Sie werden dabei Einiges lernen.
+Und wenn Sie sich neue Techniken aneignen, wenden Sie diese doch 
+zunächst einmal auf solche simulierte Datensätze an, sodass Sie 
+kontrollieren können, ob Sie den Output dieser Techniken tatsächlich
+richtig verstehen.
+
+\paragraph{Skript in Überarbeitung.}
+Das vorliegende Skript ist die zigte Überarbeitung eines Skripts,
+an dem ich seit 2012 arbeite. Vermutlich ist es nicht die letzte.
+Für jegliche inhaltliche und sprachliche Hinweise bin ich daher dankbar.
+Mein Dank gilt insbesondere Isabelle Udry, 
+die mich auf etliche sprachliche Fehler
+und inhaltliche Unklarheiten in einer der neueren Versionen
+hingewiesen hat. Diese habe ich dann prompt durch neue ersetzt. 
+
+\bigskip
+
+Viel Erfolg, Mut und Spass---und haben Sie Geduld mit sich selbst :)

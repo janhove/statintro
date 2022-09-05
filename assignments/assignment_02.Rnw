@@ -1,0 +1,213 @@
+\documentclass[10pt]{article}
+
+\title{Aufgabenblatt 1}
+\usepackage{setspace}
+\setstretch{1.3}
+\usepackage{parskip}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{ngerman}
+\usepackage{hyphenat}
+\usepackage{natbib}
+
+\usepackage[a4paper, top=3cm, bottom=3cm, left=2cm, right=3cm, marginparwidth = 4cm, marginparsep = 0.5cm]{geometry}
+
+\usepackage[small, explicit]{titlesec}
+\usepackage[normalem]{ulem}
+\titleformat{\paragraph}[runin]{\normalfont\normalsize\bf}{\theparagraph}{1em}{#1}
+\titleformat{\subparagraph}[runin]{\normalfont\normalsize}{\thesubparagraph}{1em}{\uline{#1}}
+\titlespacing*{\subparagraph}{0pt}{1ex}{1em}
+
+\usepackage{marginnote}
+\renewcommand*{\marginfont}{\footnotesize}
+
+\usepackage{tikz}
+\usetikzlibrary{calc, intersections, arrows}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+
+\usepackage{tgpagella}
+\usepackage[sc]{mathpazo}
+
+\newtheorem*{lemma}{Lemma}
+\newtheorem*{claim}{Behauptung}
+\let\oldproofname=\proofname
+\renewcommand*{\proofname}{\rm\bf{Beweis}}
+
+\author{Einführung quantitative Datenanalyse}
+\date{\today}
+
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\pagestyle{fancy}
+\fancyhf{}
+\makeatletter
+\let\runauthor\@author
+\let\runtitle\@title
+\makeatother
+\lhead{\runauthor}
+\rhead{S.~\thepage~von \pageref{LastPage}}
+\chead{\runtitle}
+
+\usepackage[shortlabels]{enumitem}
+
+\usepackage{microtype}
+             
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\df}{\,\textrm{d}}
+\newcommand{\pr}{\,\textrm{pr}}
+\DeclareMathOperator*{\esssup}{ess\,sup}
+\DeclareMathOperator*{\supp}{supp}
+
+\newcommand*{\QED}[1][$\square$]{%
+\leavevmode\unskip\penalty9999 \hbox{}\nobreak\hfill
+    \quad\hbox{#1}%
+}
+                                
+\hyphenation{}
+
+\usepackage{hyperref}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Zu den Hausaufgaben}
+In R Daten analysieren ist Übungssache.
+Deswegen sollten Sie die R-Befehle, die im
+Skript vorkommen, selber ausprobieren
+(abtippen, nicht kopieren und einkleben!)
+und links und rechts mal etwas ändern,
+um zu schauen, was sich im Output verändert.
+Weiter sollten Sie sich jede Woche einige
+der Aufgaben im Skript zur Brust nehmen
+und diese im Idealfall mit anderen Studierenden
+diskutieren.
+
+Ein paar der Aufgaben im Skript stelle ich
+jeweils in leicht abgeänderter Form aufs
+wöchentliche Aufgabenblatt. Diese Aufgaben
+verstehen sich als fakultativ, bieten Ihnen
+aber die Gelegenheit bei mir Feedback
+zu Ihrem R-Code einzuholen. So können Sie
+hoffentlich möglichst schnell anfangen,
+einen guten Stil zu pflegen.
+Unter einem guten Stil verstehe ich
+gut strukturierten, deutlich geschriebenen
+Code, mit dem die Analyse reproduziert werden kann.
+
+In diesem ersten Aufgabenblatt liegt der Fokus
+auf der Reproduzierbarkeit der `Analyse'.
+Sie sollten (ausserhalb von R) einen kleinen
+Datensatz anfertigen und diesen dann in R
+einlesen und anzeigen. Die Schritte, die Sie
+in R ausführen, können Sie dann ganz einfach
+dokumentieren, indem Sie die entsprechenden Befehle
+in ein Skript eintragen. Um sicher zu stellen,
+dass alle Befehle funktionieren, können Sie dann 
+automatisch eine HTML-Datei herstellen, die sowohl
+die Befehle als auch die Ergebnisse dieser Befehle
+enthält.
+
+\section*{Daten eintragen, einlesen und anzeigen}
+Slavin et al.\ (2011) berichten die Ergebnisse einer mehrjährigen Evaluationsstudie,
+in der zwei Unterrichtsprogramme miteinander verglichen wurden.
+Schülern und Schülerinnen (SuS) in beiden Programmen wurden unter anderem
+ein spanischer und ein englischer Vokabeltest vorgelegt, und zwar
+in der 1., der 2., der 3. und der 4. Klasse. Die vier Tabellen 
+unten zeigen einen Teil der Ergebnisse, die Slavin et al.\ (2011) berichten; es handelt sich
+dabei um die durchschnittlichen Vokabeltestergebnisse der getesteten SuS.
+
+\begin{enumerate}
+\item Tragen Sie diese Daten in ein Spread\-sheet im 
+langen Format ein. Jede Zeile soll das Ergebnis in einer einzigen 
+Klasse, in einer einzigen Sprache und von einem einzigen Programm 
+enthalten. Sie brauchen also 16 Zeilen mit Daten und eine Zeile 
+mit passenden Spaltennamen.
+
+\item Speichern Sie dieses Spread\-sheet im CSV-Format.
+Lagern Sie diese CSV-Datei in dem Unterordner
+\texttt{data} in Ihrem Projektordner ab.
+
+\item Erstellen Sie nun ein (vorläufig leeres) R-Skript und speichern 
+Sie dieses in einem neuen Unterordner \texttt{assignments} in Ihrem R-Projekt.
+Sie können das Skript beispielsweise \texttt{IhrName\_blatt01.R} nennen.
+Tragen Sie die Befehle, die Sie für die nächsten Teile dieser
+Aufgabe brauchen, in dieses neue Skript ein.
+Vergessen Sie die Befehle fürs Laden der Erweitungspakete, die Sie brauchen, nicht!
+(Die Befehle, um diese zu installieren, sollten jedoch nicht in Ihrem Skript
+vorkommen.)
+
+\item Lesen Sie das Spread\-sheet in R ein.
+
+\item Kontrollieren Sie, ob das Spread\-sheet richtig eingelesen wurde.
+
+\item Zeigen Sie in R nun nur die Englischergebnisse im \textit{transitional bilingual}-Programm an.
+
+\item Zeigen Sie die Spanischergebnisse in der 1. und 2. Klasse im \textit{English immersion}-Programm an.
+
+\item Führen Sie den Befehl \texttt{sessionInfo()} aus.
+\end{enumerate}
+
+Wenn das alles geklappt hat, klicken Sie \texttt{File > Compile Report\dots} und wählen Sie
+das HTML-Format aus. So erzeugen Sie eine HTML-Datei, die sowohl die R-Befehle
+als auch den Output dieser Befehle zeigt. Reichen Sie diese HTML-Datei auf Moodle ein.
+
+\begin{table}[h]
+\centering
+\caption{Vokabeltestergebnisse 1.\ Klasse.}
+\label{tab:slavin_1}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 74.98                   & 79.90 \\
+ Spanish    & 99.85                   & 90.19
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+
+\caption{Vokabeltestergebnisse 2.\ Klasse.}
+\label{slavin_2}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 80.40                        & 81.13 \\
+ Spanish    & 92.94                        & 87.54
+\end{tabular}
+
+\end{table}
+\begin{table}[h]
+\centering
+\caption{Vokabeltestergebnisse 3.\ Klasse.}
+\label{slavin_3}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 84.76                        &  85.45\\
+ Spanish    & 92.86                        & 85.64
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Vokabeltestergebnisse 4.\ Klasse.}
+\label{slavin_4}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 88.07                        &  90.36\\
+ Spanish    & 91.00                        & 86.27
+\end{tabular}
+\end{table}
+
+\end{document}
+

@@ -1,0 +1,684 @@
+\chapter{Zufallsstichproben}\label{ch:stichproben}
+
+In Kapitel \ref{ch:descriptives} sind wir davon
+ausgegangen, dass die Daten, die uns zur Verfügung
+standen, die ganze \textbf{Population}, für die wir uns
+interessierten, darstellten. 
+Eine Population kann eine endliche Menge von tatsächlichen
+oder potenziellen Beobachtungen sein, wie zum Beispiel
+die Wahlpräferenz aller AmerikanerInnen, die vorhaben, 
+zur Urne zu gehen.
+% Öfters sollte man die Population von Interesse
+% aber eher als einen abstrakteren datengenerierenden Mechanismus
+% zu verstehen. Ein simples Beispiel hierfür ist die Kreisscheibe aus Abbildung
+% \ref{fig:kreis}, die Daten aus einer kontinuierlichen Gleichverteilung generiert.
+In der Regel stellen die Daten,
+die gesammelt wurden, aber nur einen kleinen Teil
+der Population von Interesse da bzw.\ sie besteht aus
+endlich vielen Belegen, die von einem Mechanismus
+generiert wurden, der theoretisch unendlich viele solche
+Belege generieren könnte.
+Man sagt, dass solche Daten eine \textbf{Stichprobe}
+der Population von Interesse bilden.
+Diese Stichprobe gibt einem notwendigerweise ein 
+unvollständiges Bild der Population, aus der sie stammt.
+Das Ziel ist es dann,
+anhand der Stichprobe Rückschlüsse über die
+Population, aus der die Stichprobe stammt, zu ziehen.
+Von Interesse sind also nicht sosehr etwa die zentrale Tendenz
+und Streuung in der Stichprobe, sondern die
+zentrale Tendenz und Streuung in der Population.
+
+Im Folgenden gehen wir davon aus, dass uns eine 
+(einfache) \textbf{Zufallsstichprobe} (\textit{(simple) random sample}) zur Verfügung steht.
+Bei einer solchen Stichprobe hatte jedes Element aus der Population
+die gleiche Wahrscheinlichkeit, ausgewählt zu werden.\footnote{Eine etwas
+kompliziertere Art Stichprobe ist die geschichtete Zufallsstichprobe
+(\textit{stratified random sample}).
+Hierzu teilt man die Population von Interesse (z.B.\ Studierende
+an der Universität Freiburg) in Gruppen auf (z.B.\ Studierende an der
+Philosophischen Fakultät, an der Theologischen Fakulät, an der
+Naturwissenschaftlichen Fakultät usw.). Dann zieht man zufällige
+Stichproben innerhalb jeder Gruppe. Somit hat man in
+der Stichprobe garantiert aus jeder Gruppe einige Beobachtungen
+(z.B.\ würde die Stichprobe sowieso Studierende an der Theologischen
+Fakultät beinhalten), aber ist es dennoch möglich, Aussagen über
+das Mittel und die Streuung in der Gesamtpopulation zu machen.
+Letzteres tut man grundsätzlich, indem man die Gruppenergebnisse nach
+der Gesamtgruppengrösse gewichtet. Geschichtete Zufallsstichproben
+werden wir in diesem Skript nicht behandeln.}
+Das heisst aber nicht, dass jeder \emph{Wert} die gleiche Wahrscheinlichkeit
+hat, ausgewählt zu werden: Je nach Population kommen bestimmte Werte
+häufiger vor als andere.
+Dieses Kapitel widmet sich diesen beiden Fragen:
+
+\begin{enumerate}
+\item Wie können wir anhand einer Zufallsstichprobe am
+besten die zentrale Tendenz (insbesondere das Mittel)
+und die Streuung (insbesondere die Varianz und Standardabweichung)
+der Population \textbf{schätzen}?
+
+\item Wenn wir unterschiedliche Zufallsstichproben aus
+der gleichen Population ziehen, wie stark unterscheiden
+sich diese Stichproben dann?
+\end{enumerate}
+
+Fünf Sekunden kritisches Überlegen zeigen aber, dass wir es in der Praxis
+nie wirklich mit Zufallsstichproben zu tun haben. Auf dieses Problem
+wird am Ende dieses Kapitels näher
+eingegangen. Bis dahin bitte ich um etwas \textit{willing suspension of disbelief}.
+
+\section{Stichprobenfehler}
+Zufallsstichproben widerspiegeln nicht perfekt
+jeden Aspekt der Population, aus der sie stammen.
+Um dies besser einzusehen, lohnt es sich,
+Zufallsstichproben aus Populationen zu ziehen,
+deren Eigenschaften wir kennen. So können wir sehen,
+wie stark diese von der Population und voneinander
+abweichen. Dies können wir tun, indem wir
+am Computer Stichproben \textbf{simulieren}.
+
+\paragraph{Aufgabe 1.}
+Mit dem R-Code unten können Sie einschätzen,
+wie Stichproben aus einer normalverteilten
+Population aussehen. Zunächst habe ich hier
+die Stichprobengrösse auf 20 festgelegt,
+aber mit dieser Zahl sollten Sie selber
+herumspielen. Mit der Funktion \texttt{rnorm()}
+werden Zufallsstichproben einer bestimmten Grösse
+und mit bestimmten Parametern (Mittel, Standardabweichung)
+generiert (\textit{r} für \textit{random}).
+Die \texttt{hist()}-Funktion zeichnet ein
+einfaches Histogramm, ähnlich wie in Abschnitt \ref{sec:histogram}.\footnote{R bietet oft mehrere Möglichkeiten, ein Problem zu lösen. In Abschnitt \ref{sec:histogram} haben wir das Histogramm mit einem \texttt{ggplot()}-Befehl gezeichnet. Diese Funktion ist Teil des \texttt{ggplot2}-Packages, das wiederum Teil des \texttt{tidyverse}-Bündels ist. Die \texttt{hist()}-Funktion dahingegen ist Teil des \texttt{graphics}-Packages, das zur Defaultinstallation von R gehört und daher weder installiert noch geladen werden muss. Für ein schnelles Histogramm ist \texttt{hist()} mehr als genug.}
+Führen Sie diese Befehle aus und zwar nicht ein Mal, sondern
+mehrmals. Bemerken Sie dabei, wie (un)ähnlich
+sich die Histogramme von Stichproben aus einer Normalverteilung sind.
+
+<<eval = FALSE>>=
+# Stichprobengrösse definieren
+groesse <- 20
+
+# Stichprobe aus Normalverteilung ziehen: rnorm
+# (hier: Mittel 3 und Standardabweichung 7)
+x <- rnorm(n = groesse, mean = 3, sd = 7)
+
+# Histogramm zeichnen
+hist(x, col = "lightgrey")
+@
+
+\paragraph{Aufgabe 2.}
+Passen Sie den Code oben so an, dass
+er Stichproben aus einer Gleichverteilung mit
+Bereich [-5, 5] statt aus einer Normalverteilung
+generiert. Die Funktion, die Sie dazu brauchen,
+ist \texttt{runif()}. Neben dem \texttt{n}-Parameter
+hat diese Funktion einen \texttt{min}- und
+\texttt{max}-Parameter, mit denen der Bereich
+der Gleichverteilung eingestellt wird.
+Lassen Sie den angepassten Code dann mehrmals
+laufen. Sehen die einzelnen Histogramme
+wie Gleichverteilungen aus? Was ist, wenn Sie
+die Stichprobengrösse vergrössern?
+
+\paragraph{Fazit.}
+Zufallsstichproben sind imperfekte
+Abbildungen der Population, aus der sie stammen.
+Diese Gegebenheit bezeichnet man als
+\textbf{Stichprobenfehler} (\textit{sampling error}).
+Rückschlüsse über die Population verstehen sich
+also als \textbf{Schätzungen}. Sowohl das Schätzen
+selbst als auch das Quantifizieren ihrer Genauigkeit
+sind das Ziel der \textbf{Inferenzstatistik}.
+
+\section{Die zentrale Tendenz und Streuung schätzen}
+In Kapitel \ref{ch:descriptives} wurden
+das Mittel und die Varianz als Masse
+der zentralen Tendenz und der Streuung
+einer Population eingeführt. Hier
+erkunden wir, inwieweit diese Masse nützlich
+sind, um anhand einer Stichprobe die
+zentrale Tendenz und die Streuung einer Population
+zu erfassen. Wenn wir unterschiedliche Stichproben
+aus der gleichen Population ziehen und
+ihr Mittel und ihre Varianz ähnlich wie in
+Kapitel \ref{ch:descriptives} berechnen,
+dann werden die Ergebnisse aufgrund des
+Stichprobenfehlers natürlich bei jeder Stichprobe
+anders sein. Es wäre jedoch gut zu wissen,
+ob die Stichprobenmittel und -varianzen
+\emph{im Durchschnitt} dem Populationsmittel bzw.\
+der Populationsvarianz entsprechen.
+
+Um dieser Frage nachzugehen, simulieren
+wir wieder Zufallsstichproben. Der Code unten
+bewirkt Folgendes: Wir ziehen 10'000 Zufallsstichproben
+von je 5 Beobachtungen (\texttt{groesse}) aus
+einer Gleichverteilung mit Bereich [-5, 5].
+Von jeder Stichprobe berechnen wir das Mittel
+und die Varianz.
+Die Varianz wird mit der selbst geschriebenen Funktion
+\texttt{pop\_var()} berechnet; siehe Seite \pageref{popvar}.
+Um die 10'000 Stichproben zu generieren, wird hier ein
+\textit{for}-Schleife verwendet.
+
+\label{code:stichprobenmittel}
+<<cache = TRUE>>=
+# Stichprobengrösse festlegen - rumspielen!
+groesse <- 5
+
+# Anzahl Simulationen
+n_sim <- 10000
+
+# Insgesamt werden 10'000 Mittel und 10'000 Varianzen berechnet.
+mittel <- vector(length = n_sim)
+varianz <- vector(length = n_sim)
+
+for (i in 1:n_sim) {
+  # Stichprobe aus einer Gleichverteilung mit Bereich -5 bis 5 ziehen.
+  x <- runif(n = groesse, min = -5, max = 5)
+
+  # Mittel berechnen und speichern
+  mittel[[i]] <- mean(x)
+
+  # Varianz berechnen und speichern
+  varianz[[i]] <- pop_var(x)
+}
+@
+
+\subsection{Das Stichprobenmittel}\label{sec:stichprobenmittel}
+Das Mittel einer gleichverteilten Population mit Bereich
+$[a, b]$ liegt bei $\frac{b+a}{2}$. Solche Infos findet man auf
+\href{https://en.wikipedia.org/wiki/Uniform\_distribution\_(continuous)}{Wikipedia}.
+In unserem Fall ist
+$\mu = \frac{5 + (-5)}{2} = 0$. Das Mittel der Stichprobenmittel
+sollte also nahe bei 0 liegen:
+
+<<>>=
+mean(mittel)
+@
+
+\paragraph{Aufgabe.}
+Dieses Ergebnis wird aufgrund des Stichprobenfehlers bei Ihnen
+etwas anders aussehen. Vergleichen Sie daher Ihr Ergebnis mit
+den Ergebnissen Ihrer KollegInnen
+oder lassen Sie den Code mehrmals
+laufen. Wenn das Mittel einer Stichprobe im Schnitt dem
+Mittel der Population entspricht, sollte bei etwa der Hälfte
+Ihrer KollegInnen das Mittel der Stichprobenmittel grösser
+und bei der Hälfte kleiner als $\mu = 0$ sein.
+
+\paragraph{Fazit.}
+Wenn wir das Mittel einer Zufallsstichprobe auf die gleiche Art
+und Weise berechnen wie das Mittel einer Stichprobe, erhalten
+wir \emph{im Schnitt}, \emph{über Tausende von Stichproben hinweg}
+das Populationsmittel. Man sagt auch, dass der \textbf{Erwartungswert}
+des Stichprobenmittels gleich dem Populationsmittel ist.
+Das Stichprobenmittel (Kürzel: $\bar{x}$)
+ist also eine sog.\ \textbf{unverzerrte} (\textit{unbiased}) Schätzung des
+Populationsmittels ($\mu$) und wird gleich berechnet:
+\begin{equation*}
+\bar{x} = \frac{1}{n} \sum_{i = 1}^{n} x_i.
+\end{equation*}
+
+\subsection{Die Stichprobenvarianz}\label{sec:stichprobenvarianz}
+Der Wikipediaseite über Gleichverteilungen
+können wir entnehmen, dass
+die Varianz einer gleichverteilten Population
+mit Bereich $[a, b]$ $\sigma^2 = \frac{(b-a)^2}{12}$ ist.
+In unserem Fall also 
+\[
+ \sigma^2 = \frac{(5-(-5))^2}{12} \approx 8.33.
+\]
+Das Mittel der berechneten Varianzen sollte also nahe bei 8.33 liegen.
+
+<<>>=
+mean(varianz)
+@
+
+\paragraph{Aufgabe 1.}
+Dieses Ergebnis wird aufgrund des Stichprobenfehlers bei Ihnen
+etwas anders aussehen. Vergleichen Sie daher Ihr Ergebnis mit
+den Ergebnissen Ihrer KollegInnen
+oder lassen Sie den Code mehrmals
+laufen. Wenn die Varianz einer Stichprobe im Schnitt der
+Varianz der Population entspricht, sollte bei etwa der Hälfte
+Ihrer KollegInnen das Mittel dieser Varianz grösser
+und bei der Hälfte kleiner als $\sigma^2 = 8.33$ sein.
+
+\paragraph{Aufgabe 2.}
+Ändern Sie den Code oben, sodass jede Stichprobe
+aus bloss 2 Beobachtungen besteht. Lassen Sie den Code
+laufen und vergleichen Sie die durchschnittliche Varianz
+der Stichproben mit jener aus Aufgabe 1.
+Machen Sie dies auch für grössere Stichproben, z.B.,
+mit 30 Beobachtungen.
+
+\paragraph{Fazit.}
+Wenn wir die Varianz einer Stichprobe ähnlich berechnen
+wie die Varianz einer Population, erhalten wir im Schnitt
+einen Wert, der niedriger als die Populationsvarianz ist.
+Formel \ref{eq:popvar} liefert also eine \textbf{verzerrte} Schätzung
+der Populationsvarianz, wenn wir sie auf eine Zufallsstichprobe
+anwenden:
+Je kleiner die Stichprobe, desto mehr wird die Populationsvarianz
+unterschätzt.
+
+Intuitiv lässt sich der Grund für diese Unterschätzung so verstehen:
+Wenn wir Zufallsstichproben von je nur einer Beobachtung aus einer
+Population ziehen, gibt es keine Streuung innerhalb jeder Stichprobe---die
+Beobachtung kann ja nicht von sich selbst abweichen.
+Bei der kleinst möglichen Stichprobe ist die Unterschätzung
+der Varianz in der Population also maximal. In grösseren Stichproben
+ist dieses Problem in stets geringerem Ausmass vorhanden.
+
+Es stellt sich heraus, dass die Unterschätzung der Populationsvarianz
+vorhersagbar ist. Wenn die Stichprobe 5 Beobachtungen zählt,
+wird das Mittel der Varianzen der Stichproben $\frac{4}{5}$ Mal
+so gross sein als die Populationsvarianz. Zählt die Stichprobe
+10 Beobachtungen, wird es $\frac{9}{10}$ Mal so gross sein, und so weiter
+($\frac{n-1}{n}$). Um dies zu kompensieren, wird die Stichprobenvarianz
+(Kürzel: $s^2$) nicht wie die Populationsvarianz ($\sigma^2$),
+sondern folgendermassen berechnet:
+\begin{equation*}
+s^2 = \frac{1}{n-1} \sum_{i = 1}^{n} (x_i - \bar{x})^2.
+\end{equation*}
+
+Im Unterschied zur Populationsvarianz (Formel \ref{eq:popvar}) wird in dieser Formel
+das Stichprobenmittel verwendet (da das Populationsmittel
+in der Regel nicht bekannt ist) und wird die Summe der Quadrate
+durch $n-1$ statt durch $n$ geteilt. Letzteres kompensiert die
+Überschätzung, sodass die neue Formel die Populationsvarianz unverzerrt schätzt.
+Die \texttt{var()}-Funktion führt diese Berechnung aus.
+
+\subsection{Die Stichprobenstandardabweichung}
+Aus dem gleichen Grund, weshalb die Stichprobenvarianz
+nicht wie die Populationsvarianz berechnet wird, wird die
+Stichprobenstandardabweichung ($s$)
+nicht wie die Populationsstandardabweichung ($\sigma$)
+berechnet, sondern wie folgt:
+\begin{equation*}
+s = \sqrt{s^2} = \sqrt{\frac{1}{n-1} \sum_{i = 1}^{n} (x_i - \bar{x})^2}.
+\end{equation*}
+
+In R kann hierfür die \texttt{sd()}-Funktion verwendet werden.\footnote{Ein kleines Detail: Während die Stichprobenvarianz ein unverzerrtes Mass der Populationsvarianz ist, unterschätzt die Stichprobenstandardabweichung die Populationsstandardabweichung leicht. Diese Unterschätzung zu korrigieren, ist im besten Fall schwierig und meistens unmöglich. Sie ist aber ziemlich gering, sodass man diese Formel verwendet und die Unterschätzung in Kauf nimmt.\label{fn:samplesd}}
+Die Stichprobenvarianz- und standardabweichung der Norwegischergebnisse
+können also einfach so berechnet werden:
+
+<<>>=
+# Varianz
+var(d$Norwegian)
+
+# Standardabweichung
+sd(d$Norwegian)
+@
+
+Es kommt eigentlich quasi nie vor, dass man für einen Datensatz
+die Populationsvarianz und -standardabweichung berechnet.
+Spricht man in diesem Kontext von der Varianz
+und Standardabweichung, meint man also die Stichprobenvarianz und die
+Stichprobenstandardabweichung. Bei grossen Populationen oder Stichproben
+ergeben beide Berechnungsmethoden ohnehin nahezu das Gleiche.
+
+\section{Die Verteilung der Stichprobenmittel}\label{sec:clt}
+Wie die Simulationen in Abschnitt \ref{sec:stichprobenmittel}
+zeigen, haben sind die Mittel von Zufallsstichproben
+im Schnitt dem Populationsmittel gleich. Die einzelnen
+Mittel werden sich aber immer zumindest etwas von ihm
+unterscheiden. Aber wie stark weichen einzelne Stichprobenmittel
+nun vom Populationsmittel ab? Um diese Frage zu beantworten,
+simulieren wir wieder ein paar Szenarien.
+
+\subsection{Simulationen}
+\paragraph{Aufgabe 1: Stichproben aus einer Normalverteilung.}
+Für Aufgaben 1--3 werden wir Zufallsstichproben aus
+den drei Populationen in Abbildung \ref{fig:parentpopulation}
+generieren und schauen, wie die Mittel dieser Stichproben
+verteilt sind.
+
+Für die erste Aufgabe ziehen wir Stichproben aus einer
+Normalverteilung mit $\mu = 80$ und $\sigma^2 = 400$ (also $\sigma = 20$).
+
+\begin{enumerate}
+\item Kreieren Sie ein neues R-Skript.
+Übernehmen Sie dafür den Code auf Seite \pageref{code:stichprobenmittel}
+und passen Sie ihn so an, dass er Stichproben aus dieser
+Normalverteilung generiert. Den R-Befehl dafür finden Sie
+am Anfang dieses Kapitels.
+Speichern Sie Ihr Skript in Ihrem Arbeitsordner.
+
+\item Verwenden Sie diesen Code, um 1'000 Stichproben mit je
+2 Beobachtungen aus dieser Verteilung zu generieren und ihr Mittel
+zu berechnen.
+
+\item Zeichnen Sie ein Histogramm der 1'000 Stichprobenmittel.
+Beschreiben Sie die Verteilung der Stichprobenmittel.
+Achten Sie dabei auch auf die Werte auf der $x$-Achse.
+
+\item Berechnen Sie die Varianz der 1'000 Stichprobenmittel und notieren
+Sie das Ergebnis.
+
+\item Wiederholen Sie Schritte 2--4 für Stichproben mit
+5, 20 und 100 Beobachtungen. Was stellen Sie fest?
+\end{enumerate}
+
+<<fig.cap = "Drei Populationen, aus denen hier Stichproben generiert werden.\\label{fig:parentpopulation}", echo = FALSE, fig.width = 8, fig.height = 2, out.width = ".8\\textwidth">>=
+p_norm <- ggplot(data.frame(x=c(0, 160)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 80, sd = 20)) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("Normalverteilung",
+          "Mittel = 80, SD = 20")
+
+p_unif <- ggplot(data.frame(x=c(-200, -80)),
+             aes(x)) +
+  stat_function(fun = function(x) dunif(x, -180, -100)) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("Gleichverteilung",
+          "Bereich [-180, -100]")
+
+p_schief <- ggplot(data.frame(x = c(0, 6)),
+             aes(x)) +
+  stat_function(fun = function(x) df(x, 4, 12)) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("F-Verteilung",
+          "Freiheitsgrade: 4 und 12")
+
+gridExtra::grid.arrange(p_norm, p_unif, p_schief, ncol = 3)
+@
+
+
+\paragraph{Aufgabe 2: Stichproben aus einer Gleichverteilung.}
+Für die zweite Aufgabe ziehen wir Stichproben aus einer
+Gleichverteilung mit Bereich [-180, -100]. Diese Verteilung
+hat $\mu = -140$ und $\sigma^2 \approx 533$.
+
+\begin{enumerate}
+\item Übernehmen Sie den Code auf Seite \pageref{code:stichprobenmittel}
+und passen Sie ihn so an, dass er Stichproben aus dieser
+Gleichverteilung generiert.
+
+\item Verwenden Sie diesen Code, um 1'000 Stichproben mit je
+2 Beobachtungen aus dieser Verteilung zu generieren und ihr Mittel
+zu berechnen.
+
+\item Zeichnen Sie ein Histogramm der 1'000 Stichprobenmittel.
+Beschreiben Sie die Verteilung der Stichprobenmittel.
+Achten Sie dabei auch auf die Werte auf der $x$-Achse.
+
+\item Berechnen Sie die Varianz der 1'000 Stichprobenmittel und notieren
+Sie das Ergebnis.
+
+\item Wiederholen Sie Schritte 2--4 für Stichproben mit
+5, 20 und 100 Beobachtungen. Was stellen Sie fest?
+\end{enumerate}
+
+
+\paragraph{Aufgabe 3: Stichproben aus einer schiefen Verteilung.}
+Für die dritte Aufgabe ziehen wir Stichproben aus einer
+rechtsschiefen Verteilung. Es handelt sich hier um eine
+$F$-Verteilung mit den Freiheitsgraden (= Parametern) 4 und 12.
+Was eine $F$-Verteilung ist, ist im Moment nicht wichtig; wichtig
+ist nur, dass es sich um eine rechtsschiefe Verteilung handelt.
+Die $F(4, 12)$-Verteilung hat
+$\mu = 1.2$ und $\sigma^2 = 1.26$.
+
+\begin{enumerate}
+\item Übernehmen Sie den Code auf Seite \pageref{code:stichprobenmittel}
+und passen Sie ihn so an, dass er Stichproben aus einer $F(4, 12)$-Verteilung
+generiert.
+Statt des \texttt{runif(n = groesse, min = -5, max = 5)}-Befehls
+brauchen Sie \texttt{rf(n = groesse, df1 = 4, df2 = 12)}.
+
+\item Verwenden Sie diesen Code, um 1'000 Stichproben mit je
+2 Beobachtungen aus dieser Verteilung zu generieren und ihr Mittel
+zu berechnen.
+
+\item Zeichnen Sie ein Histogramm der 1'000 Stichprobenmittel.
+Beschreiben Sie die Verteilung der Stichprobenmittel.
+Achten Sie dabei auch auf die Werte auf der $x$-Achse.
+
+\item Berechnen Sie die Varianz der 1'000 Stichprobenmittel und notieren
+Sie das Ergebnis.
+
+\item Wiederholen Sie Schritte 2--4 für Stichproben mit
+5, 20 und 100 Beobachtungen. Was stellen Sie fest?
+\end{enumerate}
+
+\subsection{Fazit: Der zentrale Grenzwertsatz}
+Die Simulationen oben sollen den \textbf{zentralen Grenzwertzsatz}
+(\textit{central limit theorem} (CLT)) illustrieren.\footnote{Es ist übrigens der Satz, der zentral (also von zentraler Bedeutung) ist, nicht der Grenzwert.} Dieser
+Satz besagt Folgendes:
+
+Wenn Zufallsstichproben mit $n$ Beobachtungen
+aus einer Population
+mit Mittel $\mu$ und Varianz $\sigma^2$
+gezogen werden,\footnote{Es gibt ein paar Wahrscheinlichkeitsverteilungen,
+die kein Mittel oder keine Varianz haben.
+Für diese gilt der zentrale Grenzwertsatz nicht.}
+sind die Stichprobenmittel
+ungefähr normalverteilt, wenn $n$ gross genug ist.
+Dies gilt auch dann,
+wenn die Population selber nicht normalverteilt ist.
+Das Mittel der \textbf{Verteilung der Stichprobenmittel}
+($\mu_{\bar{x}}$) ist gleich dem Populationsmittel ($\mu$).
+Die Varianz der Stichprobenmittel ($\sigma^2_{\bar{x}}$)
+wird kleiner, je grösser die Stichproben sind:
+\begin{equation*}
+\sigma^2_{\bar{x}} = \frac{\sigma^2}{n}.
+\end{equation*}
+
+Die Standardabweichung der Verteilung der Stichprobenmittel,
+der \textbf{Standardfehler} (\textit{standard error} (S.E.); $\sigma_{\bar{x}}$),
+ist daher
+\begin{equation*}
+\sigma_{\bar{x}} = \sqrt{\frac{\sigma^2}{n}} = \frac{\sigma}{\sqrt{n}}.
+\end{equation*}
+
+Diese Einsichten---dass die Mittel genügend grosser
+Stichproben annähernd normalverteilt sind und dass
+die Varianz dieser Normalverteilung proportional zur
+Stichprobengrösse ab\-nimmt---sind von grösster Bedeutung
+für die Inferenzstatistik, wie wir später sehen werden.
+Es stellt sich somit die Frage, was mit ``wenn $n$ gross genug ist''
+gemeint ist.
+
+Die Antwort auf diese Frage hängt von der Population,
+aus der die Stichproben stammen, ab. Die Simulationen
+sollen zeigen, dass bei Normalverteilungen
+die Stichprobenmittel bereits
+bei den kleinsten Stichprobengrössen
+normalverteilt sind.
+Auch bei \emph{fast} normalverteilten Populationen
+und sogar bei gleichverteilten Populationen
+ist die Stichprobenmittelverteilung bereits bei
+ziemlich kleinen Stichproben annähernd normalverteilt.
+Bei schiefen Populationen, dahingegen,
+kann die Stichprobenmittelverteilung durchaus
+noch ein bisschen Schiefe aufweisen, auch
+wenn die Stichprobengrösse respektabel ist.
+
+Impräzise\footnote{Die genaue
+mathematische Formulierung des zentralen Grenzwertsatzes
+lässt an Präzision natürlich nichts zu wünschen übrig.} 
+an diesem Satz mag ausserdem erscheinen,
+dass er besagt,
+dass die Stichprobenmittel \emph{annähernd}
+normalverteilt sein werden. Normalverteilungen
+reichen eigentlich von $-\infty$ bis $\infty$.
+Wenn man aber Stichproben aus, zum Beispiel,
+einer Gleichverteilung mit Bereich [-5, 20]
+generiert, dann werden die Stichprobenmittel
+natürlich immer zwischen -5 und 20 liegen.
+In diesem Sinne könnte die Verteilung der
+Stichprobenmittel aus dieser Population nie
+perfekt normalverteilt sein. Aber auch mit
+annähernd normalverteilten Stichprobenmitteln
+kommt man ein Stück weiter.
+
+\paragraph{Beispiel 1.}
+Die Verteilung der Mittel von Stichproben
+mit Grösse 36 aus einer Normalverteilung
+mit $\mu = 1.2$ und $\sigma^2 = 4.1$ hat
+ein Mittel von 1.2 und eine Standardabweichung
+von $\sqrt{\frac{4.1}{36}} \approx 0.34$ (= Standardfehler).
+Mit Stichprobengrössen von 50 bzw.\ 100
+wäre der Standardfehler
+$\sqrt{\frac{4.1}{50}} \approx 0.29$
+bzw.\
+$\sqrt{\frac{4.1}{100}} \approx 0.20$.
+Wer Lust hat, kann dies mit einer Simulation überprüfen.
+
+\paragraph{Beispiel 2.}
+Wenn man mit einem fairen 6-seitigen Würfel
+würfelt sind die Werte 1, 2, 3, 4, 5 und 6
+alle gleich wahrscheinlich. Anders als bei
+der kontinuierlichen Gleichverteilung
+aus Abschnitt \ref{sec:continuousuniform}
+kann aber nicht jeder Wert im Bereich beobachtet
+werden: Man kann ja keine 1.72 würfeln.
+Eine solche Verteilung nennt man eine
+\textbf{diskrete Gleichverteilung}.
+
+Der zentrale Grenzwertsatz trifft auch auf
+diskrete Gleichverteilungen zu. In diesem
+Fall hat die diskrete Gleichverteilung ein
+Mittel von 3.5 und eine Standardabweichung
+von 1.71 (oder eine Varianz von 2.92).
+Wenn man also mit 10 Würfeln mehrmals würfelt
+und jeweils das Mittel der Augen notiert,
+wird man feststellen, dass die Mittel
+ungefähr normalverteilt sind mit $\mu_{\bar{x}} = \mu = 3.5$
+und $\sigma_{\bar{x}} = \frac{1.71}{\sqrt{10}} = 0.54$.
+Würfelt man mit 25 Würfeln, dann beträgt
+der Standardfehler $\frac{1.71}{\sqrt{25}} = 0.34$.
+
+Überprüfen wir dies doch einmal mit einer kleinen Simulation:
+<<>>=
+wuerfel <- 1:6
+n_sample <- 10
+n_sim <- 10000
+mittel <- vector(length = n_sim)
+for (i in 1:n_sim) {
+  wuerfe <- sample(x = wuerfel, size = n_sample, replace = TRUE)
+  mittel[[i]] <- mean(wuerfe)
+}
+sd(mittel) # Standardfehler für n = 10
+@
+
+
+\section{Aufgaben}
+\begin{enumerate}
+\item Sie möchten wissen, wie viele Bücher im Schnitt
+in Schweizer Wohnzimmern vorhanden sind. Nach dem Zufallsprinzip
+wählen Sie acht Haushalte aus. Im Wohnzimmer jedes Haushalts zählen
+Sie die Anzahl Bücher pro Haushalt. Dies sind Ihre Ergebnisse:
+\[
+  18, 10, 7, 142, 48, 27, 257, 14.
+\]
+Tragen Sie diese Daten wie folgt in R ein:
+<<>>=
+buecher <- c(18, 10, 7, 142, 48, 27, 257, 14)
+@
+Sie können die Daten auch in ein Spreadsheet eintragen und dieses Spreadsheet in R einlesen.
+\begin{enumerate}
+\item Stellen Sie diese Daten grafisch dar und beschreiben Sie ihre Verteilung.
+\item Was ist Ihre beste Schätzung des Mittels der Anzahl Bücher pro Schweizer Haushalt?
+\item Was ist Ihre beste Schätzung der Varianz und der Standardabweichung der Anzahl Bücher pro Schweizer Haushalt?
+\item Erklären Sie, warum wir es hier mit Schätzungen zu tun haben.
+      Warum sind wir uns nicht sicher, was das Mittel und die Streuung der Population betrifft?
+\end{enumerate}
+
+\item Eine Gleichverteilung mit Bereich [-0.39, 20.39] hat $\mu = 10$ und $\sigma^2 = 36$.
+
+\begin{enumerate}
+\item Wie wahrscheinlich ist es, dass eine Zufallsstichprobe mit 4
+Beobachtungen aus dieser Verteilung ein Mittel von 5 oder weniger hat? Sie können davon ausgehen,
+dass der zentrale Grenzwertsatz zutrifft.
+
+\item Idem, aber für 10 Beobachtungen und für 50 Beobachtungen.
+
+\item Wie viel Prozent der Stichprobenmittel liegen mehr als
+4 Einheiten von $\mu$ entfernt bei $n = 8$?
+
+\item Zwischen welchen zwei Werten liegen, symmetrisch um $\mu$,
+66.7\% der Stichprobenmittel bei $n = 10$ und bei $n = 60$?
+Wie gross ist diese Entfernung zu $\mu$, wenn man sie in Standardfehlern ausdrückt?
+
+\item Idem, aber für 90\% und 95\% der Stichprobenmittel.
+\end{enumerate}
+\end{enumerate}
+
+\section{Nicht-zufällige Stichproben}
+Wir haben uns in diesem Kapitel mit \textbf{Zufallsstichproben}
+(\textit{random samples}) beschäftigt,
+also mit Stichproben, bei denen jedes Element in der Population
+die gleiche Wahrscheinlichkeit hat, ausgewählt zu werden, und bei
+denen die Auswahl eines Elements die Auswahl eines anderen Elementes
+nicht beeinflusst.
+Zwei grosse Vorteile von Zufallsstichproben sind,
+dass sie unverzerrte Schätzungen des Populationsmittels und der
+Populationsvarianz liefern und dass der zentrale Grenzwertsatz
+auf sie zutrifft.
+
+In der Praxis ist es jedoch schwierig, eine Zufallsstichprobe
+aus einer einigermassen interessanten Population zu ziehen.
+Wenn wir etwa anhand einer Zufallsstichprobe die Englischkenntnisse
+bei Erwachsenen kosovarischer Herkunft im Kanton Sankt-Gallen
+charakterisieren möchten, brauchen wir zuerst eine vollständige
+Liste aller Erwachsenen kosovarischer Herkunft in SG.
+Dann müssten wir zufällig eine Stichprobe von ihnen auswählen
+und die Ausgewählten alle von einer Teilnahme an der Studie überzeugen:
+Sobald sich eine Person weigert, mitzumachen, hätten wir keine
+Zufallsstichprobe aus der ursprünglichen Population mehr.
+Stattdessen hätten wir eine Stichprobe aus der Population
+der in SG wohnhaften Erwachsenen kosovarischer Herkunft, die
+bei einer solchen Studie mitmachen möchten. Unsere Schätzungen
+würden sich in erster Linie auf diese neue Population beziehen, nicht
+auf die Population, für die wir uns anfangs interessierten.
+
+Das Beispiel macht auch klar, was die Konsequenz hiervon ist:
+Während eine Zufallsstichprobe eine unverzerrte Schätzung des
+Mittels der Population, die eigentlich von Interesse ist, liefert,
+wäre es bei einigen Weigerungen möglich, dass einige der ausgewählten
+Personen nicht zur Teilnahme bereit sind, gerade weil sie ihre
+Englischkenntnisse als ungenügend einschätzen oder weil sie
+sprachwissenschaftliche Forschung für uninteressant halten.
+Die Übrigen dürften also tendenziell eher gut im Englischen sein
+oder sich eher für Sprachen interessieren.
+Das Mittel dieser Stichprobe dürfte entsprechend das
+Mittel der Population, die ursprünglich von Interesse war,
+eher über- als unterschätzen.
+
+Fazit: Statt Zufallsstichproben werden in den Sozialwissenschaften
+meistens nicht-zu\-fäll\-ige Stichproben verwendet. Die Konsequenz
+davon ist, dass man sich bei der Interpretation der Ergebnisse
+mehr Gedanken machen muss, wenn man Rückschlüsse über eine Population
+ziehen möchte, als wenn die Stichprobe zufällig ausgewählt worden wäre.
+
+\begin{itemize}
+\item Eine Meinungsumfrage auf Twitter erreicht
+tendenziell Menschen ähnlicher Meinung. Aber sogar die angesehensten Meinungs\-forschungs\-institute können keine
+Zufallsstichproben organisieren: Bei Telefonumfragen in den USA
+nehmen nur \href{http://www.pewresearch.org/2017/05/15/what-low-response-rates-mean-for-telephone-surveys/}{etwa 10\%} der Ausgewählten teil.
+
+\item Wer ohne Entgelt einen langen Fragebogen
+zu seinem mehrsprachigen
+Verhalten ausfüllt, findet Mehrsprachigkeit tendenziell wichtiger
+als jemand, der nach der dritten Frage das Browserfenster schliesst
+oder den Fragebogen nicht einmal erhalten hat
+(bei einer Erhebung nach dem Schneeballprinzip).
+
+\item Muster in einer gut ausgebildeten Stichprobe
+mit überdurchschnittlichem
+sozioökonomischem Status (z.B.\ Universitätsstudierende)
+dürften nicht auf Populationen mit niedrigerem
+Bildungsniveau oder sozioökonomischen Status generalisieren
+lassen.
+Dies ist natürlich vor allem relevant, wenn
+Bildung und der sozioökonomische Status wichtig für
+den Forschungsgegenstand sind. Wenn man bereit ist, anzunehmen,
+dass diese Faktoren nur einen minimalen Effekt auf die Befunde haben,
+kann man zuversichtlicher generalisieren.
+Ob eine solche Annahme berechtigt ist,
+ist eine sachlogische---keine statistische---Frage.
+\end{itemize}

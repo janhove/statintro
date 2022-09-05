@@ -1,0 +1,866 @@
+\chapter{Varianzanalyse}\label{ch:anova}
+
+\section{Mehrere Gruppen vergleichen: Das Problem}
+Wenn wir statt zwei nun mehrere Gruppen
+mithilfe von Signifikanztests
+hinsichtlich eines outcomes vergleichen möchten,
+läge es auf der Hand, mehrere $t$-Tests einzusetzen.
+Wenn man zum Beispiel drei Gruppen vergleichen
+möchte, könnte man zuerst Gruppen A und B vergleichen,
+dann Gruppen A und C und zu guter Letzt Gruppen B und C.
+Das Problem mit diesem Vorgehen ist, dass
+die Wahrscheinlichkeit, \emph{irgendeinen}
+signifikanten Unterschied zu finden, wenn die
+Nullhypothese tatsächlich stimmt, grösser als $\alpha$
+(in der Regel: $\alpha = 0.05$) ist.
+Die Simulationen in diesem Abschnitt stellen
+dieses Problem unter Beweis. Danach folgen mögliche
+Lösungen.
+
+<<echo = FALSE>>=
+set.seed(123456789)
+@
+
+Generieren wir zuerst einen Daten,
+für die wir wissen, dass die Nullhypothese buchstäblich
+stimmt. Wir gehen hier zwar von \textit{random sampling} aus,
+aber wenn wir von \textit{random assignment} ausgingen,
+würde sich am Problem und an der Lösung nichts ändern.
+Mit dem folgenden Befehl wird ein Datensatz (tibble)
+namens \texttt{d} kreiert. Dieser enthält
+60 Beobachtungen von je zwei Variablen: \texttt{gruppe}
+(drei Ausprägungen mit je 20 Beobachtungen)
+und \texttt{ergebnis}. Letztere Variable wurde
+aus einer Normalverteilung generiert, deren Eigenschaften
+unabhängig von \texttt{gruppe} sind. Die Nullhypothese
+stimmt also. Abbildung \ref{fig:anova_zufallsdaten}
+stellt diese Daten grafisch dar.
+<<cache = TRUE>>=
+d <- tibble(
+  gruppe = rep(c("A", "B", "C"), times = 20),
+  ergebnis = rnorm(n = 3*20, mean = 10, sd = 3)
+)
+@
+
+<<echo = FALSE, out.width=".6\\textwidth", cache = TRUE, fig.width = .8*6, fig.height = .8*2, fig.cap= "Zufällig generierte Daten: drei Zufallsstichproben von je 20 Beobachtungen aus der gleichen Normalverteilung. Bei Ihnen werden diese Daten natürlich anders aussehen.\\label{fig:anova_zufallsdaten}">>=
+ggplot(d,
+       aes(x = gruppe,
+           y = ergebnis)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(shape = 1,
+             position = position_jitter(width = 0.2, height = 0)) +
+  xlab("Gruppe") +
+  ylab("Ergebnis")
+@
+
+Wir könnten nun diesen Datensatz drei Mal aufspalten:
+Ein Mal behalten wir nur die Daten aus den Gruppen
+A und B, ein Mal behalten wir nur die Daten aus Gruppen
+A und C, und ein Mal nur die Daten aus Gruppen B und C.
+Wir führen dann jedes Mal einen $t$-Test nach Student aus.
+Bei Ihnen werden der Output anders aussehen, da
+die Daten zufällig generiert wurden.
+Was den R-Code betrifft, bemerke man die 
+Verwendung von \texttt{\%in\%} sowie 
+des Platzhalters \texttt{\_}.
+Mit dem letzteren übergibt man das tibble,
+das man vor dem vorigen \texttt{|>} kreiert hat,
+einem bestimmten Parameter in einer nächsten
+Funktion (hier dem \texttt{data}-Parameter
+in der \texttt{t.test()})-Funktion).
+<<>>=
+# A vs. B
+d |> 
+  filter(gruppe %in% c("A", "B")) |> 
+  t.test(ergebnis ~ gruppe, data = _, var.equal = TRUE)
+
+# A vs. C
+d |> 
+  filter(gruppe %in% c("A", "C")) |> 
+  t.test(ergebnis ~ gruppe, data = _, var.equal = TRUE)
+
+# B vs. C
+d |> 
+  filter(gruppe %in% c("B", "C")) |> 
+  t.test(ergebnis ~ gruppe, data = _, var.equal = TRUE)
+@
+
+Wenn man sich in die Logik des Signifikanztestens
+einschreibt, dann müsste man aufgrund dieser Ergebnisse
+die Nullhypothese, dass die Daten in jeder Gruppe
+aus der gleichen Verteilung stammen, ablehnen,
+denn für den Vergleich zwischen Gruppen A und B
+findet man ja einen $p$-Wert,
+der kleiner als $\alpha = 0.05$ ist ($p = 0.017$).
+Dies obwohl die Nullhypothese in dieser Simulation
+buchstäblich stimmt.
+Dass man Nullhypothesen, die tatsächlich stimmen,
+ab und zu zu Unrecht ablehnt, ist klar---und das
+ist hier auch nicht das Problem. Vielmehr ist das Problem,
+dass diese Fehlerquote (Fehler der ersten Art) angeblich
+bei $\alpha = 0.05$ festgelegt wurde, aber eigentlich
+wesentlich höher ist.
+
+Diese Tatsache können wir mit einer Simulation illustrieren.
+Mit den folgenden Befehlen wird das gleiche Szenario wie oben
+(3 Gruppen mit je 20 Beobachtungen; Nullhypothese stimmt;
+3 $t$-Tests) 5'000 durchlaufen. Jedes Mal wird der $p$-Wert
+der einzelnen $t$-Tests gespeichert sowie auch der kleinste
+der jeweils drei $p$-Werte.
+<<cache = TRUE>>=
+n_runs <- 5000
+pval_ab <- vector(length = n_runs)
+pval_ac <- vector(length = n_runs)
+pval_bc <- vector(length = n_runs)
+min_pval <- vector(length = n_runs)
+
+for (i in 1:n_runs) {
+  sim_df <- tibble(
+    gruppe = rep(c("A", "B", "C"), times = 20),
+    ergebnis = rnorm(n = 3*20, mean = 10, sd = 3)
+  )
+
+  # A vs. B
+  sim_df_ab <- sim_df |> 
+    filter(gruppe %in% c("A", "B"))
+  pval_ab[[i]] <- t.test(ergebnis ~ gruppe, data = sim_df_ab)$p.value
+
+  # A vs. C
+  sim_df_ac <- sim_df |> 
+    filter(gruppe %in% c("A", "C"))
+  pval_ac[[i]] <- t.test(ergebnis ~ gruppe, data = sim_df_ac)$p.value
+
+  # B vs. C
+  sim_df_bc <- sim_df |> 
+    filter(gruppe %in% c("B", "C"))
+  pval_bc[[i]] <- t.test(ergebnis ~ gruppe, data = sim_df_bc)$p.value
+
+  # Kleinsten der 3 p-Werte speichern
+  min_pval[[i]] <- min(c(pval_ab[[i]], pval_ac[[i]], pval_bc[[i]]))
+}
+@
+
+Wenn die Nullhypothese stimmt, müssten die $p$-Werte gleichverteilt
+sein (siehe Aufgaben letztes Kapitel).
+Wenn Sie Histogramme der $p$-Werte der einzelnen
+$t$-Tests zeichnen, werden Sie feststellen, dass
+dies tatsächlich der Fall ist. Die Abweichungen,
+die Sie feststellen werden, sind zufallsbedingt;
+wenn Sie die Anzahl Simulationen erhöhen, werden diese Abweichungen kleiner.
+Wenn Sie nun aber die Verteilung der jeweils
+kleinsten der drei $p$-Werte (\texttt{min\_pval})
+zeichnen, werden Sie feststellen, dass diese \emph{nicht}
+gleichverteilt sind; siehe Abbildung
+\vref{fig:anova_pvalues}.
+
+Wenn wir uns bei unseren Inferenzen darüber, ob sich die drei Gruppen voneinander
+unterscheiden, nach dem kleinsten der drei $p$-Werte richten, würden wir nicht
+in bloss $\alpha =$ 5\% der Fälle die Nullhypothese zu Unrecht ablehnen,
+sondern in mehr als 10\% der Fälle, wenn drei Gruppen verglichen werden:
+<<>>=
+mean(min_pval < 0.05)
+@
+
+\paragraph{Familywise Type-I error rate.}
+ Wenn man mehrere Signifikanztests verwendet, um eine Nullhypothese
+ zu überprüfen, steigt die Wahrscheinlichkeit, dass mindestens einer
+ von ihnen einen signifikanten $p$-Wert produziert---auch wenn die Nullhypothese
+ stimmt und jeder Test korrekt ausgeführt wurde.
+ Die Wahrscheinlichkeit, dass man mindestens einen signifikanten $p$-Wert
+ antrifft, wenn die Nullhypothese stimmt, nennt man die \textit{familywise Type-I error rate};
+ siehe Abbildung \vref{fig:familywise}.
+
+ In Fällen wie im obigen Beispiel ist die Tatsache, dass man eine Nullhypothese
+ mit mehreren Tests überprüft hat (\textit{multiple comparisons}),
+ allen klar. Ausserdem kann das Problem in solchen Fällen relativ leicht behoben
+ werden. In anderen Fällen sind die \textit{multiple comparisons} weniger einfach
+ aufzudecken bzw.\ schwieriger bei der Interpretation der Ergebnisse zu berücksichtigen---zum
+ Beispiel, weil im Forschungsbericht nur eine Auswahl der ausgeführten Signifikanztests
+ beschrieben wird. Siehe hierzu Kapitel \ref{ch:QRP}.
+
+<<echo = FALSE, warning = FALSE, message = FALSE, out.width="\\textwidth", fig.width = 6, fig.height = 1.5, fig.pos = "tp", fig.cap = "Wenn die Nullhypothese stimmt, sollte der $p$-Wert aus einer Gleichverteilung stammen. Für die $p$-Werte aus den einzelnen $t$-Tests ist dies auch der Fall: Die Wahrscheinlichkeit, dass man einen $p$-Wert kleiner als 0.05 beobachtet, liegt tatsächlich bei 5\\%, wenn die Nullhypothese stimmt. Wenn man aber auf der Basis des jeweils kleinsten der drei $p$-Werte schliesst, ob sich die Gruppen unterscheiden, dann sind die relevanten $p$-Werte nicht gleich- sondern rechtsschief verteilt: Die Wahrscheinlichkeit, dass man \\emph{irgendeinen} $p$-Wert kleiner als 0.05 beobachtet, ist erheblich höher als 5\\%, auch wenn die Nullhypothese stimmt.\\label{fig:anova_pvalues}">>=
+cols <- RColorBrewer::brewer.pal(3, "Set1")
+par(mfrow = c(1, 4), las = 2, mar = c(4, 4, 3, 1) + 0.1)
+hist(pval_ab, main = "Vergleich AB", xlab = "p",
+     col = cols[2], freq = FALSE,
+     breaks = seq(0, 1, 0.1))
+hist(pval_ac, main = "Vergleich AC", xlab = "p",
+     col = cols[2], freq = FALSE,
+     breaks = seq(0, 1, 0.1))
+hist(pval_bc, main = "Vergleich BC", xlab = "p",
+     col = cols[2], freq = FALSE,
+     breaks = seq(0, 1, 0.1))
+hist(min_pval, main = "Jeweils kleinster\nder 3 p-Werte", xlab = "min p",
+     col = cols[1], freq = FALSE,
+     breaks = seq(0, 1, 0.1))
+par(op)
+@
+
+<<echo = FALSE, out.width = ".7\\textwidth", fig.width = 6, fig.height = 3, fig.pos = "tp", fig.cap = "Wenn alle Nullhypothesen stimmen und mehrere unabhängige Signifikanztests durchgeführt werden, dann wird die Wahrscheinlichkeit, dass mindestens ein Test ein signifikantes Ergebnis produziert immer grösser ($y = 1 - (1 - 0.05)^\\textrm{Anzahl Tests}$). Diese Wahrscheinlichkeit ist der \\textit{familywise Type-I error rate}. Zwei Tests sind unabhängig voneinander, wenn das Ergebnis des einen Tests überhaupt keine Indizien darüber gibt, was das Ergebnis des anderen Tests sein wird---z.B., weil komplett andere Daten benutzt werden. Wenn die Tests nicht unabhängig voneinander sind (z.B., weil man die gleichen Daten mit mehreren Tests auswertet), wird dieses Problem zwar immer noch vorhanden sein, aber es wird weniger ausgeprägt sein.\\label{fig:familywise}">>=
+n_tests <- seq(1, 30, by = 1)
+error_rate <- 1 - 0.95^n_tests
+df_error_rate <- tibble(n_tests, error_rate)
+ggplot(df_error_rate,
+       aes(x = n_tests,
+           y = error_rate)) +
+  geom_point() +
+  geom_line() +
+  xlab("Anzahl unabhängiger Tests") +
+  ylim(0, 1) +
+  ylab("Fehler der 1. Art (Wsk.)") +
+  geom_hline(yintercept = 0.05, linetype = 2) +
+  annotate(geom = "text",
+           x = 15, y = 0.10,
+           label = "angeblicher Fehler der 1. Art (5%)") +
+  annotate(geom = "text",
+           x = 15, y = 0.60, angle = 18,
+           label = "tatsächlicher Fehler der 1. Art")
+@
+
+\section{Erste Lösung: Randomisierungstest}
+Die einfachste Art und Weise, das \textit{multiple comparisons}-Problem
+zu lösen, ist, die Nullhypothese mit einem einzigen Test zu überprüfen
+statt mit mehreren Tests. Am häufigsten wird hierzu Varianzanalyse (\textsc{anova}: \textit{analysis of variance})
+bzw.\ der $F$-Test eingesetzt (siehe nächsten Abschnitt). Aber das Gleiche
+kann man bewirken mit einem Randomisierungstest, der m.E.\ einfacher nachvollziehbar ist.
+
+Der Randomisierungstest geht von der gleichen Nullhypothese wie im letzten Kapitel aus:
+Die Versuchspersonen (oder was auch immer beobachtet wurde) wurden nach dem Zufallsprinzip
+den Gruppen zugeordnet und die Unterschiede zwischen den Gruppenmitteln, die wir hier
+gerade berechnen, sind lediglich
+das Ergebnis dieser zufälligen Zuordnung.
+<<>>=
+d |> 
+  group_by(gruppe) |> 
+  summarise(mittel = mean(ergebnis))
+@
+
+Die entscheidende Frage ist nun:
+Wie wahrscheinlich wäre es, dass sich die Mittel so stark
+oder noch stärker voneinander unterscheiden würden, wenn diese Nullhypothese tatsächlich stimmt?
+Um diese Frage zu beantworten, müssen wir zuerst in einer Zahl ausdrücken, wie stark
+sich diese drei Mittel voneinander unterscheiden.
+Die Varianz der Gruppenmittel bietet sich hierfür an.
+<<>>=
+d |> 
+  group_by(gruppe) |> 
+  summarise(mittel = mean(ergebnis)) |> 
+  select(mittel) |> 
+  var()
+@
+
+Die Varianz der Stichprobenmittel beträgt also 1.282.
+Bei Ihnen wird das Ergebnis aufgrund der zufällig
+generierten Daten anders aussehen.
+Um die Verteilung der Varianzen der Stichprobenmittel
+unter Annahme der Nullhypothese zu generieren,
+können wir die Beobachtungen ein paar tausend Mal
+zufällig den Gruppenbezeichnungen zuordnen
+und jedes Mal die Varianz der Stichprobenmittel
+der permutierten Daten berechnen.
+Die Logik ist identisch mit jener der Permutationstests
+aus dem letzten Kapitel, nur schauen wir uns die Varianz
+der Gruppenmittel statt des Unterschieds zwischen den
+zwei Gruppenmitteln an.
+<<cache = TRUE>>=
+n_runs <- 10000
+var_mittel_H0 <- vector(length = n_runs)
+
+# Der Datensatz d wird hier als d_H0 kopiert,
+# sodass er nachher nicht überschrieben wird.
+d_H0 <- d
+
+for (i in 1:n_runs) {
+  d_H0$gruppe <- sample(d_H0$gruppe)
+
+  var_mittel_H0[[i]] <- d_H0 |> 
+    group_by(gruppe) |> 
+    summarise(mittel = mean(ergebnis)) |> 
+    select(mittel) |> 
+    var()
+}
+@
+
+<<fig.width = 1.2*3, fig.height = 1.2*2, echo = FALSE, fig.cap = "Die Verteilung der Varianzen der Stichprobenmittel, wenn die Beobachtungen zufällig den Gruppen neu zugeordnet werden. Die Proportion der Varianzen, die mindestens so gross wie die beobachtete Varianz sind, stellt ein gültiger $p$-Wert dar.\\label{fig:distributionvaranova}">>=
+df_var_H0 <- tibble(var_mittel_H0)
+ggplot(df_var_H0,
+       aes(x = var_mittel_H0)) +
+  geom_histogram(fill = "grey", col = "black",
+                 binwidth = 0.10) +
+  xlab("Varianz der Gruppenmittel unter H0") +
+  ylab("Anzahl") +
+  geom_vline(xintercept = 1.282355,
+             colour = "red", linetype = 2) +
+  annotate("text", x = 2, y = 1050, label = "s² > 1.28",
+           angle = 0)
+@
+
+Die Verteilung dieser Varianzen (\texttt{var\_mittel\_H0})
+wird in Abbildung \ref{fig:distributionvaranova} dargestellt.
+Die Proportion der Varianzen, die mindestens so gross wie die
+beobachtete Varianz sind, ist ein gültiger $p$-Wert.
+<<>>=
+mean(var_mittel_H0 > 1.282355)
+@
+
+In diesem Fall also $p = 0.066$.
+Von Durchführung zu Durchführung wird sich dieser Wert
+leicht ändern, da er auf `nur' 10'000 der fast
+578 Quadrillionen möglicher Permutationen basiert.\footnote{Für die Interessierten:
+Es gibt ${{60}\choose{20}} \approx 4.2 \cdot 10^{15}$ Möglichkeiten, um 20 Versuchspersonen
+aus einer Gruppe von 60 zu wählen. Dann gibt es noch ${{40}\choose{20}} \approx 1.4 \cdot 10^{11}$ Möglichkeiten,
+um 20 Versuchspersonen aus der restlichen Gruppe von 40 zu wählen. Zusammen ergibt das etwa
+$4.2 \cdot 10^{15} \cdot 1.4 \cdot 10^{11} \approx 5.78 \cdot 10^{26}$ Möglichkeiten.}
+Aber die Unterschiede werden minimal sein.
+
+\paragraph{Aufgabe 1.} 
+Wir haben die Unterschiede zwischen den Gruppenmitteln
+mit dem Varianzmass erfasst. Würde sich am Ergebnis etwas ändern, wenn wir
+stattdessen die Standardabweichung benutzt hätten? Versuchen Sie die Frage zu beantworten,
+ohne den Computer zu verwenden.
+
+\paragraph{Aufgabe 2.}
+In Abschnitt \ref{sec:unterschiede_mehrere_gruppen} auf
+Seite \pageref{sec:unterschiede_mehrere_gruppen} wurde
+ein echter Datensatz mit drei Gruppen vorgestellt.
+Überprüfen Sie die Nullhypothese, dass sich die
+Durchschnittsleistung zwischen den `no information'-,
+`information'- und `strategy'-Konditionen nicht unterscheidet
+und zwar mit einem Permutationstest.
+Über die leicht unterschiedlichen
+Gruppengrössen brauchen Sie sich keine Sorgen zu machen, d.h., bei Ihrer Berechnung
+können Sie stets 15 Datenpunkte der `information'-Kondition zuordnen,
+14 der `no information'-Kondition und 16 der `strategy'-Kondition.
+
+\paragraph{Mit dem \texttt{coin}-Package.}
+Permutationstests wie diese braucht man nicht selber
+zu programmieren, obwohl ich es für didaktisch sinnvoll halte,
+dass man dies eben schon tut.
+Mit der Funktion \texttt{independence\_test()}
+aus dem \texttt{coin}-Package können sie schnell
+und einfach durchgeführt werden. Am Ergebnis ändert sich nichts.
+Wenn Sie
+diese Funktion mehrmals laufen lassen, werden Sie feststellen,
+dass die kleineren Abweichungen dem Zufallsverfahren hinter dem Test
+zuzuweisen sind.
+<<cache = TRUE>>=
+coin::independence_test(ergebnis ~ factor(gruppe), data = d,
+                        distribution = approximate(nresample = 10000))
+@
+
+\section{Zweite Lösung: Varianzanalyse und $F$-Tests}
+Permutationtests waren anno dazumals zu schwierig,
+um durchzuführen. Ähnlich wie im letzten Kapitel gibt es
+aber mathematische Kniffe, mit dem man in der Regel zu recht
+ähnlichen Ergebnissen kommt. Diese Tricks
+heissen Varianzanalyse
+(\textsc{anova}: \textit{analysis of variance})
+und der $F$-Test. Da Forschungsartikel oft voller
+\textsc{anova}s und $F$-Tests stehen, werden
+diese Tricks hier kurz vorgestellt.
+
+\subsection{Streuungszerlegung}
+Der erste Schritt in einer \textsc{anova}
+besteht darin, dass man die Streuung im
+outcome in zwei Teile zerlegt: Streuung zwischen
+den Gruppen und Streuung innerhalb der Gruppen.
+Dazu berechnet man zuerst die Gesamtquadratsumme
+(vgl.\ Quadratsumme auf Seite \pageref{sec:sumsofsquares}).
+Bei Ihnen werden diese Zahlen anders aussehen, da
+die Daten zufällig generiert wurden.
+<<>>=
+# Gesamtquadratsumme
+sq.total <- sum((d$ergebnis - mean(d$ergebnis))^2)
+sq.total
+@
+
+Um die Streuung innerhalb der Gruppen,
+die Residuenquadratsumme, zu berechnen, kann
+man von allen Beobachtungen ihr Gruppenmittel abziehen.
+Oder man modelliert die Daten in einem allgemeinen
+linearen Modell und berechnet die Quadratsumme der
+Residuen:
+<<>>=
+d.lm <- lm(ergebnis ~ gruppe, data = d)
+
+# Residuenquadratsumme
+sq.rest <- sum((resid(d.lm))^2)
+sq.rest
+@
+
+Die vom Modell erfasste Quadratsumme beträgt also:
+<<>>=
+sq.gruppe <- sq.total - sq.rest
+sq.gruppe
+@
+
+Wir haben, zusätzlich zum Intercept, zwei Parameter gebraucht,
+um den Einfluss des Gruppenfaktors zu modellieren. Dies können
+Sie kontrollieren, indem Sie das Modell \texttt{df.lm} inspizieren.
+Im Schnitt beschreibt jeder zusätzliche Parameter also eine Quadratsumme von 25.6:
+<<>>=
+meanSq.gruppe <- sq.gruppe / 2
+meanSq.gruppe
+@
+
+Es gibt 60 unabhängige Datenpunkte und das Modell schätzt
+bereits 3 Parameter (Intercept + 2 Parameter für die
+Gruppenunterschiede). Daher könnten wir im Prinzip
+noch 57 Parameter schätzen lassen. Dies wäre zwar nicht
+sinnvoll, aber es wäre möglich. Mehr Parameter zu schätzen,
+ginge nicht: In einem allgemeinen linearen Modell kann man
+nur so viele Parameter schätzen als es Beobachtungen gibt.
+Im Schnitt würden diese 57 Parameter eine Quadratsumme
+von 8.87 erfassen:
+<<>>=
+meanSq.rest <- sq.rest / (60 - 2 - 1)
+meanSq.rest
+@
+
+Die kritische Einsicht ist nun, dass wenn die Nullhypothese
+stimmt, die zwei Gruppenparameter im Schnitt nur die gleiche
+Quadratsumme wie die 57 nicht-modellierten Parameter beschreiben
+können. Also: Wenn $H_0$ zutrifft, sollten \texttt{meanSq.gruppe}
+und \texttt{meanSq.rest} einander gleich sein. Eine andere
+Art und Weise, um dies auszudrücken, ist, dass das Verhältnis von
+\texttt{meanSq.gruppe} und \texttt{meanSq.rest} laut der Nullhypothese im Schnitt (`$\mathbb{E}$') 1
+sein soll:
+\[
+H_0: \mathbb{E}\left(\frac{\texttt{meanSq.gruppe}}{\texttt{meanSq.rest}}\right) = 1.
+\]
+Dieses Verhältnis bezeichnet man als $F$.
+In unserem Fall beträgt $F$ 2.89.
+<<>>=
+f.wert <- meanSq.gruppe / meanSq.rest
+f.wert
+@
+
+\subsection{Der $F$-Test}
+Aufgrund des Stichprobenfehlers wird $F$ nie ganz genau 1 sein.
+Die nächste Frage ist daher: Wie ungewöhnlich wäre ein $F$-Wert von 2.89 oder grösser,
+wenn die Nullhypothese stimmt?
+Wenn die Daten in den unterschiedlichen
+Gruppen aus Normalverteilungen
+mit dem gleichen Mittel und der gleichen Varianz stammen,
+dann fällt der $F$-Wert in eine bestimmte Verteilung, nämlich eine $F$-Verteilung.
+$F$-Verteilungen haben zwei Parameter (`Freiheitsgrade'):
+die Anzahl Parameter, die man brauchte, um den Effekt zu modellieren (hier: 2),
+und die Anzahl Beobachtungen, die man nicht aufgebraucht hat (hier: 57).
+Abbildung \ref{fig:distf} zeigt eine $F(2, 57)$-Verteilung.\footnote{Achtung: $2, 57$ ist keine Kommazahl; es handelt sich um zwei separate Zahlen, die Freiheitsgrade.}
+<<echo = FALSE, fig.width = 1.4*3, fig.height = 1.4*2, fig.cap = "Die $F$-Verteilung mit 2 und 57 Freiheitsgraden. ($F$-Verteilungen haben zwei Freiheitsgrade.) Die Strichellinie stellt den beobachteten $F$-Wert dar.\\label{fig:distf}">>=
+ggplot(data.frame(x = c(0, 5)),
+       aes(x)) +
+  stat_function(fun = function(x) df(x, 2, 57)) +
+  xlab("F-Wert") +
+  ylab("Wsk.-Dichte") +
+  ggtitle("F(2, 57)-Verteilung") +
+  geom_vline(xintercept = f.wert, linetype = 2)
+@
+
+Die Fläche unter der Kurve rechts von der Strichellinie
+ist die Wahrscheinlichkeit, dass man einen $F$-Wert von
+2.89 oder mehr beobachtet, wenn die Nullhypothese tatsächlich stimmt.
+Sie kann so berechnet werden:
+<<>>=
+pf(f.wert, df = 2, df2 = 60 - 2 - 1, lower.tail = FALSE)
+@
+
+Dies ist fast das gleiche Ergebnis wie beim Permutationstest.
+
+\subsection{Varianzanalyse in R}
+Glücklicherweise muss man all diese Schritte nicht von Hand
+ausführen. Es reicht, die Daten in einem allgemeinen linearen
+Modell zu modellieren (was oben bereits gemacht wurde)
+und die \texttt{anova()}-Funktion aufs Modell anzuwenden:
+<<>>=
+anova(d.lm)
+@
+
+Berichten würde man dieses Ergebnis wie folgt: $F(2, 57) = 2.89$, $p = 0.064$.
+
+\paragraph{Aufgabe 1.}
+In Abschnitt \ref{sec:unterschiede_mehrere_gruppen} auf
+Seite \pageref{sec:unterschiede_mehrere_gruppen} wurde
+ein echter Datensatz mit drei Gruppen vorgestellt.
+Überprüfen Sie die Nullhypothese, dass sich die
+Durchschnittsleistung zwischen den `no information'-,
+`information'- und `strategy'-Konditionen nicht unterscheidet
+und zwar mit einer \textsc{anova}.
+
+\paragraph{Aufgabe 2.}
+In Abschnitt \ref{sec:money_model} auf Seite \pageref{sec:money_model}
+wurde ein echter Datensatz mit zwei Gruppen vorgestellt.
+Diesen haben Sie im letzten Kapitel mit einem $t$-Test analysiert.
+Analysieren Sie ihn hier nochmals mit einem normalen $t$-Test (also nicht
+nach Welch) und mit einer \textsc{anova}. Welchen Merksatz ziehen Sie?\\
+(Tipp: Quadrieren Sie den $t$-Wert, den Sie beim $t$-Test erhalten.)
+
+
+\section{Varianzanalyse mit mehreren Prädiktoren}
+Varianzanalyse kann man auch anwenden, wenn
+es mehrere Prädiktoren in einem Modell gibt.
+Die Daten aus der Dragan/Luca-Studie (siehe Seite \pageref{sec:berthele2011b}) kann
+man wie folgt in einer \textsc{anova} auswerten:
+<<message = FALSE>>=
+b11 <- read_csv(here("data", "berthele2011.csv"))
+b11.lm1 <- lm(Potenzial ~ CS * Name, data = b11)
+anova(b11.lm1)
+@
+
+Jede Zeile in der Tabelle zeigt, wie
+viele Parameter für einen bestimmten Prädiktor
+modelliert werden mussten (\texttt{Df})
+und was die assoziierte Quadratsumme
+und seine $F$- und $p$-Werte sind.
+Aber Vorsicht: Wenn wir die Reihenfolge
+der Prädiktoren ändern, ändern sich ein paar
+Zahlen:
+<<>>=
+b11.lm2 <- lm(Potenzial ~ Name * CS, data = b11)
+anova(b11.lm2)
+@
+
+Der Grund hierfür ist, dass bei der Berechnung von \texttt{Sum Sq}
+sequenziell vorgegangen wird.
+Wenn wir die Varianzanalyse von Hand ausführen würden,
+würden wir:
+\begin{enumerate}
+ \item die Gesamtquadratsumme berechnen;
+<<>>=
+(ss.gesamt <- sum((b11$Potenzial - mean(b11$Potenzial))^2))
+@
+ \item den Effekt der ersten Variable rausrechnen und berechnen,
+ wie gross die Quadratsumme ist, die diese erfassen kann;
+<<>>=
+cs.lm <- lm(Potenzial ~ CS, data = b11)
+(ss.cs <- ss.gesamt - sum(resid(cs.lm)^2))
+@
+ \item den Effekt der zweiten Variable rausrechnen und berechnen,
+  wie gross die Quadratsumme ist, die diese erfassen kann;
+<<>>=
+name.lm <- lm(Potenzial ~ CS + Name, data = b11)
+(ss.name <- ss.gesamt - ss.cs - sum(resid(name.lm)^2))
+@
+ \item den Interaktionseffekt rausrechnen und berechnen,
+ wie gross die Quadratsumme ist, die dieser erfassen kann;
+<<>>=
+interaktion.lm <- lm(Potenzial ~ CS + Name + CS:Name, data = b11)
+(ss.interaktion <- ss.gesamt - ss.cs - ss.name - 
+    sum(resid(interaktion.lm)^2))
+@
+ \item die restliche Quadratsumme berechnen;
+<<>>=
+(ss.rest <- ss.gesamt - ss.cs - ss.name - ss.interaktion)
+@
+ \item $F$-Werte für alle Effekte berechnen.
+<<>>=
+ss.cs / (ss.rest/151)
+ss.name / (ss.rest/151)
+ss.interaktion / (ss.rest/151)
+@
+\end{enumerate}
+
+Je nachdem, ob wir \texttt{CS} oder \texttt{Name} als erste Variable
+ins Modell eintragen, ändert sich die Quadratsumme, die dieser
+Variable zugeschrieben wird. Der Grund dafür ist, dass
+die Variablen \texttt{CS} und \texttt{Name} in diesem Datensatz
+etwas miteinander korreliert sind: Es gibt mehr Datenpunkte für
+Dragan ohne Codeswitches als mit und mehr Datenpunkte für Luca
+mit Codeswitches als ohne:
+<<>>=
+xtabs(~ CS + Name, data = b11)
+@
+
+Ein Teil der Streuung in den \texttt{Potenzial}-Werten
+kann daher nicht eindeutig dem einen oder dem anderen
+Prädiktor zugewiesen werden. Wird \texttt{CS} als erste
+Variable dem Modell hinzugefügt, dann wird all die Streuung,
+für die es nicht ganz klar ist, ob sie \texttt{CS}
+oder \texttt{Name} zu verdanken ist,
+der Variable \texttt{CS} zugeschrieben; wird \texttt{Name}
+als erste Variable dem Modell hinzugefügt, wird all diese
+Streuung ihr zugeschrieben. Daher ändern sich die Ergebnisse
+für diese Variablen, je nachdem, welche Variable zuerst hinzugefügt
+wurde. Am Ergebnis für den letzten Effekt (die Interaktion) ändert
+sich jedoch nichts.
+
+\paragraph{\textit{Type-I, Type-II, Type-III sum of squares}.}
+ Wenn die Quadratsummen und die von ihnen abgeleiteten $F$- und $p$-Werte
+ sequenziell berechnet werden (wie oben),
+ spricht man von \textit{Type-I sum of squares}.
+ Diese Berechnungsart ist insbesondere dann sinnvoll, wenn man sich für den
+ als letzten modellierten Effekt interessiert,
+ aber zuerst noch ein paar andere
+ Variablen berücksichtigt.
+
+ Eine alternative Berechnungsart wird auf typische kreative
+ Weise \textit{Type-II sum of squares}
+ genannt. Hierzu werden die Effekte in allen möglichen Reihenfolgen ins Modell eingetragen
+ (aber Interaktionen kommen immer nach Haupteffekten) und gilt als der $F$- und $p$-Wert eines
+ Effektes jene $F$- und $p$-Werte, die man antrifft, wenn der Effekt als letzter eingetragen wurde.
+ In unserem Beispiel sähe das Ergebnis wie folgt aus:
+
+ \begin{itemize}
+  \item \texttt{CS}: Man übernimmt die Angaben für \texttt{CS} aus der \textsc{anova}-Tabelle
+  für Modell \texttt{b11.lm2}, da hier \texttt{CS} als letzter Haupteffekt eingetragen wurde:
+  $F(1, 151) = 1.9$, $p = 0.17$.
+
+  \item \texttt{Name}: Man übernimmt die Angaben für \texttt{Name} aus der \textsc{anova}-Tabelle
+  für Modell \texttt{b11.lm1}, da hier \texttt{Name} als letzter Haupteffekt eingetragen wurde:
+  $F(1, 151) = 0.52$, $p = 0.47$.
+
+  \item Die Interaktion kommt immer nach den Haupteffekten, weshalb ihr Ergebnis in beiden
+  Modellen gleich ist: $F(1, 151) = 11.4$, $p < 0.001$.
+ \end{itemize}
+
+ Diese Ergebnisse kann man automatisch mit der \texttt{Anova()}-Funktion (mit grossem A)
+ aus dem \texttt{car}-Package berechnen:
+<<>>=
+car::Anova(b11.lm1)
+@
+
+ Es gibt auch noch die Berechnungsart \textit{Type-III sum of squares},
+ aber von dieser wird meistens abgeraten. \textit{Type-I} und \textit{Type-II sum of squares}
+ können beide je nach der Situation nützlich sein, und wenn man sich nur für die Interaktion
+ interessiert oder wenn man es genau die gleiche Anzahl Beobachtungen pro `Zelle' gibt,
+ macht es eh nichts aus.
+ Schmeissen Sie aber bitte keine Daten weg,
+um so gleich grosse Zellen zu erhalten und nicht zwischen diesen
+Berechnungsarten wählen zu müssen!
+
+\section{Begriffe}
+
+\begin{description}
+ \item[One-way ANOVA (einfaktorielle Varianzanalyse).]
+ Eine Varianzanalyse mit einem
+ Prädiktor. Meistens ist dies eine Gruppenvariable
+ mit zwei oder mehreren Ausprägungen.
+
+ \item[Two-way ANOVA (zweifaktorielle Varianzanalyse).]
+ Eine Varianzanalyse mit zwei
+ Prädiktoren. Oft ist hierbei die Interaktion zwischen den
+ Prädiktoren von Interesse. Wenn die eine Variable zwei Ausprägungen
+ hat und die andere vier, spricht man oft von einer
+ \textit{$2 \times 4$ two-way \textsc{anova}}. \textit{Three-way},
+ \textit{four-way}, usw., \textsc{anova} gibt es auch: Man fügt
+ dem Modell einfach mehr Prädiktoren hinzu.
+
+ \item[\textsc{ANCOVA}.] Steht für \textit{analysis of covariance}.
+ Es handelt sich lediglich um eine Varianzanalyse, in der mindestens eine
+ kontinuierliche Kontrollvariable berücksichtigt wird.
+ % Für weiterführende Literatur, siehe \citet{Huitema2011}.
+
+ \item[\textsc{RM-ANOVA}.] Steht für \textit{repeated-measures analysis of variance}.
+ Dieses Vorgehen kann man verwenden, wenn etwa mehrere Datenpunkte der gleichen
+ Variable pro Versuchsperson vorliegen. \textsc{rm-anova} wird hier
+ nicht besprochen, da es mittlerweile flexiblere Werkzeuge gibt,
+ um mit Abhängigkeitsstrukturen in den Daten umzugehen (gemischte Modelle).
+
+ \item[\textsc{MANOVA}.] Steht für \textit{multivariate analysis of variance}.
+ Es ist eine Erweiterung von \textsc{anova} auf mehrere \textit{outcomes}.
+ Zu \textsc{manova} schreiben \citet{Everitt2011} in der Einführung
+ ihres Buches \textit{An introduction to applied multivariate analysis with R}
+ Folgendes:
+
+\end{description}
+
+\begin{quote}
+``But there is an area of multivariate statistics that we have omitted
+from this book, and that is multivariate analysis of variance (\textsc{manova})
+and related techniques (\dots). There are a variety of reasons for this omission. First,
+we are not convinced that \textsc{manova} is now of much more than historical
+interest; researchers may occasionally pay lip service to using
+the technique, but in most cases it really is no more than this.
+They quickly move on to looking at the results for individual variables.
+And \textsc{manova} for repeated measures has been largely superseded by the
+models that we shall describe [in ihrem Buch].'' (S.~vii-viii)
+\end{quote}
+
+\section{Geplante Vergleiche und Post-hoc-Tests}
+Mit einfaktorieller Varianzanalyse versucht man die Frage
+zu beantworten, ob sich die Gruppenmittel (\emph{irgendwelche}
+Gruppenmittel) in der Population voneinander
+unterscheiden oder ob \emph{irgendwelche} Gruppenmittel
+sich nicht nur wegen der zufälligen Zuordnung unterscheiden.
+Findet man einen
+kleinen $p$-Wert, dann tendiert man dazu, davon auszugehen,
+dass irgendwelche Gruppenmittel sich tatsächlich voneinander
+unterscheiden. Die Varianzanalyse bietet aber keine
+Antwort auf die naheliegende Folgefrage: Welche Gruppen
+unterscheiden sich eigentlich genau voneinander?
+Unterscheiden sich Gruppen A und B, oder eher Gruppen A und C
+oder B und C?
+
+Um solche Fragen zu beantworten, bedienen sich Forschende
+oft auf die Varianzanalyse folgender Signifikanztests.
+Wenn sich die gestellten Fragen erst \emph{nach} der
+Daten\-erhebung ergeben und nicht im Vorhinein aus der
+Theorie abgeleitet wurden (exploratorische Analyse),
+spricht man von \textbf{Post-hoc-Tests}. Wenn die
+Fragen schon \emph{vor} der Untersuchung vorlagen
+(konfirmatorische Analyse), spricht man von
+\textbf{geplanten Vergleichen}.
+
+Häufig verwendete Verfahren für solche nachfolgende Tests
+tragen Namen wie `$t$-Tests mit Bonferroni-Korrektur',
+`$t$-Tests mit Holm--Bonferroni-Korrektur',
+`Fishers \textit{least significant difference}-Test',
+`Scheffé-Test' usw. Die Idee ist, dass das aufgrund
+der mehrfachen Tests gestiegene globale Risiko,
+einen Fehler der ersten Art zu begehen, kontrolliert
+werden muss.
+
+Zusätzliche Tests sind jedoch nicht immer nötig
+oder erwünscht. Entscheidend sind meines Erachtens
+die Theorie und die Hypothesen, die der Studie zu
+Grunde lagen, und welche Datenmuster man als
+Belege für dese Theorie und Hypothesen betrachten
+würde:
+
+\begin{itemize}
+\item Sagt die Theorie voraus, dass es \emph{irgendwelche}
+Gruppenunterschiede (egal welche) geben wird, dann reicht eine
+Varianzanalyse aus. Man kann zusätzlich eventuell interessante
+Gruppenunterschiede deskriptiv berichten, etwa indem man
+das lineare Modell, für das man die Varianzanalyse ausgeführt hat,
+grafisch darstellt. Diese möglichen Unterschiede überlässt
+man dann einer neuen, konfirmatorischen Studie (siehe \citealp{Bender2001}, S. 344).
+Falls die Varianzanalyse keine Signifikanz ergibt,
+sollte man in diesem Fall auch auf zusätzliche Tests verzichten,
+sodass man den \textit{familywise Type-I error rate} nicht erhöht.
+
+\item Sagt die Theorie jedoch einen \emph{spezifischen}
+Gruppenunterschied voraus, oder werden mehrere separate Theorien
+überprüft, die sich auf unterschiedliche Gruppenmittel beziehen
+(z.B.\ A vs.\ B und C vs.\ D), dann braucht man eigentlich
+die Varianzanalyse nicht auszuführen und reichen $t$-Tests.
+Allfällige interessante aber nicht vorhergesagte Gruppenunterschiede
+werden deskriptiv (nicht inferenzstatistisch) berichtet und man
+überlasst sie wiederum einer neuen, konfirmatorischen Studie.
+
+\item Sagt die Theorie voraus, dass sich ein bestimmter
+Unterschied \emph{oder} ein bestimmter anderer Unterschied zeigen wird,
+dann sollte man sich über die oben angesprochenen Methoden
+schlau machen. Dies gilt auch wenn die Theorie komplexere
+Gruppenunterschiede vorhersagt, etwa `Das Gesamtmittel von Gruppen A und B
+ist niedriger als das Gesamtmittel von Gruppen B, C und D'.
+Siehe hierzu \citet{Schad2020}.
+
+\item Sagt die Theorie voraus, dass sich ein bestimmter Unterschied
+\emph{und} ein bestimmter anderer Unterschied zeigen wird, dann reichen
+m.E.\ wiederum zwei t-Tests.
+% Man kann in diesem Fall einen signifikanten
+% und einen nicht-signifikanten Unterschied natürlich nicht als Evidenz für die Theorie betrachten: Vorhergesagt wurden ja zwei Unterschiede.
+\end{itemize}
+
+
+Eine kurze Einführung mit vielen Referenzen ist \citet{Bender2001}.
+Konkrete Ratschläge finden Sie in \citet{Ruxton2008}. Diesen sind jedoch wohl
+schwierig zu folgen ist,
+wenn man noch keine konkrete Erfahrung mit derartigen
+Analysen hat. Ein Blogeintrage zum Thema ist \href{https://janhove.github.io/analysis/2016/04/01/multiple-comparisons-scenarios}{\textit{On correcting for multiple comparisons: Five scenarios}}
+(1.4.2016).
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Seien Sie vorsichtig und sparsam mit Post-Hoc-Erklärungen.}
+ Im Nachhinein gelingt es einem oft, gewisse Muster in den Daten
+ theoretisch zu deuten. Dabei ist es durchaus möglich, dass diese Muster
+ rein zufallsbedingt sind und sich
+ bei einer neuen Studie nicht mehr ergeben.
+
+ Es ist übrigens erstaunlich einfach, sich selbst
+ im \emph{Nach}hinein weiszumachen, dass man ein bestimmtes Muster
+ in den Daten \emph{vorher}gesagt
+ hat. Ein wichtiger Grund hierfür ist, dass wissenschaftliche Theorien
+ und Hypothesen oft vage sind und mehreren statistischen Hypothesen entsprechen.
+ Um zu vermeiden,
+ dass man zuerst sich selbst und nachher seinen Lesenden vortäuscht, dass
+ man die Muster in den Daten so vorhergesagt hat, wie sie sich ergeben haben,
+ kann man seine wissenschaftlichen und statistischen Hypothesen
+ präregistrieren: Man spezifiziert vor der Datenerhebung, welche Muster
+ man erwartet und wie man die Daten analysieren wird.
+ Für mehr Informationen zu Präregistration, siehe etwa
+ \url{http://datacolada.org/64}, \citet{Wagenmakers2012b}
+ und \citet{Chambers2017}.
+\end{framed}
+
+\section{Zwischenfazit Signifikanztests}
+
+\begin{itemize}
+ \item $p$-Werte drücken die Wahrscheinlichkeit aus, mit der man das beobachtete
+ Muster (z.B.\ einen Gruppenunterschied oder eine andere Parameterschätzung)
+ oder noch extremere Muster antreffen würde, wenn die Nullhypothese tatsächlich
+ stimmen würde.
+
+ \item Die Nullhypothese ist fast ausnahmslos, dass das Muster nur aufgrund von
+ Zufall zu Stande gekommen ist, sei dies wegen der zufälligen Zuordnung in
+ einem Experiment oder wegen der Zufallsauswahl, wenn man mit Stichproben
+ aus einer Population arbeitet. Anders ausgedrückt: Sie besagt, dass der eigentliche
+ Gruppenunterschied bzw.\ der Parameter, den man zu schätzen versucht hat,
+ gleich 0 ist.
+
+ \item Mit Signifikanztests überprüft man nicht, ob ein Unterschied oder ein Parameter gross ist; man testet lediglich die Nullhypothese, dass dieser Parameter einen bestimmen Wert hat (in der Regel 0). Man kann Signifikanztests
+ daher nicht einsetzen, um zu bestimmen, ob man irgendeinen beobachteten
+ Unterschied als gross oder klein einstufen sollte.
+
+ \item Auch wenn die Nullhypothese nicht stimmt, muss das nicht heissen,
+ dass dafür Ihre wissenschaftliche Hypothese stimmt: Vielleicht gibt es
+ noch andere theoretische Ansätze, die mit den Befunden kompatibel sind,
+ oder vielleicht verzerrt Ihre Datenerhebung die Ergebnisse.
+
+ \item Oft versucht man die Wahrscheinlicht, dass man die Nullhypothese
+ ablehnt, obwohl diese stimmt, auf 5\% zu reduzieren, indem
+ man nicht schlussfolgert, dass die Nullhypothese nicht stimmt, wenn $p > 0.05$.
+
+ \item $p > 0.05$ heisst aber \emph{nicht}, dass die Nullhypothese stimmt.
+
+ \item Randomisierungs- bzw.\ Permutationstests, $t$-Tests und $F$-Tests dienen alle dem gleichen
+ Zweck. $t$-Tests verwendet man dabei, um die Nullhypothese für Parameterschätzungen
+ (z.B.\ Gruppenunterschiede oder Regressionskoeffizienten) zu testen;
+ $F$-Tests, um zu testen, ob ein Prädiktor (oft mit mehr als zwei Ausprägungen)
+ mehr Streuung in den Daten beschreibt als man rein durch Zufall erwarten würde.
+
+ \item $t$- und $F$-Tests können vom allgemeinen linearen Modell abgeleitet
+ werden. Ihre Annahmen sind den Annahmen dieses Modells gleich. Man kann
+ sie aber durchaus auch als Annäherungen zu Randomisierungs- bzw.\ Permutationstests
+ verstehen und einsetzen.
+
+ \item Es gibt Signifikanztests, denen wir noch nicht begegnet sind.
+ Von der Berechnung her unterscheiden diese sich von den $t$- und $F$-Tests,
+ aber ihr Ziel ist nach wie vor gleich: Die Wahrscheinlichkeit berechnen,
+ mit der man ein beobachtetes oder ein noch extremeres Muster antreffen würde,
+ wenn dieses Muster nur Zufall zuzuschreiben wäre.
+\end{itemize}
+
+\section{$F$-Test im \texttt{summary()}-Output}\label{sec:ftestsummary}
+Jetzt können wir auch endlich die letzte Zeile
+im \texttt{summary()}-Output eines \texttt{lm()}-Modells
+entziffern. Greifen wir nochmals das Modell \texttt{b11.lm1} auf:
+<<>>=
+summary(b11.lm1)
+@
+
+Der $F$-Test ($F(3, 151) = 4.8$, $p = 0.003$)
+testet die Nullhypothese, dass alle Prädiktoren zusammen
+im Modell überhaupt keine Varianz im outcome
+erfassen. Anhand des \texttt{anova()}-Outputs kann
+man die Zahlen rekonstruieren.
+<<>>=
+anova(b11.lm1)
+meanSq.total <- (1.755 + 0.364 + 7.965) / 3
+meanSq.rest <- 105.786 / 151
+fwert <- meanSq.total / meanSq.rest
+fwert
+@
+
+Den $p$-Wert kann man dann mit der $F(3, 151)$-Verteilung
+berechnen:
+<<>>=
+pf(fwert, 3, 151, lower.tail = FALSE)
+@
+
+Ich habe noch nirgends gesehen, dass dieser $F$-Test
+relevant für die Beantwortung einer Forschungsfrage ist.
+Sie können ihn also ohne Weiteres ignorieren.

@@ -1,0 +1,101 @@
+\chapter{Weiterbildung}\label{ch:weiterbildung}
+\section{Bücher}
+Anstatt die Literaturempfehlungen aus den letzten 300 Seiten nochmals zu wiederholen,
+beschränke ich mich hier auf drei Buchempfehlungen:
+\begin{itemize}
+ \item Bodo Winters \textit{Statistics for linguists: An introduction using R}
+schliesst von der Philosophie her gut bei diesem Skript an.
+\citet{Winter2019} bespricht auch das verallgemeinerte lineare Modell und sog.\
+\textbf{gemischte Modelle}, die zum Beispiel sehr nützlich sind, wenn man
+eine Studie analysieren möchte, in der unterschiedliche Versuchspersonen
+auf mehrere Stimuli reagieren.
+
+ \item Richard McElreaths
+ \textit{Statistical rethinking: A Bayesian course with examples in R and Stan} (2.\ Herausgabe)
+ ist eine gelungene Einführung in die sog.\ \textbf{bayessche Statistik},
+ die sich m.E.\ besonders empfiehlt, wenn man schon etwas Erfahrung im Umgang mit
+ quantitativen Daten gesammelt hat \citep{McElreath2020}.
+ 
+ \item \textit{R for data science} von
+ \citet{Wickham2017} ist eine grossartige Ressource,
+ mit der Sie sowohl Ihre R- als auch Ihre Analysefähigkeiten
+ weiterentwickeln können. Das Buch ist kostenlos verfügbar
+ unter \url{https://r4ds.had.co.nz/}.
+\end{itemize}
+
+\section{Abschliessende Tipps}
+\begin{itemize}
+  \item Planen Sie regelmässig Zeit fürs Selbststudium ein.
+  Auch wenn es nur jede zweite Woche zwei Stunden
+  am Freitagnachmittag sind, hilft Ihnen das mehr, als wenn
+  Sie erst in den letzte Monaten Ihres Doktorats volle Pulle
+  Statistik lernen. Mit den Buchempfehlungen oben und den Literaturempfehlungen
+  in den vorigen Kapiteln sollten Ihnen die Quellen nicht ausgehen.
+
+  \item Niemand ist mit allen
+  Verfahren vertraut. 
+  Versuchen Sie, zu antizipieren, was Sie
+  selber brauchen werden, und versuchen Sie, sich diese
+  Verfahren anzueignen. Wenn Ihre outcomes kategorisch
+  sein werden, sollten Sie sich zum Beispiel wohl über
+  logistische Regression schlau machen; wenn Ihre Daten eine
+  Abhängigkeitsstruktur
+  haben werden (z.B.\ mehrere Antworten pro Versuchsperson
+  oder SchülerInnen in Klassen), dürften gemischte Modelle
+  nützlich sein.
+  Es ist sowieso eine gute Idee,
+  sich über die Analysemethode zu informieren, bevor man anfängt,
+  die Daten zu sammeln.
+
+  \item Statistische Verfahren tragen öfters irreführende Namen.
+  Sogenannte kausale Modelle erlauben es einem zum Beispiel nicht,
+  kausale Zusammenhänge zu belegen; diese sind eine Annahme des Modells,
+  kein Ergebnis von ihm. Ebenso wird `konfirmatorische' Faktoranalyse in der Praxis
+  wohl häufiger für exploratorische als für konfirmatorische Zwecke
+  verwendet. Und dass ein `signifikanter' Befund komplett tautologisch
+  oder irrelevant sein kann, haben wir ja bereits diskutiert.
+  Lassen Sie sich bei der Wahl Ihrer Werkzeuge also nicht zu stark
+  von deren Namen leiten.
+
+  \item Gehen Sie nicht davon aus, dass publizierte Analysen
+  viel Sinn ergeben. \textbf{(!!!)}
+  In vielen Artikeln ist dies nämlich nicht der
+  Fall. Ausserdem werden viele Analysen schlecht berichtet.
+  Oft wird zu viel irrelevante und daher ablenkende Information
+  im Text berichtet und werden zu viele Signifikanztests berichtet;
+  siehe \citet{Vanhove2020b}.
+  Aus meiner Sicht sollten Sie keine Analysen ausführen oder berichten,
+  die in der Literatur zwar gängig sind, aber die im Kontext Ihrer Studie
+  Ihres Erachtens keinen Mehrwert haben. Und es ist nicht, weil eine
+  Analyse irgendwelche Zahlen ausspuckt, dass all diese Zahlen auch für
+  Sie oder Ihre Leserschaft relevant sind.
+
+  \item Gehen Sie sparsam mit Signifikanztests um.
+
+  \item Verwenden Sie reichlich Grafiken und nicht (nur) Tabellen,
+  sowohl beim Analysieren als auch in Ihren Berichten.
+  Zeigen Sie dabei möglichst die Variabilität der Daten
+  (Streudiagramme, Boxplots) und die Unsicherheit Ihrer
+  Schätzungen (z.B.\ Konfidenzintervalle).
+
+  \item Machen Sie nach Möglichkeit Ihre Daten und R-Code
+  online verfügbar. 
+  Einerseits brauchen Sie so Details,
+  die Sie für irrelevant halten, nicht in den Bericht aufzunehmen:
+  Interessierte Lesende können die Details selber im Anhang
+  nachschlagen.
+  Andererseits ist es durchaus möglich, dass in den nächsten
+  Jahren statistische Verfahren entwickelt werden, mit denen
+  man Ihre Daten besser auswerten kann. Wenn Ihre Daten
+  frei zugänglich sind, können Sie entsprechend reanalysiert
+  werden und vermeiden Sie, dass Ihre Studie irrelevant wird.
+  Eine praktische Plattform, um Daten und Skripts zu teilen,
+  ist \url{https://osf.io/}.
+  
+  \item Ob eine Analyse vertretbar ist,
+  hängt in erster Linie davon ab, ob sie Ihnen dabei hilft,
+  Ihre Fragen zu beantworten oder etwas über die Daten
+  zu lernen. Gehen Sie nicht nach einem Flowchart vor,
+  sondern überlegen Sie sich, was Sie eigentlich herausfinden
+  möchten und ob die Zahlen im Output dafür relevant sind.
+\end{itemize}

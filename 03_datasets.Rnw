@@ -1,0 +1,1290 @@
+\chapter{Arbeiten mit Datensätzen}\label{ch:datenaufbereiten}
+Die erste Hürde, die es bei einer quantitativen Analyse
+zu überwinden gilt, ist, die Daten so zu organisieren,
+dass diese überhaupt analysierbar sind. Hat man dies
+geschafft, muss man die Daten noch in das Computerprogramm, 
+mit dem man sie analysieren wird (hier: R), einlesen.
+Öfters muss man die eingelesen Datensätze anschliessend
+mit anderen Datensätzen kombinieren und umgestalten
+und in der Regel will man auch noch gewisse Informationen
+aus den Datensätzen herauslesen. Dieses Kapitel ist
+diesen Schritten gewidmet.
+
+\section{Daten organisieren}
+Stellen Sie sich die folgende Datenerhebung vor.
+Sie möchten untersuchen, wie sich die Fähigkeit,
+die Bedeutung von Wörtern in einer nicht beherrschten 
+Sprache auf der Basis ihrer Ähnlichkeit zu Wörtern
+in beherrschten Sprachen zu erschliessen, im Laufe
+des Lebens verändert. Dazu legen Sie einer Reihe von
+deutschsprachigen Versuchspersonen unterschiedlichen
+Alters eine Anzahl geschriebener schwedischer Wörter vor
+und bitten Sie sie, diese ins Deutsche zu übersetzen.
+Der Übersichtlichkeit halber werden hier die Übersetzungen
+von vier Versuchspersonen für fünf Wörter gezeigt,
+und zwar für jede Versuchsperson in der Reihenfolge,
+in der die Wörter übersetzt wurden.
+
+\begin{itemize}
+\item Versuchsperson 1034. Frau, 51 Jahre.
+\begin{itemize}
+\item Wort: \textit{söka}. Übersetzung: \textit{Socken} (falsch).
+\item Wort: \textit{försiktig}. Übersetzung: \textit{vorsichtig} (richtig).
+\item Wort: \textit{mjölk}. Übersetzung: \textit{Milch} (richtig).
+\item Wort: \textit{behärska}. Keine Übersetzung gegeben.
+\item Wort: \textit{fiende}. Übersetzung: \textit{finden} (falsch).
+\end{itemize}
+
+\item Versuchsperson 2384. Frau, 27 Jahre.
+\begin{itemize}
+\item Wort: \textit{fiende}. Keine Übersetzung gegeben.
+\item Wort: \textit{behärska}. Keine Übersetzung gegeben.
+\item Wort: \textit{försiktig}. Übersetzung: \textit{vorsichtig} (richtig).
+\item Wort: \textit{mjölk}. Übersetzung: \textit{Milch} (richtig).
+\item Wort: \textit{söka}. Übersetzung: \textit{Socke} (falsch).
+\end{itemize}
+
+\item Versuchsperson 8667. Frau, 27 Jahre.
+\begin{itemize}
+\item Wort: \textit{mjölk}. Übersetzung: \textit{Milch} (richtig).
+\item Wort: \textit{behärska}. Keine Übersetzung gegeben.
+\item Wort: \textit{fiende}. Übersetzung: \textit{finden} (falsch).
+\item Wort: \textit{söka}. Übersetzung: \textit{suchen} (richtig).
+\item Wort: \textit{försiktig}. Übersetzung: \textit{vorsichtig} (richtig).
+\end{itemize}
+
+\item Versuchsperson 5901. Mann, 15 Jahre.
+\begin{itemize}
+\item Wort: \textit{behärska}. Übersetzung: \textit{beherrschen} (richtig).
+\item Wort: \textit{mjölk}. Übersetzung: \textit{milch} (sic.) (richtig).
+\item Wort: \textit{försiktig}. Übersetzung: \textit{vorsichtig} (richtig).
+\item Wort: \textit{fiende}. Übersetzung: \textit{feinde} (sic.) (richtig; eigentlich \textit{Feind}).
+\item Wort: \textit{söka}. Übersetzung: \textit{socken} (sic.) (falsch).
+\end{itemize}
+\end{itemize}
+
+Wie trägt man solche Angaben am besten in ein Spreadsheet ein?
+Bevor wir uns ein paar Faustregeln anschauen, möchte ich ein bisschen
+Werbung für ein Spreadsheetprogramm machen, dass Sie vielleicht noch
+nicht kennen.
+
+\paragraph{Ein kostenloses Spread\-sheetprogramm.}
+\href{http://libreoffice.org}{LibreOffice.org} ist eine
+kostenlose Applikationssuite, die---wie Microsoft Office---aus 
+einem Textbearbeitungsprogramm (Write), einem Spread\-sheetprogramm
+(Calc), einem Präsentationsprogramm (Impress) usw., besteht.
+Selber finde ich LibreOffice Calc nützlicher als MS Excel,
+weil man beim Speichern von Spread\-sheets gewisse Einstellungen
+viel einfacher ändern kann. Darauf werden wir später zurückkommen.
+
+\subsection{Lange Datensätze sind praktischer als breite}
+Wir befassen uns in diesem Kurs mit sog.\ rechteckigen Datensätzen,
+d.h., Datensätze, in denen die Informationen in Zeilen und Spalten
+organisiert werden und in denen alle Zeilen und Spalten gleich lang sind.
+(Beispiele von anderen Datensatzformaten sind XML und JSON.)
+Die zwei üblichsten Formate, in denen Datensätze organisiert werden,
+sind das breite und das lange Format.
+Im breiten Format werden alle Angaben zu einer bestimmten
+\textbf{Erhebungseinheit} (z.B., zu einer Versuchsperson) in die gleiche
+Zeile eingetragen. In unserem Beispiel könnte ein breiter Datensatz
+wie in Abbildung \ref{fig:wide_data_subject} aussehen (7 Spalten werden nicht gezeigt).
+Bemerken Sie, dass es für jedes Wort drei Spalten gibt:
+eine, in der steht, an welcher Stelle das Wort übersetzt wurde;
+eine, in der die Übersetzung steht;
+und eine, in der vermerkt wird, ob die Übersetzung richtig war.
+Auch die Anordnung in Abbildung \ref{fig:wide_data_item}, in der es eine Zeile pro Wort gibt
+und alle Übersetzungen für dieses Wort auf der gleichen Zeile
+stehen, ist ein Beispiel eines breiten Datensatzes (10 Spalten nicht
+werden nicht gezeigt).
+
+\begin{figure}[tp]
+\includegraphics[width = \textwidth]{figs/wide_data_subject.png}
+\caption{Ein breiter Datensatz mit einer Zeile pro Versuchsperson.}
+\label{fig:wide_data_subject}
+\end{figure}
+
+\begin{figure}[tp]
+\includegraphics[width = \textwidth]{figs/wide_data_item.png}
+\caption{Ein breiter Datensatz mit einer Zeile pro Stimulus.}
+\label{fig:wide_data_item}
+\end{figure}
+
+Im langen Format werden die Angaben zu einer \textbf{Beobachtungseinheit}
+in der gleichen Zeile arrangiert. Eine Definition von `Erhebungseinheit'
+und `Beobachtungseinheit' ist schwierig zu geben \citep[siehe][]{Wickham2014}
+und würde ausserdem wenig bringen. In diesem Beispiel wären die 
+Beobachtungseinheiten aber die einzelnen Übersetzungen. Die gleichen
+Daten im langen Format könnten aussehen wie in Abbildung \ref{fig:long_data}.
+Es ist in der Regel wesentlich einfacher mit langen Datensätzen als mit
+breiten zu arbeiten. Und falls es trotzdem einmal nötig sein sollte, mit
+einem breiten Datensatz zu arbeiten: Lange Datensätze zu breiten zu 
+konvertieren, ist einfacher als umgekehrt; siehe hierzu Abschnitt \ref{sec:pivot}.
+
+\begin{figure}[tp]
+\includegraphics[width = \textwidth]{figs/long_data.png}
+\caption{Ein langer Datensatz mit einer Zeile pro Stimulus pro Versuchsperson. Lange Datensätze sind in der Regel einfacher zu verwalten und zu analysieren als breite.}
+\label{fig:long_data}
+\end{figure}
+
+Um zu vermeiden, dass das absichtliche oder versehentliche Löschen
+einer Zeile dazu führt, dass die anderen Zeilen nicht mehr
+interpretiert werden können, werden die Angaben zu den Versuchspersonen
+in jeder Zeile wiederholt. Lassen Sie weder im langen noch im
+breiten Format Informationen weg, die man einer anderen
+Zeile entnehmen kann. Also \emph{nicht} so wie in Abbildung \ref{fig:leere_zellen}!
+
+\begin{figure}[tp]
+\includegraphics[width = \textwidth]{figs/long_data_nicht_so.png}
+\caption{Nicht so! In diesem Datensatz wurden mehrere Zellen leer gelassen, da man deren
+Inhalt anderen Zellen entnehmen kann. Dies wird bei einer Analyse aber zu Schwierigkeiten führen. Ausserdem kann das Löschen einer Zeile dafür sorgen,
+dass die Infos auf anderen Zeilen nicht mehr rekonstruiert werden können.}
+\label{fig:leere_zellen}
+\end{figure}
+
+Bemerken Sie auch, dass es eine Spalte gibt, welche die Reihenfolge,
+in der die Wörter übersetzt wurden, explizit macht. Im Prinzip könnte
+man diese Information aus der Struktur des Datensatzes ableiten.
+Indem man diese Information jedoch explizit hinzufügt, vermeidet man,
+dass sie verloren geht, wenn der Datensatz anders sortiert wird.
+
+Sowohl breite als auch lange Datensätze sind \textbf{rechteckig}:
+\begin{itemize}
+\item Sie haben eine Anzahl Zeilen und Spalten. Alle Zeilen sind gleich lang. Dies gilt auch für die Spalten.
+\item Es gibt keine komplett leeren Zeilen und Spalten. Einzelne leere Zellen
+gibt es öfters schon, aber es ist nicht so, dass es Angaben in Spalten A--D
+gibt, überhaupt keine in Spalten E--F und dann wieder welche in Spalte G.
+\item In der Regel haben alle Spalten einen Namen. Manchmal kommt es zwar vor,
+dass keine einzige Spalte einen Namen hat, aber geben Sie nicht ein paar Spalten
+einen Namen und anderen nicht.
+\item Alle Spaltennamen stehen in \emph{einer} Zeile. Die Spaltenbezeichnungen stellen
+sich also nicht aus mehreren Zellen zusammen.
+\end{itemize}
+
+Zum Vergleich: Das Spread\-sheet in Abbildung \ref{fig:berechnungen_im_Spreadsheet} zeigt einen
+nicht-rechteckigen Datensatz. Die Zusammenfassungen unten
+haben in diesem Datensatz nichts zu suchen und würden
+beim Einlesen zu Problemen führen.
+
+\begin{figure}[tp]
+\includegraphics[width = \textwidth]{figs/datensatz_schlecht.png}
+\caption{Nicht so! Dieser Datensatz ist nicht rechteckig: ``Prozent Männer:'' ist keine Versuchspersonnummer, und ``0.25'' ist kein Geschlecht. Ausserdem ist Zeile 22 komplett leer.}
+\label{fig:berechnungen_im_Spreadsheet}
+\end{figure}
+
+\subsection{Kurze, aber selbsterklärende Bezeichnungen verwenden}
+Machen Sie sich die spätere Analyse einfacher, indem Sie den
+Spalten und anderen Angaben in Ihren Datensätzen deutliche Namen geben.
+Dadurch vermeiden Sie, dass Sie während der Analyse
+ständig wieder nachschlagen müssen, was die
+Angaben überhaupt heissen. Dies verringert wiederum
+die Wahrscheinlichkeit, dass Sie Fehler machen.
+
+Ein paar Beispiele:
+
+\begin{itemize}
+\item Sie werten einen Fragebogen aus. Machen
+Sie in jeder Spalte deutlich, worum es in den Fragen 
+ging. Vermeiden Sie also Spaltennamen wie `Q3' oder 
+`Frage8'. Verwenden Sie stattdessen Spaltennamen
+wie `DiplomVater' (wenn die Frage war, welchen
+Schulabschluss der Vater der Gewährsperson hat)
+oder `DialectUse' (wenn die Frage war, wie oft
+die Gewährsperson Dialekt redet).
+
+\item Wenn Sie eine Spalte namens `Geschlecht' haben,
+die mit Nullen und Einsen gefüllt ist, müssten Sie
+ständig nachschlagen, ob 0 jetzt für `Frau' oder 
+`Mann' steht. Verwenden Sie stattdessen lieber direkt
+`Frau' und `Mann', oder sogar `f' und `m'.
+Eine andere Möglichkeit ist, dass Sie die Spalte
+zu `Frau' umbenennen, sodass es deutlich
+ist, dass eine 1 heisst, dass die Gewährsperson
+eine Frau war, und eine 0, dass es sich um einen
+Mann handelte.
+
+\item Verwenden Sie eher kurze Bezeichnungen.
+In der späteren Analyse werden Sie nämlich
+insbesondere 
+die Spaltennamen mehrmals wieder eintippen müssen.
+Vermeiden Sie daher Spaltennamen wie `wie\_oft\_sprechen\_Sie\_Hochdeutsch' und verwenden Sie stattdessen
+`use\_hochdeutsch' oder Ähnliches.
+\end{itemize}
+
+Am besten verwenden Sie übrigens keine Leertasten
+und Lesezeichen in den Spaltennamen.
+
+
+\subsection{Fehlende Angaben unzweideutig vermerken}
+Im Beispiel oben habe ich fehlende Übersetzungen
+einfach leer gelassen. Daraus kann ich ableiten,
+dass der Versuchsperson das Wort zwar vorgelegt
+wurde, aber sie dieses nicht übersetzt hat.
+Es wäre jedoch auch möglich gewesen, dass
+einigen Versuchspersonen bestimmte Wörter
+gar nie vorgelegt wurden, z.B.\
+aufgrund eines Softwarefehlers.
+Es wäre wichtig, solche Fälle 
+von den ersten zu unterscheiden,
+indem man diese Fälle mit einer Kürzel (z.B.
+`NA' für `not available' oder `not applicable')
+vermerkt.
+
+Gegebenenfalls kann man auch mehrere Kürzel
+verwenden, um unterschiedliche Gründe für
+das Nicht-Vorhanden-Seins voneinander zu unterscheiden.
+In der Regel ist es aber am einfachsten, sämtliche
+fehlende Daten mit `NA' zu vermerken und
+den Grund hierfür in eine Kommentarspalte einzutragen.
+
+Verwenden Sie aber keine Zahlen
+(wie -99 oder -9999), um fehlende Angaben zu vermerken.
+Der Grund ist, dass solche Zahlen manchmal zulässige
+Werte sind. Ausserdem können solche Angaben
+schwieriger auf den ersten Blick erkannt werden,
+wenn man eine Zusammenfassung des Datensatzes generiert.
+
+\subsection{Mehrere kleinere Datensätze sind handlicher als ein riesiger}
+\label{sec:mehrere_kleine}
+In den Spread\-sheets oben wurden bestimmte
+Informationen mehrfach wiederholt. Zum Beispiel
+musste man bei den Übersetzungen von Versuchsperson
+1034 fünf Mal eintragen, dass sie eine Frau im Alter
+von 51 Jahren war. In diesem Fall ist der Datensatz
+trotz wiederholten Informationen übersichtlich.
+Wenn man sich aber überlegt, dass in der Regel für
+jede Versuchsperson viel mehr Informationen
+vorliegen (z.B., Daten aus einem Hintergrundsfragebogen)
+und dass man öfters auch Informationen zu den verwendeten
+Stimuli (hier: den Wörtern) mit einbeziehen will,
+wird klar, dass man es schnell mit grossen Datensätzen
+zu tun hat, in denen viele Informationen mehrfach
+wiederholt werden.
+
+Um die Übersicht zu bewahren und um sich eine 
+Menge Tipp- oder Kopierarbeit zu sparen, lohnt
+es sich, statt eines grossen Datensatzes
+mehrere kleinere zu verwalten. In unserem Beispiel
+würde man dann ein Spread\-sheet mit Informationen
+zu den Versuchspersonen gestalten (Abbildung \ref{fig:versuchspersonen}).
+Daneben kann man noch ein Spread\-sheet mit Informationen
+zu den Wörtern anfertigen (Abbildung \ref{fig:woerter}).
+In einem dritten Spread\-sheet kann man dann die Antworten bei der 
+Übersetzungsaufgabe aufführen (Abbildung \ref{fig:uebersetzungen}).
+
+\begin{figure}[tp]
+\centering
+\includegraphics[max width = 0.7\textwidth]{figs/versuchspersonen.png}
+\caption{Ein erster Datensatz mit Informationen, die nur die Versuchspersonen betreffen.}
+\label{fig:versuchspersonen}
+\end{figure}
+
+
+\begin{figure}[tp]
+\centering
+\includegraphics[max width = 0.7\textwidth]{figs/woerter.png}
+\caption{Ein zweiter Datensatz mit Informationen, die nur die Stimuli betreffen.}
+\label{fig:woerter}
+\end{figure}
+
+\begin{figure}[tp]
+\centering
+\includegraphics[max width = 0.7\textwidth]{figs/uebersetzungen.png}
+\caption{Ein dritter Datensatz, in dem die Übersetzungen aufgeführt werden.}
+\label{fig:uebersetzungen}
+\end{figure}
+
+Da im letzten Spread\-sheet sowohl eine Spalte mit
+den Identifikationen der Versuchspersonen als
+auch mit den Bezeichnungen der Stimuli vorhanden ist,
+können ihm die Informationen aus den ersten zwei kleineren
+Datensätzen nachher problemlos hinzugefügt werden.
+Wie man dies in R machen kann, erfahren Sie in Abschnitt \ref{sec:join}.
+
+\subsection{Weitere Bemerkungen}
+\begin{itemize}
+
+\item Beachten Sie Gross- und Kleinschreibung. Für manche Statistikprogramme ist `Frau` gleich `frau', für andere (darunter R) nicht.
+
+\item Sonderzeichen, wie Umlaute, führen manchmal zu Problemen.
+
+\item Beachten Sie Leerzeichen. Für ein Computer ist `Mann' nicht gleich `Mann ' (mit Leerzeichen).
+
+\item Wenn Sie in Ihren Spread\-sheets gerne mit Farben arbeiten: Diese gehen verloren, wenn Sie das Spread\-sheet in R einlesen. Wenn die Farben Informationen kodieren, die nicht den Angaben
+im Spread\-sheet entnommen werden können, fügen Sie diese Informationen also besser noch selbst hinzu.
+
+\item Arbeiten Sie möglichst wenig im Spreadsheet!
+Nachdem Sie die Daten eingetragen haben, sollten Sie grundsätzlich nicht mehr
+im Spreadsheet, sondern in R selber arbeiten. Also nicht in Excel herumrechnen,
+sortieren, kopieren, kleben, neu formattieren usw. Wenn Sie diese Schritte in
+R ausführen und Ihren Code speichern, ist eindeutig festgelegt, wie Sie den Datensatz
+umgestaltet haben, um Grafiken zu zeichnen und Modelle zu rechnen.
+Der ursprüngliche Datensatz bleibt dabei aber unverändert, sodass Sie immer
+wieder aufs Original zurückgreifen können.
+\end{itemize}
+
+
+\section{Datensätze einlesen}
+Wenn die Daten in einem analysierbaren Format vorliegen,
+besteht die nächste Herausforderung darin, diese in R
+einzulesen. Wir behandeln hier nur zwei Fälle:
+das Einlesen von Excel-Spreadsheets im XLS(X)-Format
+und das Einlesen von Spreadsheets im CSV-Format.
+
+\subsection{Excel-Spreadsheets (XLS, XLSX)}
+Speichern Sie den Datensatz \texttt{uebersetzungen.xlsx}
+im Ordner \texttt{data} in Ihrem Arbeitsordner.
+Dieser Datensatz ist eine Exceldatei, die aus einem einzigen
+Spread\-sheet besteht. Um ihn in R einzulesen,
+verwenden wir die Funktion \texttt{read\_excel()}
+aus dem \texttt{readxl}-Package. Dieses Package ist Teil
+des \texttt{tidyverse}-Bündels, das wir bereits installiert haben.
+Wenn wir seine Funktionen aber verwenden möchten, müssen wir
+das Package noch laden. Das machen wir mit der Funktion \texttt{library()}:
+<<>>=
+library(readxl)
+@
+
+Wenn keine Fehlermeldung kommt, ist gut!
+
+\paragraph{Aufgabe.} Welche Version von \texttt{readxl}
+haben Sie installiert?
+
+Installieren müssen Sie Packages übrigens nicht immer wieder,
+aber Sie müssen die Packages, deren Funktionen Sie 
+verwenden schon bei jeder neuen Session wieder
+mit \texttt{library()} laden.
+
+Um den Datensatz einzulesen, verwenden wir nun die Funktion
+\texttt{read\_excel()}, der wir den Pfad zur Exceldatei übergeben.
+R akzeptiert sowohl absolute als auch relative Pfade,
+aber damit Sie bereits jetzt gute Gewohnheiten entwickeln,
+verweisen wir auf Dateien ab dem Ordner, in der sich die .Rproj-Datei
+des aktuellen Projekts befindet. Das geht am einfachsten mit der \texttt{here()}-Funktion aus dem \texttt{here}-Package, das wir auch noch laden müssen.
+Für unsere jetzigen Zwecke ist die Verwendung von \texttt{here()}
+eigentlich übertrieben, aber für grössere Projekte ist es eine
+sehr nützliche Funktion, sodass wir sie hier sofort verwenden.
+<<>>=
+library(here)
+translations <- read_excel(here("data", "uebersetzungen.xlsx"))
+@
+
+Wie Sie sehen, erkennt die \texttt{here()}-Funktion, dass sich (bei mir)
+die .Rproj-Datei im Ordner \texttt{home/jan/ownCloud/StatIntro2022}
+befindet. Bei Ihnen wird dieser Pfad natürlich anders aussehen. 
+Die Alternative ohne \texttt{here()} und mit einem relativen Pfad sähe übrigens so aus:
+<<eval = FALSE>>=
+translations <- read_excel("data/uebersetzungen.xlsx")
+@
+Der Vorteil von der \texttt{here()}-Funktion ist,
+dass der Befehl auch genau so funktioniert, wenn das
+Skript, in dem es vorkommt, in einem Unterordner gespeichert ist:
+Die einzulesende Datei wird ab dem \textit{project root} gesucht,
+nicht ab dem Pfad des Skripts.
+
+Angezeigt wird der Datensatz übrigens noch nicht, aber im Fenster rechts oben
+sollten Sie jetzt ein Objekt namens \texttt{translations} sehen,
+zusammen mit der Angabe `20 obs.\ of 5 variables'.
+
+Der Datensatz ist nun zugänglich in einem sog.\ \textit{tibble} namens \texttt{translations}.\footnote{Rechteckige Datensätze heissen in R eigentlich \textit{data frames}. \textit{Tibbles} sind die Entsprechung von \textit{data frames} in den \textit{tidyverse}-Paketen, darunter auch das Paket \texttt{readxl}. Wer schon viel Erfahrung mit R hat, wird im Laufe des Skripts vielleicht ein paar subtile Unterschiede zwischen \textit{data frames} und \textit{tibbles} feststellen, aber im Grossen und Ganzen sind sie klein.\label{fn:tibble}}
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Einschub: <-, = und ==.}
+Die Symbolenfolge \texttt{<-} ist der \textit{assignment operator}.
+Sie kreiert ein neues Objekt im Arbeitsgedächtnis bzw. überschreibt ein bereits
+vorhandenes Objekt. Dieses Objekt trägt den Namen links von \texttt{<-}.
+Kürzel in RStudio: \textsc{alt} + \textsc{-}.
+
+Oft wird auch das Ist-Gleich-Zeichen (\texttt{=}) als \textit{assignment operator} verwendet.
+Es wird aber auch verwendet, um Parameter in Funktionen festzulegen (wie Sie
+bald sehen werden). Zwecks \textit{one form, one function} werde ich daher
+ausschliesslich \texttt{<-} als \textit{assignment operator} verwenden.
+
+Dann gibt es noch die Symbolenfolge \texttt{==}. Diese überprüft,
+ob zwei Werte identisch sind. Beispiel:
+
+<<>>=
+4 == 2 * 2
+8 == 2 * 3
+@
+\end{framed}
+
+\paragraph{Fehlermeldungen.}
+Fehlermeldungen in R sind notorisch unverständlich.
+In Anhang \ref{ch:fehlermeldungen} finden Sie eine 
+Liste mit den häufigsten Fehlermeldungen
+sowie möglichen Auslösern und Lösungen. Wenn der Anhang Ihnen
+nicht weiterhilft, kleben Sie die Fehlermeldung am besten in
+Google ein.
+
+Wenn Sie die folgende Fehlermeldung erhalten,
+heisst das, dass R die Datei am falschen Ort gesucht hat.
+
+\begin{verbatim}
+> translations <- read_excel(here("Data", "uebersetzungen.xlsx"))
+Error: `path` does not exist: 
+  ‘/home/jan/ownCloud/StatIntro2022/Data/uebersetzungen.xlsx’
+\end{verbatim}
+
+Haben Sie die Befehle richtig eingetippt? Haben Sie den
+Arbeitsordner richtig eingestellt? Haben Sie die Datei am richtigen
+Ort gespeichert? Hier ist das Problem, dass der Ordner \texttt{data} und nicht \texttt{Data} heisst.
+
+\paragraph{Kontrollieren, ob die Daten richtig eingelesen wurden.}
+Auch wenn Sie keine Fehlermeldung erhalten, sollten Sie kontrollieren,
+ob der Datensatz richtig eingelesen wurde. Dazu können Sie 
+beispielsweise die ersten paar Zeilen des Datensatzes anzeigen
+lassen. Mit dem folgenden Befehl sollten die ersten vier Zeilen
+gezeigt werden.
+<<>>=
+slice_head(translations, n = 4)
+@
+
+Die Fehlermeldung sollte uns nicht beunruhigen.
+Die Funktion \texttt{slice\_head()} ist Teil des \texttt{dplyr}-Pakets,
+welches wiederum zum \texttt{tidyverse}-Bündel gehört.
+Dieses Bündel haben wir zwar installiert, aber noch nicht
+geladen. Laden wir das \texttt{tidyverse}-Bündel,
+so funktioniert die Funktion schon; die Mitteilungen
+über \texttt{Attaching packages} und \texttt{Conflicts}
+sind eben nur das: Mitteilungen, keine Fehlermeldungen.
+<<>>=
+library(tidyverse)
+@
+<<>>=
+slice_head(translations, n = 4)
+@
+
+Alles scheint in Ordnung zu sein. Bemerken Sie aber,
+dass leere Zellen als \texttt{NA} vermerkt wurden.
+
+Auch können Sie der Sicherheit halber kontrollieren,
+ob der Datensatz die richtige Anzahl Zeilen und Spalten
+zählt:
+<<>>=
+# Anzahl Zeilen
+nrow(translations)
+
+# Anzahl Spalten
+ncol(translations)
+@
+
+Um den ganzen Datensatz in RStudio anzuschauen, können Sie die \texttt{View()}-Funktion verwenden:
+
+<<eval = FALSE>>=
+View(translations)
+@
+
+Wenn die Daten nicht richtig eingelesen wurden, 
+kontrollieren Sie am besten nochmals, ob das Spread\-sheet
+nach den Regeln der Kunst formattiert wurde.
+
+\paragraph{Hilfeseiten abrufen.} 
+Für mehr Details zur \texttt{read\_excel()}-Funktion, siehe
+\url{https://readxl.tidyverse.org/}. Sie können auch immer
+eine Hilfeseite zu einer Funktion abrufen, indem Sie 
+\texttt{?funktionsname} (z.B.\ \texttt{?read\_excel})
+in die Konsole eintragen.
+
+\subsection{CSV-Dateien}
+Ein beliebtes Format, um Datensätze zu speichern und mit anderen zu teilen,
+ist das CSV-Format. CSV steht für \textit{comma-separated values}: Die Zellen
+auf der gleichen Zeile werden durch Kommas voneinander getrennt;
+siehe Abbildung \ref{fig:csv}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[max width = 0.6\textwidth]{figs/csv.png}
+\caption{Ein Datensatz, der als \textit{comma-separated values} gespeichert ist.}
+\label{fig:csv}
+\end{figure}
+
+In Excel ist es blöderweise eher schwierig, Datensätze im CSV-Format zu speichern:
+Zwar gibt es diese Option, aber auf deutsch- oder französischsprachigen Systemen
+werden statt Kommas Semikolonen als Trennzeichen verwendet.
+In LibreOffice.org hingegen wird man jedes Mal gefragt, ob man Kommas oder Semikolonen
+verwenden will.
+
+Manchmal werden Texteinträge auch noch zwischen Anführungszeichen gestellt, sodass
+Kommas auch in einem Textfeld vorkommen können. Die folgenden Funktionen erkennen
+dies in der Regel automatisch.\footnote{Wenn Sie vorher schon mit R gearbeitet haben, ist die Wahrscheinlichkeit gross, dass Sie statt der \texttt{read\_csv()}-Funktion (mit \texttt{\_}) die \texttt{read.csv()}-Funktion (mit \texttt{.}) verwendet haben.
+\texttt{read.csv()} ist die Einlesefunktion von \textit{base R};
+\texttt{read\_csv()} ist ihre Entsprechung aus dem \textit{tidyverse}.}
+Die \texttt{read\_csv()}-Funktion gehört zum \texttt{readr}-Package,
+das automatisch geladen wird, wenn das \texttt{tidyverse}-Bündel geladen wird.
+
+<<message = TRUE>>=
+participants <- read_csv(here("data", "versuchspersonen.csv"))
+@
+
+Beim Ausführen dieser Befehle werden ein paar Mitteilungen (keine Fehlermeldungen!)
+angezeigt, die unter anderem zeigen, dass die \texttt{read\_csv()}-Funktion erkannt hat,
+dass in den Spalten \texttt{Versuchsperson} und \texttt{Alter} nur Zahlen stehen (`dbl' für `double', ein Zahlenformat)
+und in den Spalten \texttt{Geschlecht} und \texttt{Englisch} auch Buchstaben (`chr' für `character').
+Lesen Sie nun noch den Datensatz mit den zu übersetzenden Wörtern ein; die Mitteilungen,
+die Sie in der R-Konsole beim Ausführen solcher Befehle sehen werden,
+werden in diesem Skript nicht mehr angezeigt.
+<<message = TRUE>>=
+items <- read_csv(here("data", "woerter.csv"))
+@
+
+\paragraph{Aufgabe.} Inspizieren Sie die beiden Datensätze \texttt{participants}
+und \texttt{items}.
+
+\begin{framed}
+\noindent \textbf{Einschub: Unterschiedliche CSV-Formate.} Wenn Sie auf einem französisch- oder
+deutschsprachigen Computersystem in Excel ein Spread\-sheet im `CSV-Format' speichern,
+werden die unterschiedlichen Zellen nicht mit Kommas sondern mit Semikolonen voneinander
+getrennt. Der Grund ist, dass das Komma in diesen Sprachen als Dezimaltrennzeichen dient
+und daher nicht mehr zur Trennung von Zellen verwendet werden kann. `CSV'-Dateien, in
+denen Zellen durch Semikolonen getrennt werden, können Sie in R einlesen, indem Sie statt
+der Funktion \texttt{read\_csv()} die Funktion \texttt{read\_csv2()} verwenden.
+
+In LibreOffice.org kann man für jede Datei selber einstellen,
+ob Kommas oder Semikolonen zur Trennung von Zellen verwendet werden sollten,
+und welches Symbol als Dezimaltrennzeichen dienen soll.
+\end{framed}
+
+\section{Datensätze zusammenfügen}\label{sec:join}
+Wir haben nun drei Datensätze eingelesen: 
+einen mit den Antworten in der Übersetzungsaufgabe
+(\texttt{translations}),
+einen mit Informationen zu den zu übersetzenden Wörtern
+(\texttt{items}),
+und einen mit Informationen zu den Teilnehmenden
+(\texttt{participants}).
+Um die Daten auszuwerten, müssten diese Datensätze miteinander verknüpft werden.
+Zum Beispiel müssten wir dem Datensatz \texttt{translations} 
+drei Spalten mit Informationen zu den jeweiligen Versuchspersonen hinzufügen:
+\texttt{Geschlecht}, \texttt{Alter}, \texttt{Englisch}.
+Für Zeilen in \texttt{translations},
+für die \texttt{Versuchsperson} \texttt{1034} ist, 
+sind die Einträge also \texttt{Frau}, \texttt{51} respektive \texttt{B2};
+ist \texttt{Versuchsperson} = \texttt{5901},
+sind die Einträge \texttt{Mann}, \texttt{15} respektive \texttt{B1}.
+Wenn die gemeinsame Spalte in den beiden Datensätzen identisch heisst,
+ist dies ein Kinderspiel:
+<<>>=
+all_data <- left_join(x = translations, y = participants)
+@
+
+\paragraph{Aufgabe.} Verwenden Sie die \texttt{View()}-Funktion,
+um \texttt{all\_data} zu inspizieren.
+
+Die \texttt{left\_join()}-Funktion erkennt, dass es in beiden Datensätzen
+eine Spalte \texttt{Versuchsperson} gibt und
+verwendet diese als `Reissverschluss'. Wenn die Funktion
+Schwierigkeiten hat, zu erkennen, welche Variable oder welche
+Variablen sie als Reissverschluss nehmen soll, kann man diese auch
+explizit einstellen:
+<<>>=
+all_data <- left_join(x = translations, y = participants, 
+                      by = "Versuchsperson")
+@
+
+Um auch noch Informationen zu den zu übersetzenden Wörtern
+hinzuzufügen, wiederholen wir den Befehl mit \texttt{y = items}.
+Das Ergebnis dieser Aktion sollten Sie wiederum selber inspizieren.
+<<>>=
+all_data <- left_join(x = all_data, y = items, by = "Wort")
+@
+
+Die \texttt{left\_join()}-Funktion bewirkt, dass alle Einträge
+in Datensatz \texttt{x} bewahrt bleiben und diesem Datensatz die entsprechenden
+Informationen aus Datensatz \texttt{y} hinzugefügt werden, insofern welche vorhanden sind.
+Wenn es keine Entsprechung in \texttt{y} gibt, erscheint in den hinzugefügten Spalten \texttt{NA}.
+Weitere `join'-Funktionen sind die folgenden; siehe \url{https://dplyr.tidyverse.org/reference/join.html} für Details:
+
+\begin{itemize}
+ \item \texttt{right\_join()}: Alle Einträge aus Datensatz \texttt{y} bleiben bewahrt; Entsprechungen aus \texttt{x} werden hinzugefügt, falls vorhanden.
+ \item \texttt{full\_join()}: Alle Einträge aus beiden Datensätzen bleiben bewahrt. \texttt{NA}, falls es im jeweils anderen Datensatz keine Entsprechung gibt.
+ \item \texttt{inner\_join()}: Nur Einträge aus Datensatz \texttt{x}, für die es eine Entsprechung in \texttt{y} gibt, bleiben bewahrt. Diese Entsprechungen werden hinzugefügt.
+ \item \texttt{semi\_join()}: Nur Einträge aus Datensatz \texttt{x}, für die es eine Entsprechung in \texttt{y} gibt, bleiben bewahrt. Diese Entsprechungen werden nicht hinzugefügt.
+ \item \texttt{anti\_join()}: Nur Einträge aus Datensatz \texttt{x}, für die es keine Entsprechung in \texttt{y} gibt, bleiben bewahrt.
+\end{itemize}
+
+In diesem Beispiel würden \texttt{left\_join()}, \texttt{right\_join()}, \texttt{full\_join()}
+und \texttt{inner\_join()} zum gleichen Resultat führen, aber dies ist nicht immer der Fall. Siehe hierzu die Übungen am Ende dieses Kapitels.
+
+\section{Informationen abfragen}
+Wir wissen bereits, dass wir mit \texttt{View()} einen
+ganzen \textit{tibble} oder \textit{data frame} (siehe Fussnote
+\ref{fn:tibble}) inspizieren kann. Um diese
+auf der Konsole zu zeigen, kann man stattdessen auch einfach
+den Namen des Objekts eintippen. Wenn der Datensatz zu gross ist,
+werden dann aber nur einige Zeilen und Spalten gezeigt:
+
+<<>>=
+all_data
+@
+
+Bei grösseren Datensätzen wird es natürlich auch schwieriger,
+spezifische Informationen im Datensatz selber nachzuschlagen.
+Im Folgenden werden daher einige Techniken vorgestellt, um
+die Suche zu erleichtern.
+
+\subsection{Zeilen nach Zeilennummer auswählen}
+Mit diesem Befehl zeigen wir die dritte Zeile des Datensatzes
+\texttt{all\_data} an. Am Datensatz ändert sich hierdurch nichts. 
+Wir verlieren die anderen 19 Zeilen also nicht.
+<<>>=
+slice(all_data, 3)
+@
+
+Eine alternative Schreibweise ist die folgende. 
+Mit der Symbolenfolge \texttt{|>} wird das Objekt vor ihr
+(hier: \texttt{all\_data}) der Funktion nach ihr 
+als erster Funktionsparameter übergeben:
+<<>>=
+all_data |>
+  slice(3)
+@
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Einschub: |>?} 
+Die Symbolenfolge \texttt{|>} wird \textit{pipe} genannt und
+wird verwendet,
+um Befehle übersichtlicher zu organisieren.
+Sie wird als \textit{dann} (\textit{then}) ausgesprochen.
+Für einfache Befehle wie diesen gibt es eigentlich keinen Mehrwert.
+Aber sobald wir mehrere Befehle kombinieren, ist die Notation mit
+\textit{pipes} wesentlich einfacher zu lesen und zu verstehen.
+
+Kürzel in RStudio: \textsc{ctrl} + \textsc{shift} + \textsc{m}.
+\end{framed}
+
+Im Folgenden werden die Ergebnisse der Befehle nicht mehr angezeigt.
+Probieren Sie die Befehle aber dennoch aus.
+Bemerken Sie die Verwendung von \texttt{c()} (für `combine')
+sowie von \texttt{:}. Auch können mehrere Befehle verkettet werden.
+<<eval = FALSE>>=
+# Zeilen 5 und 7 auswählen.
+all_data |>
+  slice(c(5, 7))
+
+# Zeilen 5 bis 7 einschliesslich auswählen
+all_data |>
+  slice(5:7)
+
+# Zeilen 5 bis 7 auswählen, dann vollständig zeigen
+all_data |>
+  slice(5:7) |>
+  View()
+@
+
+Mit den obigen Befehlen werden nur gewisse Zeilen in der Konsole angezeigt.
+Man kann den Output stattdessen auch als neues Objekt speichern:
+<<>>=
+zeilen7_12 <- all_data |>
+  slice(7:12)
+@
+
+Jetzt werden die Zeilen nicht angezeigt, aber sie sind fortan verfügbar als neues Objekt
+im Arbeitsspeicher. Um dieses Objekt zu inspizieren, können Sie seinen Namen eintippen
+oder \texttt{View} verwenden:
+<<>>=
+zeilen7_12
+@
+
+\subsection{Zeilen nach bestimmten Werten auswählen}
+Mit \texttt{slice()} können wir Zeilen je nach ihrer Position
+im Datensatz auswählen. In der Regel wählen wir jedoch die Zeilen
+je nach gewissen Eigenschaften dieser Zeilen aus. Dazu verwenden
+wir die \texttt{filter()}-Funktion. Beispielsweise können
+wir nur jene Zeilen, die das Wort \texttt{fiende} betreffen auswählen.
+Bemerken Sie, dass die Zeichenkombination \texttt{==} verwendet wird,
+um auf Gleichheit zu testen:
+<<>>=
+all_data |> 
+  filter(Wort == "fiende")
+@
+
+Um nur die Zeilen auszuwählen, die nicht das Wort \texttt{fiende}
+betreffen, kann man \texttt{==} durch \texttt{!=} ersetzen.
+
+Wir können auch jene Zeilen auswählen, die Versuchspersonen
+mit einem Alter über 30 betreffen:
+<<>>=
+all_data |> 
+  filter(Alter > 30)
+@
+Für Versuchpersonen unter 30 würde man \texttt{<} verwenden;
+für Versuchspersonen unter 30 einschliesslich \texttt{<=}.
+
+Wir können auch nur jene Zeilen beibehalten, für die
+keine Übersetzung (also mit \texttt{NA} als Übersetzung)
+gegeben wurde. Dann verwendet man aber am besten die Hilfefunktion
+\texttt{is.na()}:
+<<>>=
+all_data |> 
+  filter(is.na(Übersetzung))
+@
+
+Mit \texttt{!is.na()} selektieren wir dann wieder nur jene Zeilen,
+wo die Übersetzung nicht fehlt:
+<<>>=
+all_data |> 
+  filter(!is.na(Übersetzung))
+@
+
+Wir können auch mehrere \texttt{filter()}-Befehle verketten.
+Beispielsweise können wir aus dem Datensatz jene Zeilen auslesen,
+für die Position gleich 1 ist und für die eine falsche Antwort gegeben wurde:
+<<>>=
+all_data |> 
+  filter(Position == 1) |> 
+  filter(Richtig == 0)
+@
+Eine Alternative ist diese:
+<<eval = FALSE>>=
+# Output nicht im Skript
+all_data |> 
+  filter(Position == 1 & Richtig == 0)
+@
+Wollen wir die Zeilen auslesen, für die Position gleich 1 ist oder
+für die eine falsche Antwort gegeben wurde, so verwenden wir diesen Befehl:
+<<eval = FALSE>>=
+# Output nicht im Skript
+all_data |> 
+  filter(Position == 1 | Richtig == 0)
+@
+
+
+Die Ergebnisse all dieser Auswählaktionen
+können auch als separate Objekte gespeichert und angezeigt werden.
+<<eval = TRUE>>=
+nur_fiende <- all_data |> 
+  filter(Wort == "fiende")
+
+nur_fiende
+@
+
+\subsection{Spalten auswählen}
+Manchmal enthält ein Datensatz schlicht zu viele Spalten, die
+für die aktuelle Analyse nicht relevant sind. Mit \texttt{select()}
+können wir die Spalten auswählen, die wir gerade brauchen:\footnote{Für diejenigen unter Ihnen mit SQL-Erfahrung: Beachten Sie, dass
+der SQL-Befehl \texttt{SELECT} nicht dem R-Befehl \texttt{select()}, sondern \texttt{filter()} entspricht.}
+<<eval = TRUE>>=
+all_data |>
+  select(Wort, RichtigeÜbersetzung, Übersetzung) |>
+  slice_head(n = 5)
+@
+
+Es gibt auch ein paar Hilfefunktionen,
+mit denen man effizienter Spalten auswählen kann.
+Diese sind insbesondere bei grossen Datensätzen nützlich.
+Beispiele sind \texttt{contains()} und \texttt{starts\_with()}.
+<<eval = TRUE>>=
+all_data |>
+  select(contains("Übersetzung")) |>
+  slice(5:7)
+
+all_data |>
+  select(starts_with("Richt")) |>
+  slice_tail(n = 4)
+@
+
+Für weitere Hilfefunktionen,
+siehe \url{https://tidyselect.r-lib.org}.
+
+\subsection{Weitere Beispiele}
+Die unterschiedlichen Befehle können verkettet werden.
+So können wir nur die Übersetzungen fürs Wort \texttt{fiende}
+abrufen:
+<<>>=
+all_data |>
+  filter(Wort == "fiende") |>
+  select(Übersetzung)
+@
+
+Oder wir können mit \texttt{distinct()} auch nur die unterschiedlichen Übersetzungen
+fürs Wort \texttt{behärska} abrufen:
+<<>>=
+all_data |>
+  filter(Wort == "behärska") |>
+  select(Übersetzung) |>
+  distinct()
+@
+
+Führen Sie auch einmal diesen Befehl ohne \texttt{distinct()} aus.
+Im letzten Beispiel wird auch langsam klar, wieso es sich lohnt,
+das \textit{pipe} (\texttt{|>}) zu verwenden. Ohne sähe
+diese Befehlenkombination nämlich so aus:
+<<eval = FALSE>>=
+distinct(select(filter(all_data, Wort == "behärska"), Übersetzung))
+@
+
+\texttt{filter()} ist der Befehl,
+der zuerst ausgeführt werden muss,
+aber in dieser Notation wird er als letzter geschrieben.
+Mit der pipe-Notation schreibt man die Befehle in der
+Reihenfolge, in der sie ausgeführt werden müssen.
+
+\section{Datensätze umgestalten}\label{sec:pivot}
+Die meiste Zeit, die man sich für die Analyse eines Datensatzes
+reserviert, verbringt man oft nicht mit Berechnungen und mit dem Modellieren,
+sondern mit sog.\ \textit{data wrangling}: Man muss zunächst einmal
+dafür sorgen, dass der Datensatz in einem Format vorliegt, in dem er
+analysiert werden kann. Data wrangling eignet sich wohl am besten
+für \textit{learning by doing}. Eine Technik, die man aber oft braucht,
+ist das Konvertieren zwischen langen bzw.\ längeren und breiten bzw.\ breiteren
+Formaten. Diese Technik soll hier illustriert werden anhand eines Datensatzes
+zu einer Längsschnittstudie zur Entwicklung von Lese- und Schreibfähigkeiten
+bei Portugiesisch--Französisch- und Portugiesisch--Deutsch-Zwei\-sprachigen
+\citep{Lambelet_HELASCOT_writing,Pestana_HELASCOT_reading}.
+
+\paragraph{Aufgabe.} Lesen Sie den Datensatz \texttt{helascot\_skills.csv} als \texttt{skills} ein
+und inspizieren Sie seine Struktur.\label{page:skills}
+
+<<echo = FALSE, message = FALSE>>=
+skills <- read_csv(here("data", "helascot_skills.csv"))
+@
+
+Sie werden bemerken, dass pro Versuchsperson
+(\texttt{Subject}) pro Zeitpunkt und pro getestete Sprache drei Messungen
+vorliegen: \texttt{Reading}, \texttt{Argumentation} und \texttt{Narration}.
+Wir können diesen Datensatz länger machen, indem wir diese Messungen unter- statt
+nebeneinander stellen. Hierzu verwenden wir die Funktion \texttt{pivot\_longer()}.
+Die drei Spalten, die wir dem Parameter \texttt{cols} übergeben, werden nun
+untereinander gestellt; die neue Spalte \texttt{Skill} gibt an, aus welcher
+Spalte die Messungen stammen; die neue Spalte \texttt{Score} enthält die
+Werte, die in den drei ursprünglichen Spalten standen.
+
+<<>>=
+skills_longer <- skills |>
+  pivot_longer(cols = c("Reading", "Argumentation", "Narration"),
+               names_to = "Skill",
+               values_to = "Score")
+skills_longer
+@
+
+Jetzt, wo die Daten in diesem noch längeren Format vorliegen,
+können wir den Datensatz zu einem breiteren Format umgestalten,
+wo aber die Angaben zu den unterschiedlichen Zeitpunkten
+(statt zu den unterschiedlichen Fähigkeiten) nebeneinander stehen.
+Hierzu verwenden wir die Funktion \texttt{pivot\_wider()}.
+Da die Werte in der Spalte \texttt{Time} numerisch sind, fügen
+wir ihnen mit dem Parameter \texttt{names\_prefix} noch ein \texttt{T} hinzu:
+
+<<>>=
+skills_wider_time <- skills_longer |>
+  pivot_wider(names_from = "Time",
+              names_prefix = "T",
+              values_from = "Score")
+skills_wider_time
+@
+
+Dieses Format wäre zum Beispiel praktisch, wenn wir die Unterschiede zwischen
+den T1-, T2- und T3-Messungen berechnen möchten. Diese können wir mit
+dem Befehl \texttt{mutate()} noch hinzufügen:
+<<>>=
+skills_wider_time |> 
+  mutate(
+    ProgressT1_T2 = T2 - T1,
+    ProgressT3_T2 = T3 - T2
+  ) |> 
+  select(Subject, LanguageTested, Skill, ProgressT1_T2, ProgressT3_T2)
+@
+
+Wir könnten auch die Angaben zu den unterschiedlichen Sprachen nebeneinander stellen.
+Die ersten Versuchspersonen waren alle Portugiesisch--Französisch-Zwei\-sprachige,
+die nicht auf Deutsch getesten wurden. Daher enthält die letzte Spalte scheinbar
+nur \texttt{NA} (\textit{not available}), aber mit \texttt{View()} können Sie
+sehen, dass diese Angaben für viele Versuchspersonen tatsächlich vorliegen.
+<<>>=
+skills_wider_language <- skills_longer |>
+  pivot_wider(names_from = "LanguageTested",
+              values_from = "Score")
+skills_wider_language
+@
+Dieses Format wäre dann wieder praktischer, wenn wir
+pro Versuchsperson die Unterschiede zwischen den
+\texttt{French}-, \texttt{Portuguese}- und \texttt{German}-Messungen
+zu jedem Zeitpunkt berechnen möchten:
+<<>>=
+skills_wider_language |> 
+  mutate(
+    DiffGer_Port = German - Portuguese,
+    DiffFre_Port = French - Portuguese
+  ) |> 
+  select(Subject, Time, Skill, DiffGer_Port, DiffFre_Port)
+@
+
+
+Wir können den Datensatz sogar noch breiter machen:
+<<>>=
+skills_wider_time_language <- skills_longer |>
+  pivot_wider(names_from = c("LanguageTested", "Time"),
+              values_from = "Score")
+skills_wider_time_language
+@
+
+Wenn dies nötig wäre, könnten wir diesen breiten Datensatz
+wieder zum langen Format konvertieren. Langsam wird der
+Code etwas schwieriger (bei \texttt{names\_pattern} wird
+ein sog.\ regulärer Ausdruck verwendet) und für diesen Kurs
+ist es nicht so wichtig, dass Sie solche schwierigere Fälle
+bereits bewältigen können. Vielmehr soll dieser letzte
+Codeblock illustrieren, dass solche Konversionen
+möglich sind. Wenn man das weiss, kann man auf der Hilfeseite
+von \texttt{pivot\_longer()}
+(dazu \texttt{?pivot\_longer} eintippen)
+nachschauen, wie die Beispiele dort aussehen und diese ans
+eigene Problem anpassen.
+<<>>=
+skills_back <- skills_wider_time_language |>
+  pivot_longer(cols = French_1:German_3,
+               names_to = c("Language", "Time"),
+               names_pattern = "(.*)_(.*)",
+               values_to = "Score")
+skills_back
+@
+Die Notation \texttt{French\_1:German\_3} selektiert übrigens
+alle Spalten zwischen \texttt{French\_1} und \texttt{German\_3} inklusive. 
+Eine Alternative für wenn die Spalten nicht schön praktisch 
+nebeneinander stehen, ist diese:
+<<>>=
+skills_back <- skills_wider_time_language |>
+  pivot_longer(cols = starts_with(c("French", "Portuguese", "German")),
+               names_to = c("Language", "Time"),
+               names_pattern = "(.*)_(.*)",
+               values_to = "Score")
+skills_back
+@
+
+\section{Zusammenfassungen kreieren}
+Die \texttt{summarise()}-Funktion kann man verwenden,
+um etwa Durchschnitte von Variablen in einem Datensatz zu berechnen.
+So berechnet der nächste Codeblock die Mittel der \texttt{Narration}-
+und \texttt{Argumentation}-Variablen im \texttt{skills}-Datensatz.
+Bei der \texttt{mean()}-Funktion wird der Parameter \texttt{na.rm}
+noch auf \texttt{TRUE} gestellt. Dies bewirkt, dass beim Berechnen
+des Mittels fehlende Werte (\texttt{NA}) ignoriert werden; 
+andernfalls wären beide Mittel nämlich auch \texttt{NA}.
+
+<<>>=
+skills |> 
+  summarise(mittel_narr = mean(Narration, na.rm = TRUE),
+            mittel_arg = mean(Argumentation, na.rm = TRUE))
+@
+
+Mit \texttt{group\_by()} können wir solche Zusammenfassungen
+auch für durch die Kombinationen der in dieser Funktion
+aufgeführten Variablen definierte Untergruppen generieren.
+Der Codeblock unten spaltet daher zunächst den Datensatz
+\texttt{skills} auf in 9 Untergruppen: eine pro Kombination
+der Werte von \texttt{Time} (1, 2, 3) und \texttt{LanguageTested}
+(French, German, Portuguese). Anschliessend werden die Durchschnitte
+für jede Untergruppe separat berechnet und in einem tibble
+zusammengefasst.
+Die Parametereinstellung \texttt{.groups = "drop"} bewirkt,
+dass der resultierende tibble sich nicht merken muss, wie die
+Gruppen definiert wurden, aber das ist nicht so wichtig;
+sie können dies auch weglassen.
+
+<<>>=
+skills |> 
+  group_by(Time, LanguageTested) |> 
+  summarise(mittel_narr = mean(Narration, na.rm = TRUE),
+            mittel_arg = mean(Argumentation, na.rm = TRUE),
+            .groups = "drop")
+@
+% 
+% <<>>=
+% skills |> 
+%   mutate(Class = stringr::str_sub(Subject, 1, 1)) |> 
+%   group_by(Class, Time, LanguageTested) |> 
+%   summarise(mittel_read = mean(Reading, na.rm = TRUE),
+%             .groups = "drop")
+% @
+
+Auch solche Zusammenfassungstibbles können Sie natürlich
+länger oder---wie hier---breiter machen:
+<<>>=
+skills |> 
+  group_by(Time, LanguageTested) |> 
+  summarise(mittel_narr = mean(Narration, na.rm = TRUE),
+            .groups = "drop") |> 
+  pivot_wider(names_from = "Time",
+              names_prefix = "T",
+              values_from = "mittel_narr")
+@
+
+\section{Viele Wege nach Rom}
+R bietet einem in der Regel mehrere Möglichkeiten,
+um das Gleiche zu bewirken. Gerade für die
+\texttt{tidyverse}-Funktionen
+\texttt{slice()} und \texttt{select()}
+existieren Alternativen, die durchaus praktisch
+sein können und im Verlauf dieses Skripts auftauchen werden.
+
+Um Zeilen 1 bis 3 von \texttt{all\_data} zu selektieren, kann
+man statt
+<<eval = FALSE>>=
+all_data |> slice(1:3)
+@
+auch diese Notation verwenden:
+<<>>=
+all_data[1:3, ]
+@
+Wenn man dahingegen die dritte Spalte auswählen möchte,
+kann man die Zahl 3 nach der Komma in den eckigen Klammern ausführen:
+<<>>=
+all_data[, 3]
+@
+Diese Spalte kann man auch mit seinem Namen (zwischen Anführungszeichen)
+auswählen:
+<<>>=
+all_data[, "Wort"]
+@
+Beide Ansätze können kombiniert werden. So werden mit dem folgenden
+Befehl die Zeilen 13 bis 15 der vierten Spalte ausgewählt:
+<<>>=
+all_data[13:15, 4]
+@
+Um die siebte und die dreizehnte Zeile der Spalten namens \texttt{Geschlecht} und \texttt{Alter} auszuwählen:
+<<>>=
+all_data[c(7, 13), c("Geschlecht", "Alter")]
+@
+
+Mit dem Dollarzeichen kann man ebenso eine Spalte anhand ihres Namens
+auswählen. Das Ergebnis ist jedoch kein tibble, sondern ein Vektor, d.h.,
+eine Art Liste, in der nur Daten des gleichen Typs vorhanden sind:
+<<>>=
+all_data$Wort
+@
+Um auf das vierzehnte und das achtzehnte Element dieses Vektors zuzugreifen, können wir wieder
+die Klammernotation verwenden:
+<<>>=
+all_data$Wort[c(14, 18)]
+@
+
+\section{Weiterführende Literatur}
+Zum Verwalten von Spread\-sheets, siehe meinen Blogeintrag zu \href{http://janhove.github.io/analysis/2015/06/18/preparing-data-for-analysis}{\textit{Some tips on preparing your data for analysis}} (18.6.2015).
+\citet{Broman2017} haben weitere nützliche Hinweise.
+
+Das Referenzwerk schlechthin für die Arbeit mit dem tidyverse
+ist Wickham und Grolemunds \textit{R for Data Science} und
+ist gratis verfügbar unter \url{https://r4ds.had.co.nz/}.
+
+\section{Aufgaben}
+\begin{enumerate}
+  \item \citet{Slavin2011} berichten die Ergebnisse einer mehrjährigen Evaluationsstudie,
+in der zwei Unterrichtsprogramme miteinander verglichen wurden.
+Schülern und Schülerinnen (SuS) in beiden Programmen wurden unter anderem
+ein spanischer und ein englischer Vokabeltest vorgelegt, und zwar
+in der 1., der 2., der 3. und der 4. Klasse. Die vier Tabellen auf 
+Seite \pageref{tab:slavin_1} zeigen einen Teil der Ergebnisse, die \citet{Slavin2011} berichten; es handelt sich
+dabei um die durchschnittlichen Vokabeltestergebnisse der getesteten SuS.
+
+\begin{enumerate}
+\item Tragen Sie diese Daten in ein Spread\-sheet im 
+langen Format ein. Jede Zeile soll das Ergebnis in einer einzigen 
+Klasse, in einer einzigen Sprache und von einem einzigen Programm 
+enthalten. Sie brauchen also 16 Zeilen mit Daten und eine Zeile 
+mit passenden Spaltennamen.
+
+\item Speichern Sie dieses Spread\-sheet im CSV-Format.
+Lagern Sie diese CSV-Datei in dem Unterordner
+\texttt{data} in Ihrem Projektordner ab.
+
+\item Lesen Sie das Spread\-sheet in R ein.
+
+\item Kontrollieren Sie, ob das Spread\-sheet richtig eingelesen wurde.
+
+\item Zeigen Sie in R nun nur die Englischergebnisse im \textit{transitional bilingual}-Programm an.
+
+\item Zeigen Sie die Spanischergebnisse in der 1. und 2. Klasse im \textit{English immersion}-Programm an.
+\end{enumerate}
+
+  \item 
+  \begin{enumerate}
+  \item Erklären Sie, was der folgende Codeblock bewirkt:
+<<>>=
+d1 <- all_data |>
+  filter(Übersetzung == "vorsichtig")
+d2 <- all_data |>
+  filter(Übersetzung != "vorsichtig")
+@
+
+  \item Wie viele Zeilen zählen \texttt{d1} und \texttt{d2}?
+  Wie viele Zeilen zählt \texttt{all\_data}? Wie erklären Sie sich dies?
+
+  \item Kreieren Sie nun einen tibble \texttt{d3}, der
+  tatsächlich alle Zeilen aus
+  \texttt{all\_data} enthält, wo die Versuchsperson das Wort nicht
+  als \texttt{vorsichtig} übersetzt hat.
+  \end{enumerate}
+
+  \item Das Ziel dieser Übung ist es, die Unterschiede zwischen
+  den sechs \textit{join}-Funktionen klarer zu machen.
+  \begin{enumerate}
+    \item Verwenden Sie den unten stehenden Code, um zwei Objekte
+    (\texttt{links} und \texttt{rechts}) zu kreieren:
+    
+<<>>=
+links <- tibble(
+  A = c("a", "b", "c", NA),
+  B = c(1, 2, NA, 4)
+)
+
+rechts <- tibble(
+  B = c(1, 3, 4, 4),
+  C = c(10, NA, 12, 7)
+)
+@
+    \item Inspizieren Sie die beiden neu kreierten Objekte, z.B.\ mit \texttt{View()} oder indem Sie die Objektnamen auf der Konsole eintragen.
+    
+    \item Sagen Sie vorher, wie das Ergebnis der folgenden Codeabschnitte aussehen wird.
+    Kontrollieren Sie erst \emph{danach} Ihre Antwort, indem Sie die Codeabschnitte ausführen.
+    
+<<eval = FALSE>>=
+left_join(x = links, y = rechts)
+right_join(x = links, y = rechts)
+full_join(x = links, y = rechts)
+inner_join(x = links, y = rechts)
+semi_join(x = links, y = rechts)
+semi_join(x = rechts, y = links) # Achtung!
+anti_join(x = links, y = rechts)
+anti_join(x = rechts, y = links) # Achtung!
+@
+
+  \item Kreieren Sie mit dem folgenden Codeabschnitt wieder zwei Objekte:
+<<>>=
+links <- tibble(
+  A = c("a", "b"),
+  B = c(1, NA)
+)
+rechts <- tibble(
+  B = c(1, NA, NA),
+  C = c(0, 1, 2)
+)
+@
+
+Suchen Sie auf der Hilfeseite von \texttt{left\_join}
+unter \texttt{Arguments} nach der Erläuterung zum Parameter
+\texttt{na\_matches}. Sagen Sie vorher, wie der Output
+der unten stehenden Codeblöcke aussehen wird,
+und kontrollieren Sie Ihre Antwort.
+
+<<eval = FALSE>>=
+left_join(links, rechts)
+@
+
+<<eval = FALSE>>=
+left_join(links, rechts, na_matches = "never")
+@
+
+  \end{enumerate}
+  
+  \item Wenn Sie zwei Datensätze zusammenfügen möchten,
+  aber die Variable, die als `Reissverschluss' dienen soll,
+  in den Datensätzen unterschiedlich heisst, stösst man schnell
+  auf ein Problem:
+  
+<<>>=
+links <- tibble(
+  A = c("a", "a", "b"),
+  b = c(1, 2, 3)
+)
+rechts <- tibble(
+  B = c(1, 2),
+  C = c(10, 38)
+)
+left_join(links, rechts)
+@
+
+Das Problem ist, dass die Variable, die als Reissverschluss dienen soll,
+im einen tibble \texttt{b} heisst und im anderen \texttt{B}.
+
+Konsultieren Sie die Hilfeseite von \texttt{left\_join()}
+und lösen Sie das Problem. 
+(Hinweis: Schauen Sie auf der Hilfeseite unter \texttt{Arguments > by} oder
+auch unter \texttt{Examples}.)
+
+  \item \begin{enumerate}
+\item Lesen Sie die Datensätze \texttt{helascot\_background.csv}
+und \texttt{helascot\_skills.csv} in R ein.
+
+<<echo = FALSE, message = FALSE>>=
+skills <- read_csv(here("data", "helascot_skills.csv"))
+background <- read_csv(here("data", "helascot_background.csv"))
+@
+
+\item Nehmen Sie an, Sie bräuchten die Daten im folgenden Format:
+\begin{itemize}
+ \item nur die französischen Lesetestergebnisse von Teilnehmenden, die
+       einen Heimatsprache und -kulturkurs
+       belegen (\texttt{HLC == "yes"});
+ \item Versuchspersonen ohne französisches Lesetestergebnis
+       sollten nicht im resultierenden Datensatz vorkommen;
+ \item die Lesetestergebnisse an den drei Zeitpunkten sollten
+       in Spalten nebeneinander stehen;
+ \item der resultierende Datensatz soll für die übrig gebliebenen Versuchspersonen
+       auch noch die Angaben aus dem 
+       Datensatz \texttt{helascot\_background.csv} enthalten.
+\end{itemize}
+Gestalten Sie bzw.\ kombinieren Sie die Datensätze so, dass
+das Resultat das gewünschte Format hat.
+
+\item Verwenden Sie den umformatierten Datensatz aus Teil (b)
+und kreieren Sie eine Zusammenfassungstabelle, die den
+Median (\texttt{median()})
+der Fortschritte von T1 zu T3 beim französischen Lesetest enthält.
+\end{enumerate}
+
+Hinweis: Bei Aufgaben wie diesen ist es zielführender,
+sich zunächst zu überlegen, welche Schritte auszuführen sind bzw.\
+wie die Zwischenergebnisse auszusehen haben, als sofort
+in R loszulegen.
+
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+
+\caption{Vokabeltestergebnisse 1.\ Klasse.}
+\label{tab:slavin_1}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 74.98                   & 79.90 \\
+ Spanish    & 99.85                   & 90.19
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+
+\caption{Vokabeltestergebnisse 2.\ Klasse.}
+\label{slavin_2}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 80.40                        & 81.13 \\
+ Spanish    & 92.94                        & 87.54
+\end{tabular}
+
+\end{table}
+\begin{table}[h]
+\centering
+\caption{Vokabeltestergebnisse 3.\ Klasse.}
+\label{slavin_3}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 84.76                        &  85.45\\
+ Spanish    & 92.86                        & 85.64
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Vokabeltestergebnisse 4.\ Klasse.}
+\label{slavin_4}
+\begin{tabular}{@{}lcc@{}}
+            & Transitional bilingual  & English immersion \\
+ English    & 88.07                        &  90.36\\
+ Spanish    & 91.00                        & 86.27
+\end{tabular}
+\end{table}

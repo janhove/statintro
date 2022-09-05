@@ -1,0 +1,523 @@
+\chapter{Ein anderer Blick aufs Mittel}\label{ch:linmod}
+In diesem und den folgenden Kapiteln behandeln wir das
+sog.\ \textbf{allgemeine lineare Modell}
+(\textit{general linear model}).\footnote{Nicht zu verwechseln
+mit dem \textbf{verallgemeinerten linearen Modell}
+(\textit{generalized linear model}).
+Dieses ist eine Erweiterung des allgemeinen linearen Modells, 
+mit der wir uns in diesem Kurs nur kurz befassen; siehe Kapitel \ref{ch:logistic}.}
+Das allgemeine lineare Modell ist eine Methode,
+um zu auszudrücken, wie ein oder mehrere \textbf{Prädiktoren}
+mit dem \textbf{\textit{outcome}} zusammenhängen.
+Oft redet man statt von Prädiktoren und outcome
+von unabhängigen bzw.\ abhängigen Variablen,
+aber ich finde die Begriffe Prädiktor und outcome
+deutlicher.
+
+In diesem Kapitel werden einige Schlüsselkonzepte des
+allgemeinen linearen Modells erläutert, indem wir das
+Mittel einer Population auf eine andere Art und Weise
+schätzen als wir es bisher gemacht haben. 
+In den darauf folgenden Kapiteln werden die
+Modelle graduell komplexer, aber die Basisprinzipien
+aus diesem Kapitel werden noch immer zutreffen.
+
+\section{Ein Modell für die GJT-Daten}
+Lasst uns kurz alles über Mittelwerte vergessen.
+Wir erhalten Daten (hier: die GJT-Werte von \citet{DeKeyser2010},
+siehe letztes Kapitel) und müssen
+diese sinnvoll beschreiben. Sinnvoller als einfach
+alle Datenpunkte aufzulisten, wäre, die Datenpunkte
+in zwei Teile zu zerlegen: einen systematischen Teil, der die
+Gemeinsamkeiten zwischen allen Werten ausdrückt,
+und einen unsystematischen Teil, der die individuellen Unterschiede
+zwischen diesen Gemeinsamkeiten und den Werten ausdrückt:
+\[
+\textrm{Wert einer Beobachtung} = \textrm{Gemeinsamkeit} + \textrm{Abweichung}.
+\]
+Um die Notation übersichtlich zu halten, wird diese Gleichung
+meistens so geschrieben:
+\begin{equation}\label{eq:beta0}
+ y_i = \beta_0 + \varepsilon_i.
+\end{equation}
+Hier ist $y_i$ die i.\ Beobachtung im Datensatz,
+$\beta_0$ stellt die Gemeinsamkeit zwischen allen
+Werten in der Population dar
+und $\varepsilon_i$ drückt aus, wie stark
+die i.\ Beobachtung von diesem Populationswert abweicht.
+$\varepsilon_i$ nennt man auch die \textbf{Residuen}
+oder den \textbf{Restfehler}.
+Wir schreiben $\beta_0$ statt einfach $\beta$,
+weil wir nachher die Gemeinsamkeit
+zwischen den $y$-Werten mithilfe mehrerer
+$\beta$s ausdrücken werden.
+
+In der Regel interessieren wir uns mehr für die $\beta$s
+als für die $\varepsilon$s.
+Da uns aber nicht die ganze Population
+zur Verfügung steht, müssen wir uns mit einer Schätzung
+von $\beta_0$ begnügen.
+In Gleichung \ref{eq:beta0} ist $\beta_0$ ein Parameter
+mit einem bestimmten, aber in der Regel unbekannten Wert;
+für Schätzungen dieses Parameters wird die Notation
+$\widehat{\beta_0}$ verwendet.
+Da $\widehat{\beta_0}$ bloss eine Schätzung ist,
+wird der Restfehler ebenfalls bloss geschätzt:
+\[
+y_i = \widehat{\beta_0} + \widehat{\varepsilon_i}.
+\]
+
+Wie können wir nun $\widehat{\beta_0}$ berechnen
+(bzw.\ $\beta_0$ schätzen)?
+Im Prinzip geht die Gleichung für jeden $\beta_0$-Wert
+auf, denn wir können uns die $\widehat{\varepsilon}$-Werte
+eben so aussuchen, wie es uns passt.
+Die ersten beiden GJT-Werte im Datensatz sind
+151 und 182. Wenn wir nun beispielsweise für $\beta_0$ einen beliebligen
+Wert, z.B.\ 1823, wählen,
+wählen wir $\widehat{\varepsilon_1} = -1672$ und $\widehat{\varepsilon_2} = -1641$ und die Gleichung geht auf:
+\[
+y_1 = 151 = 1823 - 1672,
+\]
+\[
+y_2 = 182 = 1823 - 1641.
+\]
+Wenn wir nun für $\beta_0$ den
+Wert 14 wählen, wählen wir $\widehat{\varepsilon_1} = 137$ und $\widehat{\varepsilon_2} = 168$
+und die Gleichung geht wiederum auf:
+\[
+y_1 = 151 = 14 + 137,
+\]
+\[
+y_2 = 182 = 14 + 168.
+\]
+Wir brauchen also eine prinzipielle Methode, um
+$\beta_0$ zu schätzen.
+
+\section{Die Methode der kleinsten Quadrate}
+Die Frage stellt sich, was die optimale Art und Weise
+ist, um $\widehat{\beta_0}$ zu bestimmen.
+Die wenig überraschende Antwort lautet: Es hängt davon
+ab, was man unter `optimal' versteht.
+Eine sinnvolle Definition von `optimal' ist,
+dass $\beta_0$ so geschätzt werden soll, dass
+die Summe der absoluten Restfehler
+($\sum_{i = 1}^{n} |\widehat{\varepsilon_i}|$) möglichst klein ist.
+Wenn wir für $\widehat{\beta_0}$ den Wert 135 wählen,
+beträgt die Summe der absoluten Restfehler 1993.
+Hier gehen wir davon aus, dass der Datensatz 
+\texttt{dekeyser2010.csv} als den Objektnamen \texttt{d} hat.
+
+<<>>=
+sum(abs(d$GJT - 135))
+@
+(Bemerken Sie, dass $y_i = \widehat{\beta_0} + \widehat{\varepsilon_i}$, also $\widehat{\varepsilon_i} = y_i - \widehat{\beta_0}$.)
+
+Wenn wir stattdessen den Wert 148 wählen, beträgt die Summe der absoluten Restfehler 1799.
+<<>>=
+sum(abs(d$GJT - 148))
+@
+
+Wenn wir `optimal' so definieren, ist 148 also die bessere
+Schätzung von $\beta_0$. Diese Übung können wir für jede Menge
+Kandidatwerte durchprobieren und dann den optimalen Wert wählen.
+Dies ist die \textbf{Methode der kleinsten absoluten Abweichungen}.
+Wie Abbildung \ref{fig:optimisation} (links)
+zeigt, sind $\beta_0$-Schätzungen
+zwischen 150 und 151 in diesem Sinne optimal.
+Der Median der GJT-Werte ist nicht zufällig 150.5: Wenn man $\beta_0$
+mit der Methode der kleinsten absoluten Abweichungen schätzt, ist
+das Ergebnis der Median der Stichprobe.
+Dass wir es hier mit einer Schätzung zu tun haben,
+wird klar, wenn man sich überlegt, dass diese Methode
+ein anderes Ergebnis liefern könnte, wenn man eine neue
+Stichprobe aus der gleichen Population zieht.
+
+<<echo = FALSE, fig.cap = "Links: Wenn der Parameter mit der Methode der kleinsten absoluten Abweichungen geschätzt wird, ist die Lösung gleich dem Median der Stichprobe. Rechts: Wenn der Parameter mit der Methode der kleinsten Quadrate geschätzt wird, ist die Lösung gleich dem Mittel der Stichprobe. \\label{fig:optimisation}", echo = FALSE, fig.width = 8, fig.height = 2.3, out.width=".9\\textwidth">>=
+sum_of_squares <- function(x, m) {
+  sum((x - m)^2)
+}
+df <- data.frame(beta0 = seq(145, 155, by = 0.01))
+df$SS <- NA
+for (i in 1:nrow(df)) {
+  df$SS[i] <- sum_of_squares(x = d$GJT, m = df$beta0[i])
+}
+p1 <- ggplot(df,
+       aes(x = beta0, y = SS)) +
+  geom_line() +
+  xlab(expression(widehat(beta[0]))) +
+  ylab(expression(paste(Sigma, epsilon[i]^2))) +
+  geom_vline(xintercept = mean(d$GJT), linetype = 2) +
+  ggtitle("Methode der kleinsten\nQuadrate",
+          "senkrechte Linie = Mittel der GJT-Werte")
+
+sum_of_deviations <- function(x, m) {
+  sum(abs(x - m))
+}
+
+df$SD <- NA
+for (i in 1:nrow(df)) {
+  df$SD[i] <- sum_of_deviations(x = d$GJT, m = df$beta0[i])
+}
+
+p2 <- ggplot(df,
+       aes(x = beta0, y = SD)) +
+  geom_line() +
+  xlab(expression(widehat(beta[0]))) +
+  ylab(expression(paste(Sigma, abs(epsilon[i])))) +
+  geom_vline(xintercept = median(d$GJT), linetype = 2) +
+    ggtitle("Methode der kleinsten absoluten\nAbweichungen",
+          "senkrechte Linie = Median der GJT-Werte")
+
+gridExtra::grid.arrange(p2, p1, ncol = 2)
+@
+
+Eine andere sinnvolle Definition von `optimal' ist,
+dass $\beta_0$ so geschätzt werden soll, dass
+die Summe der quadrierten Restfehler
+($\sum_{i = 1}^{n} \widehat{\varepsilon_i}^2$) möglichst klein ist.
+Dies ist die \textbf{Methode der kleinsten Quadrate}.
+Verglichen mit der Methode der kleinsten absoluten Abweichungen
+fallen grosse Residuen noch mehr ins Gewicht.
+Anders gesagt: Grosse Abweichungen (darunter auch Ausreisser) üben
+einen stärkeren Einfluss auf das Ergebnis aus.
+Wie Abbildung \ref{fig:optimisation} (rechts) zeigt,
+ist die optimal $\beta_0$-Schätzung laut der Methode
+der kleinsten Quadrate 150.78---nicht zufällig das Mittel
+der Stichprobe!
+
+Während wir in Kapitel 3 die Summe der Quadrate als eine
+Funktion des Mittels betrachtet haben, kann man die Rollen
+auch umkehren: Das Mittel ist jener Wert, der die Summe
+der Quadrate minimiert. Ebenso ist der Median jener Wert,
+der die Summe der absoluten Abweichungen minimiert.
+Der Modus ist übrigens der Wert, der die Summe der binären 
+Abweichungen minimiert. 
+Sind $y_i$ und $\widehat{\beta_0}$ einander gleich, beträgt 
+die binäre Abweichung 0, sonst 1.
+
+Rechnerisch ist die Methode der kleinsten Quadrate am einfachsten,
+und die Parameter in allgemeinen linearen Modellen werden daher
+meistens mit dieser Methode geschätzt
+(\textit{ordinary least squares}, OLS).
+Aber dies ist keine Notwendigkeit.
+In bestimmten Bereichen trifft man ab und zu andere Optimierungskriterien an;
+in den Sprachwissenschaften ist dies aber selten der Fall.
+Im Prinzip kann man sogar selber Optimierungskriterien
+definieren, aber dies kommt noch weniger vor.
+
+\section{Lineare Modelle in R}
+Mit der \texttt{lm()}-Funktion können lineare Modelle aufgebaut werden.
+Ihre Parameter werden anhand der Methode der kleinsten Quadrate geschätzt.
+Innerhalb der Funktion braucht es eine Formel mit dem outcome
+vor und den Prädiktoren nach der Tilde. In diesem Fall gibt es keinen
+Prädiktor, stattdessen wird \texttt{1} verwendet.
+
+<<echo = FALSE>>=
+options(digits = 7)
+@
+
+
+<<>>=
+mod.lm <- lm(GJT ~ 1, data = d)
+@
+
+Die geschätzten $\beta$s kann man abrufen, indem
+man den Namen des Modells (hier: \texttt{mod.lm})
+eintippt.
+
+<<>>=
+mod.lm
+@
+
+Auch mit \texttt{coef()} erhält man die $\beta$-Schätzungen (hier nur $\beta_0$).
+
+<<>>=
+coef(mod.lm)
+@
+
+Dass mal 150.8 und mal 150.7763 angezeigt wird, liegt lediglich daran, dass das der Output
+der letzten zwei Befehle strenger bzw.\ lockerer gerundet wird.
+
+Mit \texttt{predict()} erhält man einen Vektor mit $n$ Werten (hier: $n = 76$),
+der die `vorhergesagten' $y$-Werte enthält.
+(Ich mag den Begriff `vorhergesagt' hier nicht.)
+Es handelt sich um die $y$-Werte abzüglich der $\hat{\varepsilon}$-Werte: $\widehat{y_i} = y_i - \widehat{\varepsilon_i}$.
+In unserem Fall sind dies lediglich 76 Wiederholungen von $\widehat{\beta_0}$.\footnote{$y_i = \widehat{\beta_0} + \widehat{\varepsilon_i}$. Also $\widehat{\varepsilon_i} = y_i - \widehat{\beta_0}$, also $\widehat{y_i} = y_i - \widehat{\varepsilon_i} = y_i - (y_i - \widehat{\beta_0}) =  \widehat{\beta_0}$.}
+
+<<>>=
+predict(mod.lm)
+@
+
+Die Residuen kann man mit der \texttt{resid()}-Funktion abfragen.
+
+<<eval = FALSE>>=
+# Output hier nicht gezeigt
+resid(mod.lm)
+@
+
+\section{Unsicherheit in einem allgemeinen linearen Modell quantifizieren}
+
+\subsection{Der Bootstrap}
+Genauso wie im letzten Kapitel können wir den Bootstrap
+verwenden, um die Unsicherheit in der Schätzung von $\beta_0$
+zu quantifizieren. Da in diesem Fall $\widehat{\beta_0} = \bar{x}$,
+ergibt dies natürlich die gleiche Lösung wie vorher. Aber es gibt
+mir die Gelegenheit, zu zeigen, wie man auch für komplexere
+lineare Modelle den Bootstrap verwenden kann.
+
+Die Logik ist wiederum, dass wir die Stichprobe stellvertretend
+für die Population einsetzen. Aber anstatt Bootstrap-Stichproben
+aus der Stichprobe zu ziehen, ziehen wir diesmal Bootstrap-Stichproben
+aus den Residuen ($\varepsilon$). Diese kombinieren wir dann
+mit $\widehat{\beta_0}$, um die Bootstrap-Stichproben zu generieren.
+Wenn wir uns nur fürs Mittel interessieren, hat diese Methode
+überhaupt keinen Mehrwert, denn sie ist mathematisch der zuerst
+besprochenen Bootstrap-Methode gleich. Aber sie ist pädagogisch wertvoller
+(und manchmal auch statistisch besser),
+wenn wir später mehrere $\beta$s haben werden.
+Konkret:
+\begin{enumerate}\label{bootstrapoverview}
+ \item Man berechnet $\widehat{\beta_0}$ und erhält dazu auch noch
+ einen Vektor $\hat{\varepsilon}$, der die Werte
+ $\widehat{\varepsilon_1}$ bis $\widehat{\varepsilon_n}$ enthält.
+ \item Man zieht eine Bootstrap-Stichprobe aus $\hat{\varepsilon}$ (\textit{sampling with replacement}).
+ Diese kann man als $\hat{\varepsilon}^{*}$ bezeichnen.
+ Dieser Vektor enthält ebenso $n$ Werte,
+ wobei bestimmte $\widehat{\varepsilon_i}$ eventuell 
+ nicht vorkommen, andere dafür mehrmals.
+ \item Man kombiniert $\widehat{\beta_0}$ und $\hat{\varepsilon}^{*}$. Dies ergibt
+ eine neue Reihe von $y$-Werten: $y_i^{*} = \widehat{\beta_0} + \widehat{\varepsilon_i}^{*}$.
+ \item Man schätzt nun auf der Basis von $y^{*}$ erneut den Parameter von Interesse ($\widehat{\beta_0}^{*}$).
+ \item Man führt Schritte 2--4 ein paar tausend Mal aus und erhält so die Verteilung
+ der gebootstrappten $\beta_0$-Schätzungen.
+\end{enumerate}
+
+Der unten stehende R-Code implementiert diese Schritte.
+<<cache = TRUE>>=
+n_bootstrap <- 20000
+bs_b0 <- vector(length = n_bootstrap)
+
+for (i in 1:n_bootstrap) {
+  # Residuen bootstrappen
+  bs_residual <- sample(resid(mod.lm), replace = TRUE)
+
+  # neuen Outcome kreieren
+  bs_outcome <- predict(mod.lm) + bs_residual
+
+  # Modell neu berechnen mit diesem Outcome
+  bs_mod <- lm(bs_outcome ~ 1)
+
+  # Schätzung speichern
+  bs_b0[[i]] <- coef(bs_mod)[[1]]
+}
+@
+
+Wir können jetzt wieder die Verteilung der
+gebootstrappten Parameterschätzungen visualisieren,
+und ihre Standardabweichung und 2.5.\ und 97.5.\ Perzentile
+berechnen. Die Ergebnisse sind natürlich identisch
+mit jenen aus Kapitel \ref{ch:uncertainty}.
+
+<<eval = FALSE>>=
+# Das Histogramm wird hier nicht gezeigt.
+hist(bs_b0)
+@
+
+<<>>=
+sd(bs_b0)
+quantile(bs_b0, probs = c(0.025, 0.975))
+@
+ 
+\subsection{Ein anderer Bootstrap}\label{semiparametricbootstrap}
+Beim Bootstrap, den wir soeben besprochen haben,
+sind wir davon ausgegangen, dass die Residuen
+in der Stichprobe genau so verteilt sind wie die
+Residuen in der Population. Ein Nachteil dieser
+Annahme ist, dass wir dadurch die Feinkörnigkeit
+der Residuen in der Population wohl unterschätzen.
+Beispielsweise gibt es für das \texttt{mod.lm}-Modell
+ein Residuum von $-14.78$ und ein Residuum von
+$-12.78$, aber keines von $-13.78$.
+Ein Residuum von $-14.78$ entspricht einer Beobachtung
+von $150.78 - 14.78 = 136$; ein Residuum von $-13.78$
+entspräche einer Beobachtung von $150.78 - 13.78 = 137$.
+Nach unserer Annahme gäbe es in der Population also
+keine Versuchspersonen mit einem GJT-Ergebnis von 137.
+
+Dies ist natürlich eine etwas komische Annahme;
+in der Regel hat sie aber kaum einen Einfluss auf die
+Inferenzen. Aber eine Alternative wäre,
+dass wir davon ausgingen, dass die Residuen in
+der Population normalverteilt sind. Normalverteilungen
+sind unendlich feinkörnig, sodass diese Annahme sozusagen
+den Gegenpol der ersten Annahme darstellt.
+Das Mittel der Residuen beträgt 0, sodass
+wir nur die Standardabweichung der normalverteilten Restfehler
+in der Population
+finden müssen. Diese wird durch die Standardabweichung
+der Restfehler in der Stichprobe geschätzt.
+Dafür können wir hier zwei Funktionen verwenden:
+
+<<>>=
+sd(resid(mod.lm))
+sigma(mod.lm)
+@
+
+In diesem Beispiel (lineares Modell ohne Prädiktoren)
+sind diese Werte identisch, aber sobald Prädiktoren
+im Spiel sind, liefert \texttt{sigma()} die bessere Schätzung
+der Standardabweichung der Residuen. Sie wird so berechnet:
+\begin{equation}\label{eq:sigmap}
+\widehat{\sigma_{\varepsilon}} = \sqrt{\frac{1}{n - p} \sum_{i = 1}^{n} \widehat{\varepsilon_i^2}},
+\end{equation}
+wo $p$ die
+Anzahl geschätzten $\beta$s ist.
+In diesem Fall ist $p = 1$, sodass die Gleichung die
+Stich\-proben\-standard\-ab\-weichung der Residuen ergibt:
+<<>>=
+sqrt(sum(resid(mod.lm)^2)/(length(resid(mod.lm)) - length(coef(mod.lm))))
+@
+Hier teilt man durch $n-p$ aus dem gleichen Grund,
+weshalb man bei der Standardabweichung der Beobachtungen
+in der einer Stichprobe durch $n-1$ teilt: um eine systematische
+Unterschätzung zum grössten Teil entgegenzuwirken.
+
+Anstatt für jede Bootstrapstichprobe die Residuen
+durch \textit{sampling with replacement} zu generieren,
+werden sie hier zufällig aus einer Normalverteilung
+mit $\mu = 0$ und $\sigma = \widehat{\sigma_{\varepsilon}}$ generiert:
+
+<<cache = TRUE>>=
+n_bootstrap <- 20000
+bs_b0 <- vector(length = n_bootstrap)
+
+for (i in 1:n_bootstrap) {
+  # Neue Residuen aus Normalverteilung generieren
+  bs_residual <- rnorm(n = 76, sd = sigma(mod.lm))
+
+  # neuen Outcome kreieren
+  bs_outcome <- predict(mod.lm) + bs_residual
+
+  # Modell neu berechnen mit diesem Outcome
+  bs_mod <- lm(bs_outcome ~ 1)
+
+  # Schätzung speichern
+  bs_b0[[i]] <- coef(bs_mod)[1]
+}
+@
+
+<<eval = FALSE>>=
+# Histogramm (nicht gezeigt)
+hist(bs_b0)
+@
+
+
+<<>>=
+# Geschätzter Standardfehler
+sd(bs_b0)
+
+# 95% Konfidenzintervall
+quantile(bs_b0, probs = c(0.025, 0.975))
+@
+
+Diese Art von Bootstrap---bei der wir davon ausgehen,
+dass die Residuen eine bestimmte Verteilung haben,
+und wir die relevanten Parameter dieser Verteilung
+anhand der Stichprobe schätzen---nennt man
+einen \textbf{parametrischen Bootstrap}.
+Den Bootstrap aus dem letzten Abschnitt---bei der man
+Bootstrapstichproben der Modellresiduen
+mit den Modellvorhersagen kombiniert und die relevanten
+Parameter anhand dieser neuen Werte schätzt---nennt
+man einen \textbf{semiparametrischen Bootstrap}.
+Den Bootstrap aus dem letzten Kapitel---bei der man
+Bootstrapstichproben aus dem ursprünglichen Datensatz
+generiert---nennt man einen \textbf{nichtparametrischen Bootstrap}.
+% Siehe auch \href{https://janhove.github.io/teaching/2016/12/20/bootstrapping}{\textit{Some illustrations of bootstrapping}} (20.12.2016).
+
+Man bemerke hier übrigens, dass sowohl die Annahme,
+dass die Residuen in der Population genau so wie in der Stichprobe
+verteilt sind, als auch die Annahme, dass sie normalverteilt und
+unendlich feinkörnig sind, hier gar nicht stimmen können,
+da bei dieser Studie nur Ganzzahlen zwischen 0 und 204 hätten
+vorkommen können. Die Tatsache, dass wir unter unterschiedlichen
+Annahmen zum gleichen Ergebnis kommen, deutet bereits darauf hin, 
+dass bei dieser Stichprobengrosse die Schätzung der Unsicherheit eines
+Mittels
+nicht massgeblich von Annahmen über die genaue Verteilung der
+Residuen in der Population abhängt.
+
+\subsection{Mit $t$-Verteilungen}
+Wenn man ohnehin davon ausgehen will, dass die Residuen
+normalverteilt sind, kann man den geschätzten
+Standardfehler und das Konfidenzintervall
+auch analytisch herleiten.
+Die Formeln, die man dazu braucht, werden hier
+nicht gezeigt, denn sie haben kaum einen didaktischen
+Mehrwert.
+In R kann man die \texttt{summary()}-Funktion
+verwenden, um den geschätzten Standardfehler zu berechnen
+(\texttt{Std. Error}):
+<<>>=
+summary(mod.lm)
+@
+$\beta_0$ heisst hier \texttt{(Intercept)}.
+Was \texttt{t value} und \texttt{Pr(>|t|)} bedeuten,
+werden wir erst in einem späteren Kapitel besprechen.
+
+Das 95\%-Konfidenzintervall kann mit \texttt{confint()}
+berechnet werden.
+<<>>=
+confint(mod.lm)
+@
+
+Natürlich kann man auch gerne andere Intervalle berechnen,
+z.B.\ 80\%-Konfidenzintervalle:
+<<>>=
+confint(mod.lm, level = 0.80)
+@
+
+
+\paragraph{Denkaufgabe.}
+Warum wird bei der \texttt{summary()}-Funktion
+schon der Median aber nicht das Mittel der Residuen gezeigt?
+
+
+\section{Fazit}
+
+\begin{itemize}
+\item Datenpunkte kann man als eine Kombination einer
+Gemeinsamkeit aller Datenpunkte in der Population und einer
+spezifischen Abweichung verstehen.
+\item In der Regel ist die Gemeinsamkeit von Interesse;
+diese wird aber anhand der Abweichungen und eines
+Optimierungskriteriums geschätzt.
+\item Das am meisten verwendetete Optimierungskriterium
+ist die Methode der kleinsten Quadrate, die im `univariaten' Fall
+(= wenn man nur mit einer Variablen arbeitet) das Mittel ergibt,
+aber es existieren auch andere Methoden.
+\item Die Unsicherheit in der Parameterschätzung kann
+mithilfe des Bootstraps oder anhand weiterer Annahmen geschätzt werden.
+\end{itemize}
+
+\bigskip
+
+Es gibt keine weiteren Aufgaben zu diesem Kapitel.
+
+% \section{Aufgaben}
+% Diese Aufgaben haben zum Ziel 
+% \begin{enumerate}
+%     \item Wie würden Sie den parametrischen Bootstrap fürs \texttt{mod.lm}-Modell
+%   anpassen, wenn Sie davon ausgehen würden, dass die Residuen in der Population
+%   aus einer kontinuierlichen Gleichverteilung statt aus einer Normalverteilung stammten? 
+%   
+%   \item Wie würden Sie die \texttt{min}- und \texttt{max}-Parameter der 
+%   \texttt{runif()}-Funktion bestimmen? Sehen Sie dabei Probleme?
+%   
+%   \item Führen Sie das Bootstrapping unter dieser Annahme aus. Welche Schätzung erhalten
+%   Sie für $\widehat{\sigma}_{\bar{x}}$?
+%   
+%   \item Wäre eine diskrete Gleichverteilung hier sinnvoller als eine kontinuierliche
+%   Gleichverteilung? Welche Werte würden in dieser diskreten Gleichverteilung vorkommen?
+% \end{enumerate}

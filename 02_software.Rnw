@@ -1,0 +1,367 @@
+\chapter{Software}\label{ch:software}
+
+\section{R und RStudio installieren und konfigurieren}
+Um alle Schritte in diesem Skript mitverfolgen zu können,
+brauchen Sie die Gratis-Software R. 
+Zwar gibt es noch andere Gratis-Software, mit der man gut
+Daten analysieren kann (z.B.\ \href{https://www.python.org/}{Python}, 
+\href{https://julialang.org/}{Julia}, \href{https://jasp-stats.org/}{JASP}), aber im Vergleich
+zu diesen Alternativen hat R die Vorteile, 
+dass es in den Geistes- und Sozialwissenschaften stärker verbreitet ist
+und dass ich mich eben selber mit R am besten auskenne.
+Auf das weitere Preisen von R verzichte ich hier, siehe dazu 
+\url{https://adv-r.hadley.nz/introduction.html#why-r}.
+
+\paragraph{Aufgabe 1.}
+Laden Sie R unter \url{https://www.r-project.org} herunter
+und installieren Sie es.
+Stellen Sie dabei sicher, dass Sie mindestens über Version 4.2.0 verfügen.
+
+Nachdem Sie R installiert haben, lohnt es sich, RStudio zu installieren.
+Dies ist ein benutzerfreundlicheres und kostenloses Interface,
+in dem Sie mit R arbeiten können.
+
+\paragraph{Aufgabe 2.} 
+Laden Sie die Open Source Desktop-Version von RStudio unter \url{https://rstudio.com} 
+herunter und installieren Sie diese.
+
+Öffnen Sie RStudio. Ihr Bildschirm soll jetzt
+so aussehen wie in Abbildung \ref{fig:rstudio}.
+Wenn Sie statt vier Quadranten nur drei sehen,
+klicken Sie auf \texttt{File, New File, R Script}.
+
+\begin{itemize}
+\item Links unten sehen Sie die R-Konsole.
+Befehle, die hier eingetragen werden,
+werden von R ausgeführt.
+Auch der Output dieser Befehle erscheint hier.
+
+\item Links oben sehen Sie einen Texteditor.
+ Anstatt Ihre Befehle direkt in die Konsole (links unten)
+ einzutragen, sollten Sie diese zunächst hier eintragen.
+ Dies macht es einfacher, die Befehle klar zu strukturieren
+ und zu formattieren und
+ Tippfehler aufzudecken. Ausserdem können Sie diese
+ Skripts als .R-Datei
+ speichern, sodass Sie Ihre Analyse nachher
+ reproduzieren können.
+
+\item Rechts oben werden alle Objekte in der R-Arbeitsumgebung aufgelistet.
+ Da Sie noch keine Daten eingelesen oder kreiert haben,
+ ist diese Umgebung momentan leer.
+
+\item Wenn Sie eine Grafik zeichnen, sehen Sie diese rechts unten. Wenn Sie eine Hilfeseite abfragen, erscheint diese ebenfalls hier. Dieses Fenster kann auch als Dateimanager
+ (wie Windows-Explorer) verwendet werden.
+\end{itemize}
+
+\begin{figure}[ht]
+ \includegraphics[max width = \textwidth]{figs/RStudio.png}
+ \caption{RStudio mit links unten der R-Konsole, links oben einem Texteditor, rechts oben dem Verzeichnis über die Arbeitsumgebung (jetzt noch leer) und rechts unten allfällige Hilfeseiten und Grafiken.}
+ \label{fig:rstudio}
+\end{figure}
+
+Bevor wir richtig loslegen, ist es sinnvoll, ein paar Einstellungen zu ändern.
+
+\paragraph{Aufgabe 3.}
+Klicken Sie dazu in RStudio auf \texttt{Tools > Global options\dots}
+Stellen Sie sicher, dass unter \texttt{General > Basic} die Option
+`Restore .RData into workspace at startup' \emph{nicht} angekreuzt ist
+und dass bei `Save workspace to .RData on exit' die Option `never'
+ausgewählt wurde.
+Mit diesen Einstellungen vermeiden Sie, dass bei einem Neustart noch
+alte Resultate und Objekte in der Arbeitsumgebung herumliegen,
+die Ihre neuen Berechnungen beeinflussen, ohne dass Sie sich dessen
+bewusst sind.
+Weiter sollten Sie unter \texttt{Code > Editing} das Kästchen
+`Use native pipe operator, |>' ankreuzen.
+Was dieser `pipe operator' vermag, werden Sie schon bald merken.
+Zum Schluss empfehle ich Ihnen, dass Sie unter \texttt{Code > Saving}
+noch die `Default text encoding' auf UTF-8 wechseln. Das sollte
+die Wahrscheinlichkeit erhöhen, dass Ihre Skripts auf anderen
+Computern richtig angezeigt werden, wenn diese Sonderzeichen (wie Umlaute)
+enthalten.
+
+\section{R als Rechenmaschine}\label{sec:calculator}
+Mit R verfügen Sie über eine Rechenmaschine.
+Summen, Produkte und Quotienten können Sie
+berechnen, indem Sie Befehle wie die unten stehenden
+auf die Konsole (unten links) eintragen.
+Das vorangestellte Symbol `>' gehört nicht zum Befehl selber,
+aber Sie sehen es bereits auf der Konsole.
+Auch die Ergebnisse gehören nicht zu
+den Befehlen; diese werden auf der Konsole
+angezeigt, sobald Sie den Befehl eingetragen
+haben und mit \textsc{enter} bestätigt haben.
+
+<<>>=
+10 + 7
+12 - 28
+7 * 3.5
+11 / 3
+@
+
+Für Exponentiation verwendet man den Operator `\textasciicircum':
+
+<<>>=
+6 ^ 3
+@
+
+Quadratwurzeln ziehen können Sie mit der \texttt{sqrt()}-Funktion.
+
+<<>>=
+sqrt(64)
+@
+
+Fürs Ziehen von beliebigen Wurzeln ist zu bemerken, dass $\sqrt[n]{x} = x^{1/n}$ gilt.
+Somit lässt sich $\sqrt[3]{216}$ als $216^{1/3}$ berechnen:
+
+<<>>=
+216 ^ (1/3)
+@
+
+Logarithmen berechnet man mit der \texttt{log()}-Funktion.
+Die folgenden Befehlen berechnen so $\log_{10} 1000$ 
+(d.h., wie oft muss man 10 mit sich selbst multiplizieren, um 1000 zu erhalten?) und 
+$\log_2 256$ (d.h., wie oft muss man 2 mit sich selbst multiplizieren, um 256 zu erhalten?):
+
+<<>>=
+log(1000, 10)
+log(256, 2)
+@
+
+Für $\log_{10}$ und $\log_{2}$ existieren auch noch die Funktionen \texttt{log10()} bzw.\ \texttt{log2()}:
+<<>>=
+log10(1000)
+log2(256)
+@
+
+R respektiert die übliche Operatorrangfolge (z.B.\ Multiplikation vor Addition).
+Verwenden Sie daher runde Klammern, um Berechnungen innerhalb eines Ausdrucks
+vor anderen zu berechnen:
+
+<<>>=
+8 * 0 + 4
+8 * (0 + 4)
+@
+
+Anderen Rechenoperationen widmen wir uns dann, wenn wir sie im Skript brauchen.
+
+\section{Erweitungspakete installieren}
+Es gibt für R jede Menge Erweiterungspakete,
+mit denen man z.B.\ informative Grafiken
+gestalten kann oder spezialisierte statistische
+Modelle rechnen kann.
+Mit dem unten stehenden Befehl installieren Sie das
+\texttt{tidyverse}-Bündel: eine
+Sammlung unterschiedlicher Pakete, die alle
+auf der gleichen Philosophie basieren und 
+die das Arbeiten mit Datensätzen wesentlich
+erleichtern.
+
+\paragraph{Aufgabe.}
+Tippen Sie diesen Befehl in RStudio ins
+Fenster links oben ein.
+Und ich meine tatsächlich `tippen', nicht `selektieren, kopieren und einkleben': 
+Sie werden viel mehr lernen, wenn Sie die Befehle in diesem Skript
+abtippen als wenn Sie diese einfach aus dem PDF kopieren und einkleben!
+Selektieren Sie dann die Zeile, klicken
+Sie auf \texttt{Code, Run Selected Line(s)}
+oder drücken Sie \textsc{ctrl + enter}
+(Mac: \textsc{cmd + enter}).
+Der Befehl wird nun an die Konsole (links unten)
+weitergeleitet.
+Im Prinzip können Sie diese kurzen Befehl auch
+sofort in die Konsole eintragen, aber Sie sollten es sich angewöhnen,
+im Texteditor zu arbeiten. Fehler können so wesentlich einfacher
+aufgedeckt und behoben werden.
+Ausserdem erleichtert das Arbeiten im Texteditor
+das Dokumentieren Ihrer Analyse, da Sie Ihre Skripts abspeichern können.
+<<eval = FALSE>>=
+install.packages("tidyverse")
+@
+
+Für die Erweitungspakete, die im \texttt{tidyverse}-Bündel
+zusammengepackt wurden, finden Sie unter \url{https://www.tidyverse.org/}
+Anleitungen und weitere Informationen.
+
+\section{R-Projekte}
+Es ist sinnvoll, wenn die Skripts, Datensätze, Grafiken, usw.,
+die Sie für ein Forschungsprojekt brauchen oder kreiert haben,
+alle im gleichen Ordner (`Arbeitsordner') stehen.
+Am besten richten Sie dazu für jedes Forschungsprojekt, an dem Sie beteiligt
+sind (inklusive Seminar- und Masterarbeiten), ein R-Projekt ein.
+Auch für diesen Kurs sollten Sie ein solches Projekt einrichten.
+
+\paragraph{Aufgabe.}
+Klicken Sie in RStudio auf \texttt{File, New Project..., New directory, Empty project} und geben Sie dem
+Projekt einen Namen (z.B.\ Statistikkurs).
+Für diesen Kurs brauchen Sie
+die Optionen \texttt{Create a git repository}
+und \texttt{Use renv with this project} nicht 
+einzuschalten.\footnote{Erstere kann aber nützlich sein, wenn Sie 
+mit anderen am gleichen R-Projekt arbeiten. Siehe dazu
+\url{https://happygitwithr.com/}. Zum Nutzen
+von \texttt{renv} erfahren Sie im nächsten Abschnitt mehr.}
+Es wird jetzt ein Ordner kreiert, der eine Datei
+mit der Endung \texttt{.Rproj} enthält.
+Um das R-Projekt zu öffnen, können Sie diese Datei
+öffnen oder das Projekt in RStudio unter
+\texttt{File, Open Project...} auswählen.
+
+Wenn Sie das Projekt geöffnet haben,
+sollten Sie im Fenster rechts unten noch die Registerkarte
+\texttt{Files} öffnen und mit \texttt{New Folder}
+die Unterordner \texttt{data} und \texttt{figs} kreieren.
+Die Datensätze, mit denen wir arbeiten werden, sollten Sie
+in \texttt{data} ablegen; 
+in \texttt{figs} werden wir Abbildungen (Grafiken) speichern.
+
+\section{Softwareversionen und Updates}
+R und seine Erweiterungspakete sind in ständiger Entwicklung.
+Um ein Update der installierten R-Packages durchzuführen,
+können Sie den Befehl \texttt{update.packages()} verwenden.
+Um R selber auf den neusten Stand zu bringen, finde ich es
+eigentlich am einfachsten, die alte Version komplett zu löschen
+und die neue zu installieren. Danach muss ich dann aber die
+Packages, die ich brauche, erneut installieren.
+Dies kann recht mühsam sein, weshalb ich Ihnen empfehle,
+solche Upgrades in der vorlesungsfreien Zeit durchzuführen
+statt mitten im Semesterstress.
+
+Aber Achtung: Es kommt nicht selten vor, dass alter R-Code
+nach einem Update nicht mehr oder etwas anders funktioniert.
+Für grössere Forschungsprojekte empfiehlt es sich daher,
+die Option \texttt{Use renv with this project} anzukreuzen.
+Diese sorgt dafür, dass die Versionen der Packages, die Sie 
+im Projekt verwenden, als Teil des Projekts gespeichert werden.
+Die verwendeten Packages müssen jedoch im Projekt neu installiert werden.
+Auch wenn Sie nachher für ein anderes Projekt eine neuere
+Version des Packages verwenden, werden die Befehle im ersten Projekt
+noch mit der alten Version ausgeführt. Dies verringert die 
+Gefahr, dass Ihr alter Code ein paar Jahre später nicht mehr funktioniert.
+Für mehr Informationen, siehe \url{https://rstudio.github.io/renv/articles/renv.html}.
+
+Für dieses Skript wurde R-Version 4.2.0 verwendet.
+Eine Übersicht über die Packageversionen finden Sie im Anhang \ref{app:versions}.
+
+\section{Software zitieren}
+R und R-Pakete sind gratis und werden mehrheitlich
+von anderen Forschenden entwickelt. Wenn Sie bei
+Ihrer Arbeit sehr von R oder einem Erweiterungspaket
+profitiert haben, ziehen Sie es dann bitte in Erwägung,
+diesen Freiwilligen mit einer Referenz zu danken.
+
+Eine Referenz für R erhalten Sie, wenn Sie 
+den folgenden Befehl in die Konsole eintippen.
+Den Output dieses Befehls wird hier im Skript nicht gezeigt.
+<<eval = FALSE>>=
+citation()
+@
+
+Wenn Sie ein bestimmtes Erweiterungspaket zitieren
+möchten, stellen Sie den Namen des Pakets zwischen
+Klammern und Anführungszeichen, etwa so:
+<<eval = FALSE>>=
+# Output nicht im Skript
+citation("tidyverse")
+@
+
+Es ist eine gute Idee, der Referenz an 
+ein Erweitungspaket auch noch die Softwareversion 
+hinzuzufügen. Es kann nämlich vorkommen, dass
+gewisse Berechnungen je nach der Softwareversion
+ein anderes---eventuell falsches---Ergebnis liefern.
+Um die Softwareversion von R und eventuell geladenen
+Erweitungspaketen abzurufen, können Sie den Befehl \texttt{sessionInfo()}
+verwenden.
+<<eval = FALSE>>=
+# Output nicht im Skript
+sessionInfo()
+@
+% 
+% Im obigen Output können Sie unter anderem sehen, dass
+% ich Version 4.2.0 von R verwende und dass ich
+% dieses Skript auf einer Ubuntu-Maschine geschrieben habe.
+% Bei Ihnen wird dieser Output etwas anders aussehen---einerseits,
+% weil Sie vielleicht eine andere R-Version auf einem anderen
+% Betriebssystem verwenden, und andererseits, weil ich beim
+% Schreiben dieses Skripts hinter den Kulissen Pakete verwende,
+% die Sie gar nicht brauchen.
+% 
+% Um die Softwareversion eines spezifischen Erweitungspakets (vielleicht
+% eines Pakets, das Sie noch nicht verwendet haben)
+% abzurufen, können Sie den Namen dieses Pakets als Parameter der Funktion
+% übergeben:
+% 
+% <<>>=
+% sessionInfo("tidyverse")
+% @
+% 
+% Unter \texttt{other attached packages} sehen Sie, dass bei mir
+% Version 1.3.1 des \texttt{tidyverse}-Pakets installiert ist.
+\section{Aufgaben}
+\begin{enumerate}
+  \item Ein nützliches Erweiterungspaket, das wir bald verwenden werden,
+  ist das \texttt{here}-Package.
+  \begin{enumerate}
+    \item Installieren Sie das \texttt{here}-Package.
+    \item Wer hat das \texttt{here}-Package geschrieben?
+    \item Welche Version des \texttt{here}-Pakets haben Sie installiert?
+  \end{enumerate}
+  
+  \item Das Arbeiten im Texteditor erleichtert das Dokumentieren
+  von Analysen.
+  \begin{enumerate}
+    \item Kreieren Sie ein neues R-Skript (\texttt{File, New File, R Script})
+  und tragen Sie hier die R-Befehle aus Abschnitt \ref{sec:calculator} ein.
+  
+    \item Fügen Sie am Ende des Skripts noch eine Zeile mit dem folgenden Befehl hinzu:
+<<eval = FALSE>>=
+sessionInfo()
+@
+
+    \item Speichern Sie das Skript mit der Endung \texttt{.R}
+  (z.B.\ \texttt{rechenmaschine.R}).
+  
+    \item Klicken Sie dann auf \texttt{File, Compile Report\dots} und wählen
+  Sie dort HTML als Outputformat aus. (Eventuell müssen Sie
+  dann noch ein zusätzliches Paket installieren.)
+  Hiermit wird eine HTML-Datei hergestellt, die sowohl
+  die Befehle als auch deren Output enthält.
+  Dank des Outputs von \texttt{sessionInfo()} ist auch klar,
+  welche Softwareversionen Sie für Ihre Berechnungen verwendet haben.
+  
+  Wenn der R-Code Syntaxfehler enthält, kann übrigens keine
+  HTML-Datei hergestellt werden. So bietet das Arbeiten 
+  mit Skripts und HTML-Berichten eine minimale Qualitätskontrolle.
+  
+    \item Fügen Sie am Anfang Ihres R-Skripts noch folgende Zeilen hinzu.
+\begin{verbatim}
+#' ---
+#' author: '<Ihr Name>'
+#' title: 'R als Rechenmaschine'
+#' ---
+\end{verbatim}
+    Kompilieren Sie den HTML-Bericht erneut.
+
+    \item Übrigens können Sie dem Bericht auch noch Text hinzufügen
+    und seine Struktur mit Überschriften klarer machen. Stellen Sie
+    hierzu den Textzeilen die Symbolen \texttt{\#'} voran. Fügen
+    Sie zum Beispiel dieses Textchen noch irgendwo hinzu und 
+    kompilieren Sie den Bericht erneut:
+\begin{verbatim}
+#' Um Ihre Überlegungen und Erkenntnisse zu dokumentieren,
+#' können Sie Absätze wie diese in Ihre Skripts einbauen.
+#' Solche Absätze werden von R <i>ignoriert</i>, aber sind
+#' sowohl im Skript als auch im HTML-Bericht <b>sichtbar</b>.
+#' Sie können hier auch HTML-Markup verwenden.
+
+#' <h1>Beschriftung (1. Stufe)</h1>
+#' Lorem ipsum.
+ 
+#' <h2>Beschriftung (2. Stufe)</h2>
+#' <h3>Beschriftung (3. Stufe, etc.)</h3>
+\end{verbatim}
+
+    \end{enumerate}
+\end{enumerate}

@@ -1,0 +1,185 @@
+\documentclass[oneside, 10pt]{book}
+
+% Allgemeines Lay-Out
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+
+% Deutsch
+\usepackage[ngerman]{babel, varioref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Absätze formattieren
+\usepackage{setspace}
+\setstretch{1}
+\usepackage{parskip}
+
+% Mathe-Notation
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage[sc]{mathpazo}
+\newcommand{\pr}{\,\textrm{pr}}
+
+% Abbildungen und Tabellen
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{booktabs}
+\usepackage[margin=10pt, font=small, labelfont=bf, width=.8\textwidth]{caption}
+
+% Referenzen
+\usepackage[sort]{natbib}
+
+% For writing German
+\usepackage[ngerman]{babel, varioref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Boxes
+\usepackage{framed}
+
+% Hyperlinks
+\usepackage{hyperref}
+\usepackage{varioref}
+
+\title{{\Huge Statistische Grundlagen} 
+\vspace{0.3 cm}\\
+{\huge Eine Einführung mit Beispielen\\ aus der Sprachforschung}}
+
+\author{{\LARGE Jan Vanhove} 
+\vspace{1.5 cm} \\ 
+Universität Freiburg/Fribourg, Schweiz\\ 
+Departement für Mehrsprachigkeitsforschung und Fremdsprachendidaktik 
+\vspace{1.5 cm} \\
+\href{mailto:jan.vanhove@unifr.ch}{\texttt{jan.vanhove@unifr.ch}}\\
+\href{http://janhove.github.io}{\texttt{https://janhove.github.io}}}
+
+\date{letzte Änderung: August 2022}
+
+% KNITR options -----------------------------------
+<<setup, include=FALSE, cache=FALSE>>=
+library(knitr)
+
+# set global chunk options
+opts_chunk$set(fig.path = 'figs/',
+               fig.align = 'center',
+               fig.show = 'hold',
+               fig.pos = "tp",
+               tidy = FALSE,
+               prompt = TRUE,
+               comment = '',
+               highlight = TRUE,
+               dev = 'cairo_pdf',
+               cache = FALSE,
+               fig.width = 4,
+               fig.height = 4,
+               out.width = '.5\\textwidth')
+opts_knit$set(global.par = TRUE)
+
+options(formatR.arrow = TRUE,
+        width = 60, 
+        show.signif.stars = FALSE, 
+        tibble.print_max = 7,
+        tibble.print_min = 7,
+        digits = 5)
+
+set.seed(1986-09-08)
+@
+
+<<echo = FALSE>>=
+par(las = 1,
+    bty = "l",
+    mar = c(3,3,2,1),
+    mgp = c(2,.7, 0),
+    tck = -.01)
+@
+
+<<echo = FALSE>>=
+op <- par()
+@
+
+
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\mainmatter
+
+<<Ziele, child='01_ziele.Rnw'>>=
+@
+
+<<Software, child='02_software.Rnw'>>=
+@
+
+<<Datasets, child='03_datasets.Rnw'>>=
+@
+
+<<Univariate, child='04_univariate.Rnw'>>=
+@
+
+<<Probability, child='05_probability.Rnw'>>=
+@
+
+<<Stichproben, child='06_stichproben.Rnw'>>=
+@
+
+<<Uncertainty, child='07_uncertainty.Rnw'>>=
+@
+
+<<LinearModel, child='08_linearmodel.Rnw'>>=
+@
+
+<<Regression, child='09_regression.Rnw'>>=
+@
+
+<<GroupDiffs, child='10_groupdiffs.Rnw'>>=
+@
+
+<<Interactions, child='11_interactions.Rnw'>>=
+@
+
+<<MultipleRegression, child='12_multipleregression.Rnw'>>=
+@
+
+<<Significance, child='13_significance.Rnw'>>=
+@
+
+<<ANOVA, child='14_anova.Rnw'>>=
+@
+
+<<Power, child='15_power.Rnw'>>=
+@
+
+<<SillyTests, child='16_sillytests.Rnw'>>=
+@
+
+<<QRP, child='17_QRP.Rnw'>>=
+@
+
+<<Logistic, child='18_logistic.Rnw'>>=
+@
+
+<<Selfstudy, child='19_selfstudy.Rnw'>>=
+@
+\appendix
+
+<<ErrorMessages, child='99_errormessages.Rnw'>>=
+@
+
+\chapter{Softwareversionen}\label{app:versions}
+<<>>=
+devtools::session_info()
+@
+
+\bibliographystyle{../Documents/Literature/unified}
+\bibliography{../Documents/Literature/bibliography}
+
+\end{document}

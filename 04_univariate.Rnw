@@ -1,0 +1,1347 @@
+\chapter{Eine einzige numerische Variable beschreiben}\label{ch:descriptives}
+In diesem Kapitel arbeiten wir zunächst mit
+einem kleinen, aber dafür übersichtlichen Datensatz,
+der meiner Bachelorarbeit zu Grunde lag.
+Für diese Arbeit habe ich 23 Studierenden im zweiten Jahr im
+Fach schwedische Sprach- und Literaturwissenschaft
+an der Universität Gent vier Leseverstehensaufgaben vorgelegt:
+einen auf Schwedisch, einen auf auf
+Dänisch, einen auf bokm\aa{}l-Norwegisch
+und einen auf nynorsk-Norwegisch.
+Die Ergebnisse aus den unterschiedlichen Lesetests
+sind nicht miteinander vergleichbar und die nynorsk-Daten
+sind im Datensatz nicht vorhanden.
+Daneben gibt es Angaben zu den sonstigen Sprachkenntnissen
+der Teilnehmenden; diese ignorieren wir hier.
+Ich gehe davon aus, dass das \texttt{tidyverse}-Bündel
+und das \texttt{here}-Package geladen sind und dass
+Sie die Datei \texttt{jv\_bachpap.csv} in den Ordner
+\texttt{data} in Ihrem R-Projekt abgelegt haben.
+<<message = FALSE>>=
+d <- read_csv(here("data", "jv_bachpap.csv"))
+d |>
+  slice_head(n = 3)
+@
+
+In diesem Kapitel widmen wir uns der grafischen
+und numerischen Beschreibung einer einzigen numerischen
+Variablen: den Ergebnissen beim norwegischen Lesetest.
+Vorübergehend gehen wir davon aus, dass wir uns
+ausschliesslich für die 23 Ergebnisse im Datensatz
+interessieren und keine allgemeineren Aussagen machen
+möchten---z.B.\ über das Leseverständnis im Norwegischen
+von Studierenden im zweiten Jahr im
+Fach schwedische Sprach- und Literaturwissenschaft, die
+nicht im Datensatz vorhanden sind.
+Wir betrachten die Ergebnisse, die uns zur Verfügung
+stehen, also als die ganze \textbf{Population}, für die
+wir uns interessieren, und nicht als bloss eine
+\textbf{Stichprobe}, d.h., einen Teil der Population,
+die von Interesse wäre.
+
+\section{Das Punktdiagramm}
+Wenn wir über die Ergebnisse kommunizieren wollen
+und der Datensatz ganz klein ist, könnten wir
+ihn einfach direkt reproduzieren. Aber sogar
+für den relativ kleinen Datensatz hier---bloss 23
+Beobachtungen---würde es sich lohnen, die
+Daten grafisch darzustellen und numerisch
+zusammenzufassen.
+
+Eine erste grafische Darstellung
+ist das Punktdiagramm,
+siehe Abbildung \ref{fig:dotchart}. Anstatt
+lediglich die Zahlen im Datensatz aufzulisten,
+werden die Beobachtungen als Punkte
+auf separaten Linien entlang der $x$-Achse dargestellt.
+Jede Linie wird mit einer ID entlang der $y$-Achse vermerkt.
+<<echo = FALSE, fig.cap = "Ein Punktdiagramm sortiert nach den IDs der Versuchspersonen (links) und eins geordnet nach dem Ergebnis (rechts). Es gibt keine Werte, die weit von anderen liegen.\\label{fig:dotchart}", fig.width = 6, fig.height = 3,  out.width = '.8\\textwidth'>>=
+p1 <- ggplot(data = d,
+       aes(x = Norwegian,
+           y = Participant)) +
+  geom_point() +
+  xlab("Ergebnis Norwegisch") +
+  ylab("ID Versuchsperson")
+
+p2 <- ggplot(data = d,
+       aes(x = Norwegian,
+           y = reorder(Participant, Norwegian))) +
+  geom_point() +
+  xlab("Ergebnis Norwegisch") +
+  ylab("ID Versuchsperson")
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+@
+
+Um die linke Grafik zu zeichnen, können Sie den unten stehenden Befehl
+verwenden. Mittels des \#-Zeichens habe ich diesem Befehl mit \textbf{Kommentaren}
+versehen. Diese erläutern, wie die Grafik aufgebaut ist.
+Am Anfang Ihrer R-Karriere empfehle ich Ihnen, Ihren Code reichlich mit
+Kommentaren auszustatten, sodass Sie ihn mehrere Wochen und Monate später
+noch verstehen können. Mit der Zeit werden Sie Ihren R-Code immer besser
+lesen können und dann reichen kargere Kommentare durchaus.
+<<eval = FALSE>>=
+ggplot(data = d,                # Datensatz mit den Variablen
+       # aes() = aesthetics = welche Variable wie dargestellt werden soll
+       aes(x = Norwegian,       # Variable auf x-Achse
+           y = Participant)) +  # Variable auf y-Achse
+  geom_point() +                # Daten als Punkte darstellen
+  xlab("Ergebnis Norwegisch") + # insb. bei Arbeiten/Vorträgen/Artikeln:
+  ylab("ID Versuchsperson")     #     Achsen beschriften
+@
+
+Achten Sie darauf, dass das \texttt{tidyverse}-Bündel
+geladen ist: Auch wenn Sie es installiert haben und in einer anderen
+Session verwendet haben, müssen Sie es in jeder Session erneut laden.
+Achten Sie weiter auf Gross- und Kleinschreibung, auf die Klammern
+und Kommas und auf die Pluszeichen. Mit Letzteren werden der Grafik
+zusätzliche Schichten hinzugefügt. Mit dem
+Befehl auf den ersten vier Zeilen (\texttt{ggplot(...)}) wird
+lediglich die `Leinwand' der Grafik gezeichnet. Nach dem
+Pluszeichen folgt der Befehl \texttt{geom\_point(...)},
+der Punkte auf die Leinwand malt.
+Mit den Befehlen \texttt{xlab(...)} und \texttt{ylab(...)} werden
+Achsenbeschriftungen hinzugefügt bzw.\ überschrieben.
+In einem \texttt{ggplot()}-Befehl werden die unterschiedlichen Schichten
+mit einem +-Zeichen zusammengefügt, nicht mit einem \textit{pipe} (|>).
+
+Um die rechte Grafik zu zeichnen, ersetzen Sie in der 4.\ Zeile
+\texttt{y = Participant} durch \texttt{y = reorder(Participant, Norwegian)}
+(Klammer nicht vergessen!).
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: Code mit Stil.}
+Mit dem folgenden Code können Sie ebenfalls die Grafik links
+zeichnen, denn Leerzeichen und Zeilenbrüche werden von R
+mehrheitlich ignoriert.
+<<eval = FALSE>>=
+ggplot(data=d,aes(x=
+Norwegian,y=Participant))+geom_point(
+)+xlab("Ergebnis Norwegisch")+ylab("ID Versuchsperson")
+@
+Die erste Variante ist jedoch viel übersichtlicher, denn
+die Struktur des Codes (inkl.\ Einrückungen) widerspiegelt
+die logische Struktur des Befehls und die Leerzeichen
+machen den Code lesbarer.
+Versuchen Sie daher bereits am Anfang Ihrer R-Karriere,
+einen übersichtlichen und konsistenten Codierstil zu pflegen,
+etwa indem Sie meinen emulieren oder sich an einer
+Gestaltungsrichtlinie (z.B.\ \url{https://style.tidyverse.org/}) orientieren.
+\end{framed}
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: Grafiken speichern.}
+Nachdem Sie eine Grafik mit \texttt{ggplot()}
+erzeugt haben, können Sie diese mit dem Befehl
+\texttt{ggsave()} speichern. Siehe hierzu \texttt{?ggsave}.
+
+Es gibt aber eine allgemeinere Methode, die nicht nur bei von \texttt{ggplot()}
+erzeugten Grafiken funktioniert. Um die linke Grafik aus Abbildung \ref{fig:dotchart}
+zu speichern, können Sie den \texttt{ggplot()}-Befehlen zwischen die Befehle
+\texttt{pdf()} und \texttt(dev.off()) zu stellen, wie folgt:
+<<eval = FALSE>>=
+pdf(here("figs", "dotchart.pdf"), 
+    width = 5, height = 4) # Höhe und Breite in Zoll
+ggplot(data = d,              
+       aes(x = Norwegian,       
+           y = Participant)) + 
+  geom_point() +               
+  xlab("Ergebnis Norwegisch") + 
+  ylab("ID Versuchsperson")
+dev.off()
+@
+Die Abbildung finden Sie jetzt als eine PDF-Datei
+mit dem Namen \texttt{dotchart.pdf} im Unterordner \texttt{figs} in Ihrem Projektordner.
+
+Wenn Sie die Grafik lieber in einem anderen Format speichern, können
+Sie statt \texttt{pdf()} auch \texttt{svg()}, \texttt{png()}, \texttt{tiff()} oder
+\texttt{bmp()} verwenden.
+
+Für eine schnelle Grafik können Sie natürlich auch das \texttt{Export}-Menü
+in der Registerkarte \texttt{Plots} im Fenster rechts unten in RStudio verwenden.
+Aber ich empfehle Ihnen, den Gebrauch von \texttt{pdf()} zu umarmen, da Sie so
+in Ihrem Code dokumentieren, mit welchen Einstellungen die Grafik gespeichert wurde.
+Das ist nämlich sehr praktisch, wenn Sie später alle Grafiken mit leicht anderen
+Einstellungen neu zeichnen müssen.
+\end{framed}
+
+\medskip
+
+In diesem Beispiel ist das Punktdiagramm insbesondere nützlich
+aufgrund von dem, was es eben nicht aufzeigt. Es scheint
+nämlich keine Datenpunkte, oder Grüppchen von Datenpunkten, zu geben,
+die ziemlich weit von den anderen entfernt liegen. Solche Datenpunkte,
+die man \textbf{Ausreisser} nennt, können das Ergebnis einer Analyse
+stark beeinflussen, sodass es wichtig ist, zu wissen, dass es sie gibt.
+Ausreisser können (nicht müssen) auch auf technische
+Fehler hinweisen und sollten also nochmals kontrolliert werden.
+Abbildung \ref{fig:outlier} zeigt ein fiktives Beispiel, in dem
+die Anzahl morphologischer Fehler pro Textseite pro Lerner aufgeführt wird.
+Ein Datenpunkt liegt so weit von den anderen entfernt, dass man hier
+auf jeden Fall nochmals kontrollieren sollte, ob die Angabe tatsächlich stimmt,
+und nicht etwa auf einem Tippfehler bei der Dateneingabe beruht.
+<<echo = FALSE, fig.cap = "Beispiel eines Ausreissers. Hier müsste man kontrollieren, ob der Datenpunkt (17.6) richtig eingetragen wurde und nicht etwa ein Tippfehler ist (statt 1.76).\\label{fig:outlier}", fig.height=2.5>>=
+# fiktive Daten eintragen
+df <- data.frame(fehler = c(1.35, 2.54, 17.6, 1.75, 1.98, 2.09, 2.43),
+                 id = paste("Lerner", LETTERS[1:7]))
+ggplot(data = df,
+        aes(x = fehler,
+            y = reorder(id, fehler))) +
+   geom_point() +
+   xlab("Fehler pro Seite") +
+   ylab("ID Versuchsperson") +
+   annotate(geom = "text",
+            x = 17.6, y = 6.5,
+             hjust = "right", vjust = "top",
+             label = "Ausreisser:\nmöglicher Eingabefehler?")
+@
+
+\section{Das Histogramm}\label{sec:histogram}
+Eine zweite nützliche Grafik ist das Histogramm.
+Für ein Histogramm wird die Variable, die man darstellen
+möchte, in \textit{bins} aufgeteilt und es wird gezählt,
+wie viele Beobachtungen es in jedem \textit{bin} gibt.
+Diese Anzahlen werden in der Grafik als Bälkchen dargestellt,
+siehe Abbildung \ref{fig:histogram}.
+Wie in diesem Beispiel sind die \textit{bins}
+in den allermeisten Histogrammen gleich breit.
+Die Breite der \textit{bins} muss man selber festlegen;
+wie die Befehle und Kommentare unten zeigen, ist dies
+eine Frage von Ausprobieren.
+
+Verglichen mit dem Punktdiagramm ist ein Vorteil
+des Histogramms, dass auch sehr grosse Datensätze sinnvoll
+dargestellt werden können, während man in einem Punktdiagramm
+wohl schnell den Überblick verliert.
+<<eval = FALSE>>=
+ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Defaulteinstellungen fürs Histogramm (immer 30 bins)
+  geom_histogram()
+
+ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Anzahl 'bins' definieren
+  geom_histogram(bins = 10)
+
+ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Binbreite definieren
+  geom_histogram(binwidth = 3)
+
+ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Grenzen selbst festlegen, hier etwa bei 0, 4, 8, 12, 16.
+  # Kürzel: seq(from = 0, to = 16, by = 4).
+  # Die Farben kann man selbst auswählen.
+  geom_histogram(breaks = seq(from = 0, to = 16, by = 4),
+                 fill = "lightgreen",
+                 colour = "darkgreen") +
+  # Achsenbezeichnungen
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  ylab("Anzahl Studierende")
+@
+
+
+<<fig.cap = "Drei Histogramme mit den \\texttt{Norwegian}-Ergebnissen. \\textit{Links}: Die Grenzen zwischen den \\textit{bins} liegen bei 0, 1, 2, usw., 15, 16. \\textit{Mitte}: Grenzen bei 0, 2, 4, usw., 15, 16. \\textit{Rechts}: Grenzen bei 0, 4, 8, 12, 16. Sowohl die Grafik links als auch die in der Mitte halte ich hier für sinnvoll; die Grafik rechts ist nach meinem Geschmack ein bisschen zu grob. Eine goldene Regel für die Wahl der Breite der \\textit{bins} gibt es nicht. Daher gilt: Mit den Einstellungen herumspielen und eine nützliche Grafik auswählen.\\label{fig:histogram}", echo = FALSE, fig.width = 8, fig.height = 2, out.width="\\textwidth">>=
+grenzen <- seq(from = 0, to = 16, by = 1)
+p1 <- ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = grenzen,
+                 fill = "lightgrey",
+                 colour = "black") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = seq(from = 0, to = 16, by = 2)) +
+  scale_y_continuous(breaks = seq(0, 100, 2)) +
+  ylab("Anzahl Studierende")
+
+grenzen <- seq(from = 0, to = 16, by = 2)
+p2 <- ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = grenzen,
+                 fill = "lightgrey",
+                 colour = "black") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = grenzen) +
+  scale_y_continuous(breaks = seq(0, 100, 2)) +
+  ylab("Anzahl Studierende")
+
+grenzen <- seq(from = 0, to = 16, by = 4)
+p3 <- ggplot(data = d,
+       aes(x = Norwegian)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = seq(from = 0, to = 16, by = 4),
+                 fill = "lightgreen",
+                 colour = "darkgreen") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = grenzen) +
+  scale_y_continuous(breaks = seq(0, 100, 2)) +
+  ylab("Anzahl Studierende")
+gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+@
+ 
+In den Histogrammen bisher stand die Anzahl
+Beobachtungen pro \textit{bin} auf der $y$-Achse.
+Wenn man unterschiedliche Histogramme (z.B.\ von unterschiedlichen
+Gruppen) vergleichen möchte, kann es sinnvoller sein, diese
+Zahlen zu einer Art relative Frequenz umzurechnen.
+Diese nennt man \textbf{Wahrscheinlichkeitsdichten}.
+Sie werden so berechnet, dass die Gesamtfläche, die das Histogramm
+einnimmt, 1 beträgt. Anders gesagt: Man nimmt die Höhe jedes \textit{bins},
+also die Wahrscheinlichkeitsdichte, und multipliziert diese mit seiner Breite,
+um die Oberfläche der Bälkchen zu berechnen. Die Höhe wird so festgelegt,
+dass wenn man alle Oberflächen addiert, die Summe 1 beträgt. Die Form
+des Histogramms ist aber gleich, egal ob man mit den Anzahlen oder den
+Wahrscheinlichkeitsdichten arbeitet.
+
+Abbildung \ref{fig:histogramdensity} zeigt ein Beispiel.
+Die Breite jedes \textit{bins} in der rechten Grafik beträgt 4.
+Die Höhen sind etwa 0.09, etwa 0.105, etwa 0.045 und fast 0.015, sodass
+$(4 \cdot 0.09) + (4 \cdot 0.105) + (4 \cdot 0.045) + (4 \cdot 0.015) \approx 1$.
+<<fig.cap = "Drei Histogramme mit der \\texttt{Norwegian}-Ergebnissen. Statt der absoluten Anzahl Beobachtungen pro \\textit{bin} stehen hier Wahrscheinlichkeitsdichten auf der y-Achse.\\label{fig:histogramdensity}", echo = FALSE, fig.width = 8.5, fig.height = 2.2, out.width="\\textwidth">>=
+grenzen <- seq(from = 0, to = 16, by = 1)
+p1 <- ggplot(data = d,
+       aes(x = Norwegian,
+           y = ..density..)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = grenzen,
+                 fill = "lightgrey",
+                 colour = "black") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = seq(from = 0, to = 16, by = 2)) +
+  ylab("Wsk.-Dichte")
+
+grenzen <- seq(from = 0, to = 16, by = 2)
+p2 <- ggplot(data = d,
+       aes(x = Norwegian,
+           y = ..density..)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = grenzen,
+                 fill = "lightgrey",
+                 colour = "black") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = grenzen) +
+  ylab("Wsk.-Dichte")
+
+grenzen <- seq(from = 0, to = 16, by = 4)
+p3 <- ggplot(data = d,
+       aes(x = Norwegian,
+           y = ..density..)) +
+  # Grenzen selbst festlegen, hier etwa bei
+  # 0, 4, 8, 12, 16 und 20
+  geom_histogram(breaks = seq(from = 0, to = 16, by = 4),
+                 fill = "lightgrey",
+                 colour = "black") +
+  xlab("Ergebnisse cloze-Test Norwegisch") +
+  scale_x_continuous(breaks = grenzen) +
+  ylab("Wsk.-Dichte")
+gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+@
+
+Um die Grafiken in Abbildung \ref{fig:histogramdensity} selber zu zeichnen, ersetzen
+Sie in den Befehlen oben
+<<eval = FALSE>>=
+ggplot(data = d,
+       aes(x = Norwegian))
+@
+durch
+<<eval = FALSE>>=
+ggplot(data = d,
+       aes(x = Norwegian,
+           y = ..density..))
+@
+
+
+\section{Mittelwerte}
+Es ist unpraktisch, in einem Bericht alle einzelnen
+beobachteten Werte aufzulisten.\footnote{Aber es ist sehr sinnvoll,
+den Datensatz online verfügbar zu stellen und im Bericht auf ihn
+zu verweisen; siehe \citet{Klein2018} und \citet{Levenstein2018}! Eine benutzerfreundliche Website, wo Sie dies machen können, ist \url{https://osf.io}; siehe \citet{Soderberg2018} für eine Anleitung.} Wenn möglich probiert
+man diese Informationen daher zu komprimieren, indem
+man berichtet, welcher Wert typisch für diese Beobachtungen
+ist und wie sehr die einzelnen Beobachtungen von diesem
+typischen Wert abweichen.
+Die Frage nach dem typischen Wert betrifft die \textbf{zentrale Tendenz}
+der Beobachtungen und wird anhand von einem Mittelwert
+beantwortet. Die Frage nach den Abweichungen betrifft die
+\textbf{Streuung} der Beobachtungen und wird anhand von Streuungsmassen
+beantwortet. Zuerst widmen wir uns den Mittelwerten.
+
+\subsection{Das arithmetische Mittel}
+Wenn man vom `Durchschnitt' oder `Mittelwert' spricht,
+meint man meistens das (arithmetische) Mittel.
+Eigentlich sind `Durchschnitt' und `Mittelwert' aber Hyperonyme,
+denn es gibt ausser dem Mittel noch andere Durchschnittsmasse.
+
+Um das Mittel zu berechnen, addiert
+man alle Werte und teilt man die Summe durch die Anzahl Werte.
+Das Populationsmittel kürzt man in Formeln meistens als $\mu$ ab.
+In Gross-Sigmanotation schaut die Formel so aus:\footnote{Ich
+erlaube mir hier etwas mathematische Unvollständigkeit zwecks
+didaktischer Deutlichkeit. Die Formel gilt nämlich nur
+für Populationen, die nur endlich viele Elemente enthalten.
+Die Formel für unendlich grosse Populationen erspare ich hier Ihnen,
+da Sie erstens wesentlich schwieriger und zweitens nicht so wichtig ist.}
+\begin{equation*}
+\mu = \frac{1}{N} \sum_{i = 1}^{N} x_i.
+\end{equation*}
+
+\medskip
+
+\begin{framed}\label{grosssigma}
+\textbf{Einschub: Gross-Sigmanotation.} Formeln wie diese mögen abschrecken,
+sind in Statistikhandbüchern jedoch gang und gäbe---und gar nicht so schwierig.
+
+Reihen von Beobachtungen einer Variablen (`Vektoren') werden meistens mit
+römischen Buchstaben dargestellt. `$x$' ist also die Reihe von Beobachtungen,
+deren Mittel wir berechnen wollen---hier also die 23 Ergebnisse beim norwegischen
+Lesetest.
+
+Das kleine `$i$' ist ein Index und wird verwendet um eine spezifische Beobachtung
+zu identifizieren. `$x_i$' heisst lediglich `die i.\ Beobachtung von $x$'. Ist $i$ gleich 5,
+dann heisst $x_i$ eigentlich $x_5$, sprich die 5.\ Beobachtung von $x$.
+
+`$N$' ist einfach die Anzahl Beobachtungen in der Reihe---bei uns also $N = 23$.
+
+`$\sum$', zu guter Letzt, heisst lediglich `Summe'. Die Werte, die wir
+addieren müssen, kommen nach dem Symbol. $\sum_{i = 1}^{N} x_i$ heisst,
+dass wir die Werte in der Reihe $x$ addieren müssen, anfangend mit dem ersten ($i = 1$)
+und endend beim letzten ($N$).
+$\sum_{i = 3}^{5} x_i$ hiesse, dass
+wir nur den 3., 4.\ und 5.\ $x$-Wert addieren müssten.
+
+Der Ausdruck
+\[
+  \frac{1}{N} \sum_{i = 1}^{N} x_i
+\]
+kann also so umgeschrieben werden:
+\[
+  \frac{1}{N}(x_1 + x_2 + x_3 + \dots + x_N).
+\]
+
+In unserem Beispiel:
+\[
+  \frac{1}{23}(13 + 9 + 11 + \dots + 5).
+\]
+\end{framed}
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: \textit{for}-Schleifen.}
+Der Einschub zur Gross-Sigmanotation gibt uns die Gelegenheit,
+\textit{for}-Schleifen vorzustellen. Mit einer \textit{for}-Schleife
+kann man Berechnungen iterativ ausführen. Der folgende Codeabschnitt
+etwa kreiert zunächst eine Variable namens
+\texttt{resultat} und initalisiert diese mit 0.
+Dann wird eine \textit{for}-Schleife geöffnet, in welcher der
+Index \texttt{i} die Ganzzahlen von 1 bis und mit 10 durchläuft.
+Bei jedem Durchgang der \textit{for}-Schleife wird
+der Index \texttt{i} zum jetzigen Wert von \texttt{resultat}
+addiert; die Summe gilt als neuer Wert von \texttt{resultat}.
+Danach, bei der schliessenden geschweiften Klammer, wird der
+nächste Index verwendet. Wenn alle Indizes durchlaufen wurden,
+hört die \textit{for}-Schleife auf.
+Dieser Codeabschnitt berechnet also lediglich die Summe
+der Ganzzahlen 1 bis und mit 10 (in Gross-Sigmanotation: $\sum_{i=1}^{10} i$):
+<<>>=
+resultat <- 0
+for (i in 1:10) {
+  resultat <- resultat + i
+}
+resultat
+@
+
+Für diese Berechnung steht uns in R natürlich auch eine spezialisierte
+(und schnellere) Funktion zur Verfügung:
+<<>>=
+sum(1:10)
+@
+
+Wir können den Index auch verwenden, um auf Elemente in Vektoren oder Listen zuzugreifen.
+Eine umständliche Art und Weise, um die Summe der Norwegischwerte zu berechnen,
+ist daher die folgende:
+<<>>=
+resultat <- 0
+for (i in 1:length(d$Norwegian)) {
+  resultat <- resultat + d$Norwegian[[i]]
+}
+resultat
+# besser:
+# sum(d$Norwegian)
+@
+
+Die Notation \texttt{d\$Norwegian} zieht den Vektor namens \texttt{Norwegian} aus dem tibble \texttt{d}.
+Mit der Funktion \texttt{length()} fragt man die Anzahl Elemente, die dieser Vektor enthält,
+ab.
+Da der Vektor 23 Werte zählt, heisst \texttt{1:length(d\$Norwegian)} so viel wie \texttt{1:23}.
+In der \texttt{for}-Schleife wird nun statt des Indexes \texttt{i} jeweils der $i.$ Werte zum
+bisherigen Resultat addiert.
+Die Notation \texttt{d\$Norwegian[[4]]} identifiziert den 4.\ Wert eines Vektors oder einer Liste. Statt der Notation `[[' werden Sie auch oft `[' antreffen. Der Unterschied ist hier nicht so wichtig, aber mit `[[' identifiziert man immer einen Wert; mit `[' kann man auch mehrere Werte gleichzeitig abfragen.
+
+Wenn wir nicht nur das Endergebnis haben möchten, sondern auch die Zwischenergebnisse,
+können wir wie folgt vorgehen.
+Zunächst kreieren wir einen Vektor mit Platz für 10 Werte; hier werden wir die
+Zwischenresultate abspeichern. Das erste Zwischenergebnis, 1, stellen wir manuell
+ein. In der \textit{for}-Schleife durchläuft der Index alle Werte von 2 (!) bis 10.
+Im $i.$ Durchgang wird der aktuelle Index zum letzten Zwischenergebnis addiert;
+die Summe wird dann in den Vektor in die $i.$ Stelle des Vektors abgelagert:
+<<>>=
+zwresultate <- vector(length = 10)
+zwresultate[[1]] <- 1
+for (i in 2:10) {
+  zwresultate[[i]] <- zwresultate[[i-1]] + i
+}
+zwresultate
+@
+
+Schneller mit \texttt{cumsum()} (\textit{cumulative sum}):
+<<>>=
+cumsum(1:10)
+@
+
+Wir müssen in der \textit{for}-Schleife bei 2 statt bei 1 anfangen,
+da \texttt{zwresultate} keinen $1-1 = 0.$\ Wert hat.
+<<>>=
+zwresultate <- vector(length = 10)
+zwresultate[[1]] <- 1
+for (i in 1:10) {
+  zwresultate[[i]] <- zwresultate[[i-1]] + i
+}
+@
+
+Wer sich ein bisschen mit Programmiersprachen auskennt, hat
+aus diesen Beispielen auch gelernt, dass das erste Element
+eines Vektors in R den Index 1 hat. Programmiersprachen
+wie Java und Python verweisen auf das erste Element mit dem Index 0.
+\end{framed}
+
+Das Mittel der Norwegischdaten können wir folgendermassen
+berechnen:
+<<>>=
+# Summe aller Norwegian-Werte
+sum(d$Norwegian)
+
+# Anzahl Norwegian-Werte
+length(d$Norwegian)
+
+# Summe geteilt durch Anzahl
+136/23
+
+# Oder in einer Zeile
+sum(d$Norwegian) / length(d$Norwegian)
+@
+
+Einfacher geht es mit der \texttt{mean()}-Funktion:
+<<eval = FALSE>>=
+mean(d$Norwegian)
+@
+Anders als im letzten Kapitel brauchen wir die zusätzliche Einstellung
+\texttt{na.rm = TRUE} hier nicht, da die Variable keine fehlenden Daten
+enthält.
+
+Die \texttt{tidyverse}-Lösung brauchen wir hier im Prinzip
+nicht, aber sie zeigt nochmals, wie die \texttt{summarise()}-Funktion
+funktioniert.
+<<>>=
+d |> 
+  summarise(mittel_norwegisch = mean(Norwegian))
+@
+
+Das Mittel hat ein paar nützliche mathematische Eigenschaften,
+denen es seine Omnipräsenz verdankt. Eine betrifft den zentralen Grenzwertsatz; siehe Abschnitt \ref{sec:clt}.
+Ein wesentlicher Nachteil des Mittels ist aber, dass er stark von Ausreissern beeinflusst wird.
+Nimmt man zum Beispiel die Daten aus Abbildung \vref{fig:outlier} und berechnet man ihr Mittel,
+dann ist das Ergebnis 4.25---ein ziemlich untypischer Wert für die Beobachtungen,
+sind doch 6 der 7 Beobachtungen unter 2.6 und 1 über 17.5. Lässt man den Ausreisser weg,
+ist das Mittel 2.02, was der Tendenz des Hauptanteils der Beobachtungen besser entspricht.
+
+\subsection{Der Median}
+Ein anderer beliebter Mittelwert ist der Median.
+Es handelt sich hier buchstäblich um den Wert in der Mitte:
+Zum Berechnen des Medians ordnet man die Daten
+von klein nach gross und nimmt man den mittleren Wert.
+Gibt es eine gerade Anzahl Beobachtungen, gibt es zwei
+mittlere Werte. In solchen Fällen ist der Median das Mittel beider
+mittlerer Werte.
+
+Zuerst die komplizierte Berechnungsmethode,
+um den Vorgang zu illustrieren: Mit \texttt{arrange()}
+die Daten von klein nach gross ordnen und dann den mittleren Wert
+nehmen. Da es 23 Beobachtungen gibt,
+ist der 12.\ Wert der mittlere
+(es gibt 11 kleinere und 11 grössere):
+<<>>=
+d |>
+  select(Norwegian) |> 
+  arrange(Norwegian) |> 
+  slice(12)
+@
+
+Oder kürzer mit \texttt{median()}:
+<<>>=
+median(d$Norwegian)
+@
+
+Mit der \texttt{summarise()}-Funktion können wir eine Zusammenfassungstabelle mit mehreren Werten aufstellen:
+<<eval = TRUE>>=
+d |>
+  summarise(mittel_norwegisch = mean(Norwegian),
+            median_norwegisch = median(Norwegian))
+@
+
+Der Median ist weniger ausreisserempfindlich als das Mittel. Berechnet
+man für die Werte aus Abbildung \ref{fig:outlier} den Median mit
+dem Ausreisser, ist das Ergebnis 2.09; ohne ist es 2.04.
+
+Grosse Unterschiede zwischen dem Mittel und
+dem Median sind öfters
+Ausreissern oder asymmetrischen Verteilungen (siehe Abschnitt
+\ref{sec:distributions}) zuzuschreiben.
+So oder so gilt: \textbf{Keine Mittelwerte berechnen,
+ohne die Daten zuerst
+grafisch darzustellen!}
+Die Berechnung mag stimmen, aber unter Umständen ist sie nicht
+\emph{sinnvoll}.
+
+\subsection{Der Modus}
+Den Modus trifft man weniger oft an, aber er ist eine ganz einfache
+Art und Weise, um den `typischen Wert' zu definieren: Es handelt
+sich schlicht und einfach um den Wert, der am häufigsten vorkommt.
+Eine Modusfunktion gibt es nicht, aber wir können mit \texttt{count()} für jeden Wert
+zählen, wie oft er vorkommt. Mit \texttt{arrange(desc(n))} sortieren
+wir diese Anzahlen in absteigender Reihenfolge:
+<<>>=
+d |>
+  count(Norwegian) |> 
+  arrange(desc(n))
+@
+Zwei Werte kommen am häufigsten vor: 5 und 6 kommen beide 4 Mal vor. Die Modi der Norwegischdaten sind also 5 und 6.
+
+Ein wesentlicher Nachteil des Modus ist, dass bei feinkörnigen
+Daten jede Beobachtung
+eh nur ein oder zwei Mal vorkommt, sodass es nicht sinnvoll ist,
+ihn zu berechnen.
+
+\subsection{Andere Mittelwerte}
+Es existieren noch weitere Mittelwerte,
+z.B.\ das \textbf{harmonische Mittel},
+das \textbf{geometrische Mittel},
+das \textbf{winsorisierte Mittel}
+und das \textbf{gewichtete Mittel}.
+Diese seien hier nur der Vollständigkeit halber erwähnt,
+werden aber nicht weiter erläutert.
+Das \textbf{getrimmte Mittel} wird jedoch kurz vorgestellt,
+da es in einer Aufgabe in einem späteren Kapitel zur Sprache
+kommt.
+
+Um ein getrimmtes Mittel zu berechnen,
+löscht man zunächst die $x\%$ kleinsten und die $x\%$ grössten Werte.
+Danach berechnet man das Mittel der übrig gebliebenen Werte.
+Fürs 25\% getrimmte Mittel
+löscht man also zwei Mal ein Viertel der Daten: die 25\% niedrigsten
+Beobachtungen und die 25\% höchsten Beobachtungen.
+Das getrimmte Mittel wird verwendet, um den Einfluss von extremen
+Beobachtungen auf das Ergebnis zu reduzieren.
+<<>>=
+# Norwegischdaten sortiert von klein nach gross
+norwegisch_sortiert <- sort(d$Norwegian)
+norwegisch_sortiert
+
+# 25% getrimmte Mittel:
+mean(norwegisch_sortiert, trim = 0.25)
+
+# 1/4 von 23 ist 5.75; diese Zahl wird nach unten abgerundet, 
+# also werden die 5 niedrigsten und 5 höchsten Werte gelöscht:
+mean(norwegisch_sortiert[6:18])
+@
+
+% \paragraph{Das harmonische Mittel.}
+
+
+
+% \paragraph{Das winsorisierte Mittel.}
+% Die $x\%$ kleinsten und die $x\%$ grössten Werte werden ersetzt und
+% zwar durch den kleinsten bzw.\ grössten Wert, der nicht ersetzt wurde.
+% Danach berechnet man das Mittel. Wenn man zum Beispiel 100 Beobachtungen
+% hat und auf jeder Seite 10\% der Beobachtungen winsorisiert, ersetzt
+% man die 10 niedrigsten Beobachtungen alle durch den 11.\ niedrigsten Wert
+% und die 10 höchsten Beobachtungen durch den 90.\ Wert.
+% In diesem Beispiel wird durch die Winsorisierung eine Ganzzahl der Datenmenge ersetzt (also 10 Beobachtungen auf jeder Seite). Die genaue Berechnung ist schwieriger, wenn durch die Winsorisierung eigentlich eine Bruchzahl der Beobachtungen ersetzt werden soll. Zum Beispiel müsste man bei einer Datenreihe von 23 Beobachtungen 2.3 Beobachtungen winsorisieren, wenn man 10\%-Winsorisierung durchführt. In solchen Fällen wird nicht der kleinste bzw.\ höchste nicht-ausgeschlossene Wert verwendet, sondern eine Intrapolation zwischen den ausgeschlossenen und den nicht-ausgeschlossenen Werten. Siehe die Funktion \texttt{winsor.mean()} im \texttt{psych}-Paket.
+% Das winsorisierte Mittel wird ebenfalls verwendet, um den Einfluss
+% von extremen Beobachtungen auf das Ergebnis
+% zu reduzieren.
+
+% Es gibt noch andere Mittelwerte---etwa das
+% geometrische und das harmonische Mittel.
+% Diese werden hier nicht behandelt.
+% Auch das gewichtete Mittel wird hier nicht behandelt.
+
+\section{Streuungsmasse}
+Wenn man nur einen oder ein paar Mittelwerte berichtet,
+bleibt die Frage unbeantwortet, wie stark die einzelnen
+Beobachtungen davon abweichen.
+Mit Streuungmassen versucht man diese Abweichnung numerisch
+auszudrücken.
+
+\subsection{Spannweite}
+Ein einfaches Streuungsmass ist die Spannweite. Man berechnet
+lediglich den niedrigsten und den höchsten Wert und berichtet diese oder
+den Unterschied zwischen ihnen:
+<<>>=
+min(d$Norwegian)
+max(d$Norwegian)
+range(d$Norwegian)
+@
+
+Dieses Mass wird aus gutem Grund selten verwendet:
+Es ist extrem ausreisserempfindlich.
+Ausserdem unterschätzt die Spannweite einer
+Stichprobe systematisch die Spannweite der Population,
+aus der sie stammt.\footnote{Diese Tatsache scheint
+übrigens in der Zweit\-sprachs\-erwerbs\-forschung
+nicht allen Forschenden bekannt zu sein,
+die diesem Streuuungsmass eine zentrale Rolle in ihrer Forschung zuteilen
+\citep{Vanhove2019b}.}
+(Mit Stichproben beschäftigen
+wir uns in späteren Kapiteln.)
+
+\subsection{Summe der Quadrate}\label{sec:sumsofsquares}
+Wenn wir alle Beobachtungen ins Streuungsmass einfliessen lassen wollen,
+scheint es auf den ersten Blick sinnvoll, die Unterschiede zwischen den beobachteten
+Werten und dem Mittel zu berechnen und diese Unterschiede beieinander aufzuzählen:
+$(x_1 - \mu) + (x_2 - \mu) + \dots$. Diese Summe ist aber immer 0.
+Um das zu sehen, überlege man sich Folgendes:
+\[
+  (x_1 - \mu) + (x_2 - \mu) + \dots + (x_N - \mu) = (x_1 + x_2 + \dots + x_N) - N\mu.
+\]
+Nun wird $\mu$ berechnet als $\frac{1}{N}(x_1 + x_2 + \dots + x_N)$,
+sodass $N\mu = x_1 + x_2 + \dots + x_N$. Daher gilt
+\[
+  (x_1 + x_2 + \dots + x_N) - N\mu = (x_1 + x_2 + \dots + x_N) - (x_1 + x_2 + \dots + x_N) = 0.
+\]
+Um dieses Problem zu lösen, werden die Unterschiede zwischen den beobachteten
+Werten und dem Mittel quadriert, bevor sie beieinander aufgezählt werden.
+Dadurch werden sie alle positiv, sodass ihre Summe nicht länger 0 ist.
+Diese Summe der Quadrate wird in Formeln als $d^2$ oder $SS$ (\textit{sum of squares}) abgekürzt:
+\begin{equation*}
+d^2 = \sum_{i = 1}^{N} (x_i - \mu)^2.
+\end{equation*}
+<<>>=
+sum((d$Norwegian - mean(d$Norwegian))^2)
+@
+Achten Sie auf die Stelle der Klammern und der Quadrierung: Die Unterschiede müssen quadriert werden, nicht die Summe oder das Mittel.
+<<>>=
+# Falsch: Hier wird die Summe quadriert.
+sum((d$Norwegian - mean(d$Norwegian)))^2
+
+# Falsch: Hier wird das Mittel quadriert.
+sum((d$Norwegian - mean(d$Norwegian)^2))
+@
+
+Vielleicht fragen Sie sich, wieso man hier mit quadrierten Unterschieden arbeitet.
+Wäre es nicht einfacher, mit den absoluten Unterschieden zu rechnen?
+Streuungsmasse, die auf den absoluten Unterschieden basieren, gibt es tatsächlich
+(\textit{mean absolute deviation} und \textit{median absolute deviation}),
+aber das Arbeiten mit quadrierten Unterschieden bietet mathematische Vorteile
+(z.B. zentralen Grenzwertsatz).
+
+\medskip
+\begin{framed}
+\noindent \textbf{Einschub: Gleitkommazahlen.}
+Wir haben zwar gezeigt, dass immer
+\[
+  \sum_{i = 1}^N (x_i - \mu) = 0
+\]
+gilt.
+Aber wenn wir diese Berechnung in R kontrollieren,
+erhalten wir ein anderes Ergebnis:
+<<>>=
+sum(d$Norwegian - mean(d$Norwegian))
+@
+8.8818e-15 bedeutet $8.8818 \cdot 10^{-15}$, also 0.0000000000000088818.
+Aber eigentlich
+sollte das Ergebnis genau 0 sein, nicht fast 0.
+Das Problem liegt bei der Genauigkeit, mit der ein Computer mit Zahlen
+umgeht. Wir werden auf dieses Problem hier nicht näher eingehen, da
+es für uns nicht von praktischer Bedeutung ist.
+\end{framed}
+
+\subsection{Varianz}
+Ein Problem mit $d^2$ ist, dass Datensätze unterschiedlicher Grösse nicht vergleichbar
+sind: Je mehr Beobachtungen es gibt, desto grösser ist $d^2$. $d^2$ drückt also sowohl
+die Grösse des Datensatzes als auch die Streuung der Beobachtungen aus,
+was unerwünscht ist. Die Lösung liegt auf der Hand: $d^2$ teilen durch die Anzahl Beobachtungen. 
+Dies ergibt die Populationsvarianz ($\sigma^2$):
+\begin{equation}
+\sigma^2 = \frac{1}{N} \sum_{i = 1}^{N} (x_i - \mu)^2.
+\label{eq:popvar}
+\end{equation}
+<<>>=
+sum((d$Norwegian - mean(d$Norwegian))^2) / length(d$Norwegian)
+@
+Aber Achtung:
+In der Regel müssen wir die Varianz einer Stichprobe, nicht jene einer
+Population berechnen. Diese wird leicht anders berechnet;
+siehe Kapitel \ref{ch:stichproben}.
+
+\paragraph{Eigene Funktionen schreiben.}\label{popvar}
+Da wir uns meistens für die Varianz einer Stichprobe, nicht für jene einer
+Population interessieren, gibt es in R keine Funktion, um die Populationsvarianz
+zu berechnen. Wenn das Eintippen des obigen Befehls zu mühsam ist, z.B., weil
+Sie es immer wieder verwenden müssen, empfiehlt es sich, eine eigene Funktion
+zu schreiben. Diese könnte so aussehen:
+<<>>=
+# pop_var ist eine Funktion einer einzigen Variablen, hier 'x' genannt.
+pop_var <- function(x) {
+  # Populationsvarianz berechnen
+  sigma2 <- mean((x - mean(x))^2)
+
+  # Ergebnis ausgeben
+  return(sigma2)
+}
+@
+
+Die neu definierte Funktion \texttt{pop\_var()}
+akzeptiert einen einzigen Inputparameter,
+der innerhalb der Funktion \texttt{x} heisst.
+Diesem Parameter werden wir einen numerischen
+Vektor übergeben, auf den wir Formel \ref{eq:popvar} anwenden.
+Benutzen kann man solche Funktionen wie andere Funktionen:
+<<>>=
+pop_var(d$Norwegian)
+@
+
+\subsection{Standardabweichung}
+Varianzen sind nicht einfach zu interpretieren, da sie aufgrund
+der Quadrierung in der Berechnung in quadrierten Einheiten
+ausgedrückt werden (z.B.\ quadrierte Testergebnisse, quadrierte
+Sprecher per Sprache). Wir können aber die Wurzel der Varianz nehmen,
+was die Populationsstandardabweichung ergibt ($\sigma$):
+\begin{equation*}
+\sigma = \sqrt{\sigma^2} = \sqrt{\frac{1}{N} \sum_{i = 1}^{N} (x_i - \mu)^2}.
+\end{equation*}
+
+In R mit der selbst geschriebenen \texttt{pop\_var()}-Funktion:
+<<>>=
+pop_var(d$Norwegian) |> 
+  sqrt()
+@
+
+Standardabweichungen und Varianzen
+kann man (wie Mittelwerte) nicht absolut interpretieren:
+Eine Standardabweichung von 0.4 ist je nach der Art von Daten
+klein, gross oder unauffällig, und dies gilt
+auch für Standardabweichungen
+von 8'000. So wäre etwa eine Standardabweichung
+von 13 unauffällig, wenn es
+sich um in Zentimetern gemessenen Körpergrössen
+von Menschen handeln würde;
+erstaunlich klein, wenn die Körpergrössen
+in Millimetern ausgedrückt wären;
+und ziemlich gross, wenn sie in Zoll ausgedrückt wären.
+
+Achtung! In der Regel müssen wir die Standardabweichung einer
+Stichprobe, nicht jene einer
+Population berechnen. Diese wird leicht anders berechnet;
+siehe Kapitel \ref{ch:stichproben}.
+
+\paragraph{Daten nicht nur numerisch zusammenfassen!}
+Stellen Sie sich vor, dass Sie in einer Studie lesen,
+dass 39 Versuchspersonen eine Frage auf einer 6er-Skala
+von 0 bis 5 beantwortet haben und das Mittel der
+Antworten 2.43 betrug.
+Vielleicht stellen Sie sich dann darunter vor, dass die
+meisten Versuchspersonen sich für `2' oder `3' entschieden.
+Dies muss aber nicht der Fall sein: Hinter diesem Mittelwert
+können sich viele andere Datenmuster verstecken, die zu
+anderen Schlussfolgerungen führen sollten.
+Vielleicht sind sich die Versuchspersonen einig
+in ihrer Gleichgültigkeit, weshalb sie alle Antworten
+in der Mitte der Skala wählen. Oder vielleicht handelt
+es sich um ein sehr kontroverses Thema mit überzeugten
+Gegnern und Befürwortern aber ohne eine moderate Mitte.
+Oder vielleicht sind alle Arten von Meinung etwas vertreten;
+siehe Abbildung \ref{fig:samemean}.
+
+<<fig.cap = "Hinter dem gleichen Mittelwert kann sich eine Vielzahl von unterschiedlichen Mustern verstecken. Diese drei Grafiken zeigen alle 39 Beobachtungen einer Variablen mit einem Mittel von 2.43 (nach Rundung).\\label{fig:samemean}", echo = FALSE, fig.width = 6, fig.height = 2, out.width = "\\textwidth">>=
+par(mfrow = c(1, 3), las = 1,
+    oma = c(0, 0, 1, 0),
+    mar = c(3, 4, 1, 1),
+    bg = "white")
+
+x <- c(20, 0, 0, 0, 0, 19)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(7, 6, 4, 8, 13, 1)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(0, 0, 22, 17, 0, 0)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+title("Alle Grafiken: Mittel ~= 2.43",
+      outer = TRUE)
+par(mfrow = c(1, 1), las = 1,
+    oma = c(0, 0, 0, 0),
+    mar = c(5, 4, 1, 1))
+@
+
+Wenn ein Streuuungsmass berichtet wird, schränkt
+sich Anzahl möglicher Muster zwar ein, aber trotzdem
+können sich hinter einem Mittel und einer Standardabweichung
+mehrere Verteilungen verstecken
+(Abbildung \ref{fig:samemeansd}).\footnote{Diese Verteilungen wurden generiert anhand des R-Codes unter \url{http://bayesfactor.blogspot.ch/2016/03/how-to-check-likert-scale-summaries-for.html}.}
+
+<<fig.cap = "Sogar wenn man das Mittel und die Standardabweichung kennt, weiss man noch nicht, welches Muster sich hinter diesen Zahlen versteckt. In all diesen Grafiken beträgt das Mittel nach Rundung 2.43 und die Standardabweichung 1.05.\\label{fig:samemeansd}", echo = FALSE, fig.width = 6, fig.height = 4, out.width = "\\textwidth">>=
+par(mfrow = c(2, 3), las = 1,
+    oma = c(0, 0, 1, 0),
+    mar = c(5, 4, 1, 1),
+    bg = "white")
+
+x <- c(0, 0, 33, 0, 1, 5)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(0, 10, 7, 18, 3, 1)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(1, 10, 2, 23, 3, 0)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(0, 9, 11, 12, 7, 0)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(5, 1, 5, 28, 0, 0)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+x <- c(3, 4, 7, 24, 0, 1)
+names(x) <- 0:5
+barplot(x, ylim = c(0, 40),
+        xlab = "Antwort",
+        ylab = "Anzahl")
+
+title("Alle Grafiken: Mittel ~= 2.43, SD ~= 1.05",
+      outer = TRUE)
+par(mfrow = c(1, 1), las = 1,
+    oma = c(0, 0, 0, 0),
+    mar = c(5, 4, 1, 1))
+@
+
+\medskip
+
+\begin{framed}
+\noindent \textbf{Merksatz!} Stellen Sie Ihre Daten auch grafisch dar, sodass Sie und Ihre Leserschaft
+wissen, wie diese überhaupt aussehen. Mittelwerte und Streuungsmasse
+erzählen nicht die ganze Geschichte.
+\end{framed}
+
+\section{Kerndichteschätzungen}
+In unserem Norwegischbeispiel gibt es es nur eine geringe Anzahl Beobachtungen
+und ausserdem ist die Variable nicht sehr feinkörnig.
+Eine sehr feinkörnige Variable wäre eine Variable mit sehr vielen möglichen Ergebnissen
+und höchstens einem Beleg pro möglichen Wert.
+
+Was würde nun passieren, wenn
+wir eine grosse Anzahl Beobachtungen (z.B.\ 100'000) von einer sehr feinkörnigen
+Variablen erheben würden, diese Beobachtungen in einem
+Histogramm mit Wahrscheinlichkeitsdichten (siehe Abschnitt \ref{sec:histogram}) darstellen würden
+und die Anzahl \textit{bins} immer vergrössern würden?
+Wenn die Anzahl \textit{bins} zu gross wird, können wir sie nicht
+mehr voneinander unterscheiden, wie Abbildung \ref{fig:density1} zeigt.
+Ausserdem werden wir irgendwann nur noch \textit{bins}, die entweder
+eine oder keine einzige Beobachtung beinhalten, haben.
+
+<<fig.cap = "Vier Histogramme der gleichen feinkörnigen Variablen.\\label{fig:density1}", fig.width = 8, fig.height = 2, out.width="\\textwidth", echo = FALSE>>=
+n <- 100000
+df <- data.frame(x = c(rnorm(n/4, 15, 1),
+                   rnorm(n/4, 10, 1),
+                   rlnorm(n/4, 2, 0.15),
+                   20*rbeta(n/4, 2, 6)))
+
+p1 <- ggplot(df, aes(x = x,
+                     y = ..density..)) +
+  geom_histogram(bins = 10,
+                 fill = "white",
+                 colour = "grey") +
+  ylab("Wsk.-Dichte") +
+  ggtitle("10 bins")
+p2 <- ggplot(df, aes(x = x,
+                     y = ..density..)) +
+  geom_histogram(bins = 25,
+                 fill = "white",
+                 colour = "grey") +
+    ylab("Wsk.-Dichte") +
+  ggtitle("25 bins")
+p3 <- ggplot(df, aes(x = x,
+                     y = ..density..)) +
+  geom_histogram(bins = 50,
+                 fill = "white",
+                 colour = "grey") +
+    ylab("Wsk.-Dichte") +
+  ggtitle("50 bins")
+p4 <- ggplot(df, aes(x = x,
+                     y = ..density..)) +
+  geom_histogram(bins = 100,
+                 fill = "white",
+                 colour = "grey") +
+    ylab("Wsk.-Dichte") +
+  ggtitle("100 bins")
+
+gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 4)
+@
+
+In solchen Fällen arbeitet man stattdessen mit Kerndichtschätzungen.
+Die Berechnungsmethode braucht uns hier nicht zu interessieren; grundsätzlich
+handelt es sich um ein geglättetes Histogramm, bei dem die Wahrscheinlichkeitsdichten
+jedes Bälkchens mit einer Kurve verbunden werden und die Bälkchen selber nicht mehr dargestellt werden; siehe Abbildung \ref{fig:density2}.
+
+<<fig.cap = "Eine Kerndichteschätzung der gleichen Variablen wie in Abbildung \\ref{fig:density1}.\\label{fig:density2}", fig.width = 4, fig.height = 3, out.width=".4\\textwidth", echo = FALSE>>=
+ggplot(df, aes(x = x)) +
+  geom_density() +
+    ylab("Wsk.-Dichte")
+@
+
+Achtung! Wahrscheinlichkeitsdichte ist nicht gleich Wahrscheinlichkeit.
+In Abbildung \ref{fig:density2} ist die
+Wahrscheinlichkeit, dass ein Wert von genau 10
+beobachtet wird, nicht fast 12\%, sondern verschwindend gering.
+Wenn man bloss genügend Dezimalstellen in Betracht zieht (z.B.\ 10.00000001 oder
+9.9999999999), ist jeder einzelne Wert ja verschwindend unwahrscheinlich. Wir können
+deswegen keine sinnvollen Wahr\-schein\-lich\-keits\-aus\-sagen über spezifische Werte
+machen, sondern nur über Intervalle. Dies machen wir in den nächsten Kapiteln.
+
+Eine Kerndichteschätzung können Sie mit dem Befehl \texttt{geom\_density()} zeichnen; siehe die Beispiele unter \url{https://ggplot2.tidyverse.org/reference/geom_density.html}.
+Den Beispielen auf dieser Seite kann man entnehmen, dass man die Kerndichte
+einer Variablen auf mehrere Arten schätzen kann, sodass
+es nicht \emph{die} Kerndichteschätzung einer bestimmten
+Variablen gibt. Vergleichen Sie dazu die erste, dritte und
+vierte Grafik, die alle Kerndichteschätzungen der gleichen
+Variablen darstellen.
+
+\section{Klassische (idealisierte) Verteilungen}\label{sec:distributions}
+Es lassen sich ein paar klassische Arten von Datenverteilungen unterscheiden.
+In ihrer reinen Form trifft man diese Verteilungen zwar selten an, aber viele
+Datenverteilungen können als Annäherungen dieser Idealisierungen betrachtet werden.
+
+\subsection{Gleichverteilung}
+In einer Gleichverteilung (oder Uniformverteilung) ist die
+Wahrscheinlichkeitsdichte konstant über dem Bereich der möglichen Werte.
+Ein typisches Beispiel ist das Würfeln eines fairen
+Würfels (`diskrete Gleichverteilung'; diskret, da es eine
+beschränkte Anzahl möglicher
+Ergebnisse gibt). Die Wahrscheinlichkeit, eine 6 zu würfeln, ist gleich gross wie
+jene, eine 1. usw.\ zu würfeln. Wenn die möglichen Ergebnisse feinkörniger sind,
+spricht man von einer `kontinuierlichen Gleichverteilung'.
+
+<<fig.cap = "Wahrscheinlichkeitsdichten von drei kontinuierlichen Gleichverteilungen.\\label{fig:uniform}", fig.width = 8, fig.height = 2, echo = FALSE, out.width="\\textwidth">>=
+p1 <- ggplot(data.frame(x=c(-3, 3)),
+             aes(x)) +
+  stat_function(fun = function(x) dunif(x, -2.5, 2.5)) +
+  ylim(0, 2.2) + ylab("Wsk.-Dichte")
+p2 <- ggplot(data.frame(x=c(-3, 3)),
+             aes(x)) +
+  stat_function(fun = function(x) dunif(x, 0, 1))+
+ylim(0, 2.2) + ylab("Wsk.-Dichte")
+p3 <- ggplot(data.frame(x=c(-3, 3)),
+             aes(x)) +
+  stat_function(fun = function(x) dunif(x, 0.5, 1))+
+ylim(0, 2.2) + ylab("Wsk.-Dichte")
+gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+@
+
+\paragraph{Aufgabe.} Abbildung \ref{fig:uniform} zeigt
+drei kontinuierliche Gleichverteilungen mit Bereichen [-2.5, 2.5], [0, 1] und [0.5, 1]. Erklären Sie,
+warum die Wahrscheinlichkeitsdichte höher als 1 sein kann.
+
+\subsection{Normalverteilung}
+Die Normalverteilung ist die typische `Glockenkurve', die man in Statistikbüchern antrifft wie Sand am Meer.
+Ihre Wahrscheinlichkeitsdichte wird durch eine kompliziert aussehende Gleichung definiert, die für unsere Zwecke nicht so wichtig ist. Wichtig ist nur, dass die Form der Glockenkurve von zwei Faktoren bestimmt wird: dem Mittel der Datenverteilung ($\mu$) und ihrer Standardabweichung ($\sigma$). $\mu$ bestimmt, um welchen Wert die Kurve zentriert ist; $\sigma$ wie `breit' und `hoch' die Kurve ist.
+Siehe Abbildung \ref{fig:normal}.
+
+<<fig.cap = "Die Form einer Normalverteilung ist von zwei Parametern abhängig: ihrem Mittel ($\\mu$) und ihrer Standardabweichung ($\\sigma$).\\label{fig:normal}", echo = FALSE, fig.width = 8, fig.height = 2, out.width="\\textwidth">>=
+p1 <- ggplot(data.frame(x=c(-5, 5)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 0, 1)) +
+  ylab("Wsk.-Dichte") +
+  ylim(0, 0.7) +
+  ggtitle(expression(paste(mu, " = 0; ", sigma, " = 1")))
+
+p2 <- ggplot(data.frame(x=c(-5, 5)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 2, 1)) +
+  ylab("Wsk.-Dichte") +
+  ylim(0, 0.7) +
+  ggtitle(expression(paste(mu, " = 2; ", sigma, " = 1")))
+
+p3 <- ggplot(data.frame(x=c(-5, 5)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 0, 2)) +
+  ylab("Wsk.-Dichte") +
+  ylim(0, 0.7) +
+  ggtitle(expression(paste(mu, " = 0; ", sigma, " = 2")))
+
+p4 <- ggplot(data.frame(x=c(-5, 5)),
+             aes(x)) +
+  stat_function(fun = function(x) dnorm(x, 0, 0.7)) +
+  ylab("Wsk.-Dichte") +
+  ylim(0, 0.7) +
+  ggtitle(expression(paste(mu, " = 0; ", sigma, " = 0.7")))
+
+gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 4)
+@
+
+Gleichverteilungen und Normalverteilungen sind Beispiele von \textbf{symmetrischen Verteilungen}: Die linke Hälfte der Verteilung formt
+das Spiegelbild der rechten Hälfte. Bei Variablen, die symmetrisch verteilt sind, sind das Mittel und der Median einander (ungefähr) gleich.
+
+% Bei einer Normalverteilung sind Modus, Mittel und Median gleich,
+% d.h., es gibt eine eindeutige zentrale Tendenz.
+% Mit vielen statistischen Verfahren kann man Aussagen über das
+% Mittel einer Population oder Stichprobe machen.
+% Wenn Mittel, Median und Modus alle (mehr oder weniger) gleich sind---wie bei Normalverteilungen---,
+% kann man mit diesen Verfahren die zentrale Tendenz also völlig erfassen.
+% Wenn die Daten stark von einer Normalverteilung abweichen,
+% können die Aussagen, die solche Verfahren übers Mittel machen, zwar noch stimmen.
+% Sie sind aber eben weniger relevant fürs Erfassen der zentralen Tendenz:
+% Das Mittel ist ja bloss ein Versuch, die zentrale Tendenz zu erfassen.
+% Manchmal sind Daten zwar nicht-normalverteilt,
+% können aber einfach zu annähernd normalverteilten
+% Daten \textbf{transformiert} werden.
+% Solche Datentransformationen werden in diesem Skript
+% nur oberflächlich behandelt;
+% siehe aber \citet[][S.~59--68]{Gelman2007}
+% und \citet{Baayen2010}.
+
+% Wie wir in den nächsten Kapiteln sehen werden,
+% ist die Normalverteilung auch aus anderen Gründen
+% in der Statistik von zentraler Bedeutung:
+% Eine Reihe mathematischer Sätze,
+% die die Analyse vereinfachen, gilt nur nachweisbar,
+% wenn die Daten aus einer Normalverteilung stammen.
+
+% % Es ist aus diesen Gründen praktisch,
+% % überprüfen zu können, ob die Daten, die man ge
+% % ob Daten annähernd normalverteilt sind.
+% % Manchmal werden zu diesem Zweck statistische Tests verwendet, aber diese würde ich nicht empfehlen.
+% % Beispiele sind der Shapiro--Wilk-Test (\texttt{?shapiro.test}) und der Kolmogorov--Smirnov-Test (\texttt{?ks.test}).
+% % Ein erster Grund, weshalb ich solche numerischen Tests nicht empfehle, ist, dass sie sehr
+% % von der Stichprobengrösse abhängig sind: Grobe Verletzungen gegen Normalität werden in kleinen
+% % Stichproben nicht identifiziert, während in grossen Stichproben sogar die kleinsten Verletzungen
+% % als problematisch bezeichnet werden. Dabei ist es für die häufigsten statistischen Verfahren
+% % gerade bei grösseren Stichproben weniger wichtig, dass die Daten normalverteilt sind.
+% % Der zweite Grund ist, dass Ihre Leserschaft sich vermutlich weniger gut mit solchen Tests auskennt.
+% % Ich erwähne diese Tests nur, weil man sie in Forschungsartikeln öfters antrifft und nicht weil man sich selber auf sie verlassen sollte.q}
+% % Vielmehr sollte man sich auf eine visuelle Dateninspektion verlassen: Zeichnen Sie Histogramme und Wahrscheinlichkeitsdichten.
+% \end{mdframed}
+%
+\subsection{Bimodale Verteilung}
+Eine bimodale Verteilung ist eine Verteilung mit zwei `Höckern'.
+Bei einer Befragung zu einem gesellschaftlichen Thema etwa
+würde eine solche Verteilung darauf hindeuten,
+dass die Bevölkerung stark zwischen Befürwortern und Gegnern polarisiert ist
+und dass relativ wenige Leute eine Zwischenposition vertreten.
+Eine bimodale Verteilung kann auch darauf hindeuten,
+dass eigentlich zwei Populationen statt nur einer gemessen wurden.
+Zum Beispiel ist (in der akustischen Phonetik) die Verteilung der Grundfrequenz in der ganzen Population bimodal verteilt: Männerstimmen haben
+eine tiefere Grundfrequenz als Frauenstimmen, aber innerhalb jeder Gruppe sind die Werte ungefähr normalverteilt.
+
+Manchmal trifft man auch \textbf{multimodale} Verteilungen,
+also Verteilungen mit mehreren Höckern, an.
+
+Bi- und multimodale Verteilungen können zwar symmetrisch sein,
+und folglich können das Mittel und der Median einander recht ähnlich
+sein. Trotzdem zeigen diese Mittelwerte nicht, welche Werte typisch
+für solche Verteilungen sind. Wenn eine bimodale Verteilung in separate
+Populationen zerteilt werden kann (z.B.\ Männer und Frauen), ist es
+sinnvoller, die Mittelwerte innerhalb jeder Population zu berechnen.
+Wenn dies unmöglich ist, dürfte es sinnvoller sein, die Verteilung grafisch
+zu berichten (immer eine gute Idee!) oder sie in Vollsätzen
+zu beschreiben anstatt einen sinnlosen Mittelwert zu berechnen.
+
+\subsection{Schiefe Verteilungen}
+Eine \textbf{rechtsschiefe Verteilung} (oder: Verteilung mit positiver Schiefe)
+ist eine Verteilung, die nicht symmetrisch ist, sondern nach rechts neigt.
+Etwa Reaktionszeiten, Wortfrequenzen und die Anzahl tip-of-the-tongue-Probleme pro Aufnahme sind oft rechtsschief verteilt: Die meisten Reaktionszeiten sind niedrig,
+aber einige werden hoch sein; die allermeisten Wörter kommen selten vor, aber eine
+Handvoll Wörter sehr häufig; in den meisten Aufnahmen wird es keine tip-of-the-tongue-Probleme geben, aber in ein paar schon einige.
+
+Eine \textbf{linksschiefe Verteilung} (oder: Verteilung mit negativer Schiefe) ist nicht-sym\-me\-trisch und neigt nach links.
+Bei Testergebnissen könnte dies darauf hindeuten, dass der Test zu einfach war (\textbf{Deckeneffekt}): Personen mit dem gleichen hohen Testergebnis unterscheiden sich vermutlich noch voneinander in ihrer Fähigkeit, aber dies zeigt sich aufgrund des zu einfachen Tests nicht.
+Zu schwierige Tests führen hingegen zu rechtsschiefen Verteilungen (\textbf{Bodeneffekt}).
+
+Bei schiefen Verteilungen können Mittel und Median weit auseinander liegen
+und es ist durchaus möglich, dass keiner der beiden Werte den typischen
+Wert der Verteilung wirklich erfasst.
+
+Abbildung \ref{fig:other} zeigt eine bimodale, eine rechtsschiefe und eine linksschiefe Verteilung.
+
+<<fig.cap = "Eine bimodale und zwei schiefe Verteilungen.\\label{fig:other}", echo = FALSE, fig.width = 8, fig.height = 2, out.width=".8\\textwidth">>=
+p1 <- ggplot(data.frame(x=c(-6, 6)),
+             aes(x)) +
+  stat_function(fun = function(x) (dnorm(x, -3, sd = 1) + dnorm(x, 3, 1))/2) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("bimodale Verteilung")
+
+p2 <- ggplot(data.frame(x=c(0, 6)),
+             aes(x)) +
+  stat_function(fun = function(x) df(x, 3, 50)) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("rechtsschiefe Verteilung")
+
+p3 <- ggplot(data.frame(x = c(0.65, 1)),
+             aes(x)) +
+  stat_function(fun = function(x) dbeta(x, 20, 2)) +
+  ylab("Wsk.-Dichte") +
+  ggtitle("linksschiefe Verteilung")
+
+gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+@
+
+\section{Weiterführende Literatur}
+\citet{Huff1954} (\textit{How to lie with statistics})
+ist ein kurzes und sehr lesbares Büchlein. Es behandelt
+unter anderem die unterschiedlichen Mittelwerte und wie
+diese manipulativ eingesetzt werden.
+
+\citet{Johnson2013} bietet eine Übersicht über weitere
+Möglichkeiten, Daten grafisch und numerisch zu beschreiben.
+
+In diesem Skript werden zwar mehrere nützliche Arten von
+Grafiken vorgestellt, aber eine ausführlichere Behandlung
+finden Sie bei \citet{Healy2019}. Dieses Buch ist auch
+kostenlos verfügbar unter \url{https://socviz.co/}.
+
+\section{Aufgaben}
+
+\begin{enumerate}
+
+  \item Es sei $x$ der folgende Vektor: $(4, 2, 1, 5, 4)$.
+  Berechnen Sie die folgenden Summen von Hand:
+  \begin{enumerate}
+   \item $\sum_{i=1}^5 x_i$;
+   \item $\sum_{j=2}^3 x_j$;
+   \item $\sum_{i=2}^4 (x_i + 2)$;
+   \item $\sum_{i=2}^4 (3x_i - 2)$;
+   \item $\sum_{i=2}^4 \frac{10}{x_i}$;
+   \item $\sum_{i=1}^6 i$;
+   \item $\sum_{i=2}^4 3$;
+   \item $\sum_{i=1}^2 x_{2i}$;
+   \item $\sum_{i=1}^2 (x_{2i} - x_{2i-1})$.
+  \end{enumerate}
+
+  \item Erklären Sie, ohne den Code auszuführen, was dieser Codeabschnitt bewirkt
+  und was sein Output wäre.
+
+<<eval = FALSE>>=
+werte <- vector(length = 20)
+werte[[1]] <- 1
+werte[[2]] <- 1
+for (i in 3:length(werte)) {
+  werte[[i]] <- werte[[i-1]] + werte[[i-2]]
+}
+werte[[6]]
+@
+
+% 
+%   \item Das durchschnittliche Einkommen per Gemeinde wird
+%   üblicherweise mit dem Median statt mit dem Mittel ausgedrückt. Warum?
+
+  \item 80 willkürlich ausgewählte Schweizer Staatsbürger werden gebeten, auf einer 10er-Skala anzudeuten,
+  inwieweit sie mit der Aussage \textit{Privater Waffenbesitz sollte verboten werden} einverstanden sind
+  (1 = gar nicht einverstanden; 10 = völlig einverstanden).
+  Würde diese Befragung annähernd normalverteilte Daten liefern?
+  Wenn nicht, welcher Datenverteilung würden sie am ehesten entsprechen?
+%
+%   \item M{\&}Ms können sechs Farben haben: blau, braun, gelb, grün, orange und rot.
+%   Wie schätzen Sie die relativen Frequenzen dieser Farben ein?
+%   Gibt es z.B.\ Ihrer Erfahrung nach eine ähnlich grosse Anzahl blaue wie rote M{\&}Ms?
+%   Entspricht diese Verteilung einer der Verteilungen, die wir oben kennengelernt haben?
+
+  \item Die Datei \texttt{stocker2017.csv} enthält einen Teil der Daten aus einer
+  on-line-Studie von \citet{Stocker2017}.
+  160 Versuchspersonen wurden gebeten, die Glaubwürdigkeit von Aussagen von
+  SprecherInnen mit unterschiedlichen Akzenten (Englisch, Französisch, Deutsch und Italienisch)
+  mithilfe eines \textit{sliders} auf einer Skala von 0 bis 100 zu bewerten.
+  Diese Daten stehen in der \texttt{score}-Spalte.\label{ex:stocker}
+
+    \begin{enumerate}
+      \item Lesen Sie diese Datei in R ein. Kontrollieren Sie, ob dies geklappt hat.
+
+      \item Berechnen Sie das Mittel und den Median der \texttt{score}-Daten.
+      Sind sich diese Mittelwerte ähnlich?
+
+      \item Stellen Sie die \texttt{score}-Daten in einem Histogramm mit 10 \textit{bins} dar.
+      Welcher klassischen Verteilung entspricht diese am ehesten?
+
+      \item Zeichnen Sie ein Histogramm mit 100 bins.
+      Beschreiben Sie dieses Histogramm.
+      Sind das Mittel und der Median repräsentativ für diese Daten?
+
+      \item Welcher Wert ist der dritthäufigste? Warum, denken Sie?
+
+      \item Was ist bei den viert-, fünft-, sechst- usw. -häufigsten Werten auffällig?
+    \end{enumerate}
+    
+    \item Es sei $x = (x_1, x_2, \dots, x_n)$ ein Vektor
+    mit strikt positiven Zahlen. Das \textbf{harmonische Mittel}
+    $H$ dieser Zahlen ist nun definiert als
+    \[
+      H = \frac{n}{\sum_{i=1}^n \frac{1}{x_i}}.
+    \]
+    Schreiben Sie eine eigene R-Funktion \texttt{harmonic\_mean()},
+    welche einen Vektor mit einer beliebigen Anzahl strikt positiver
+    Zahlen als Parameter erhält und sein harmonisches Mittel ausspuckt.
+<<echo = FALSE>>=
+harmonic_mean <- function(x) {
+  H <- length(x) / (sum(1/x))
+  return(H)
+}
+@
+    
+    Hinweis: Wenn Sie den ersten Kilometer gegen 5 Kilometer/Stunde
+    überbrücken, den zweiten gegen 10 Kilometer/Stunde
+    und den dritten gegen 2 Kilometer/Stunde, dann haben Sie insgesamt
+    3 Kilometer in 48 Minuten überbrückt. (Man rechne nach.)
+    Dies entspricht einer durchschnittlichen Geschwindigkeit von 3.75
+    Kilometer/Stunde.
+    Diese durchschnittliche Geschwindigkeit können
+    Sie mit dem harmonischen Mittel berechnen. Wenn Ihre Funktion
+    gut geschrieben ist, sollte der folgende Befehl die Antwort 3.75 ergeben:
+<<>>=
+harmonic_mean(c(5, 10, 2))
+@
+
+
+\end{enumerate}

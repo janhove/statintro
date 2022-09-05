@@ -1,0 +1,1182 @@
+\chapter{Binäre outcomes auswerten}\label{ch:logistic}
+Mit der Behandlung des allgemeinen linearen Modells und
+der Auseinandersetzung mit Signifikanztests sollten
+die statistischen Grundlagen gelegt worden sein.
+Über fortgeschrittenere Themen und zusätzliche Techniken kann
+man sich dann schlau machen, wenn man sie eben tatsächlich selber
+braucht. In Kapitel \ref{ch:weiterbildung} gibt es dazu Literaturempfehlungen.
+Eine Technik, die man öfters braucht, ist \textbf{logistische Regression}.
+Dies ist ein Werkzeug, mit dem man binäre outcomes analysieren
+kann; das allgemeine lineare Modell, mit dem wir uns bisher beschäftigt haben,
+eignet sich eben für kontinuierliche outcomes.
+Beispiele von binären outcomes sind
+\begin{itemize}
+  \item Korrektheit, etwa ob eine Übersetzung als richtig oder als falsch gilt;
+  \item die Realisierung des /r/-Phonems als [R] oder [r];
+  \item die An- bzw. Abwesendheit eines Morphems;
+  \item ob nach \textit{wegen} eine Dativ- oder Genitivform kommt, usw.
+\end{itemize}
+
+Logistische Regression ist eine Erscheinungsform des 
+\textbf{verallgemeinerten linearen Modells}
+(\textit{generalised linear model}). Da der Schritt vom \emph{allgemeinen}
+zum \emph{verallgemeinerten} linearen Modell Studierenden und Mitarbeitenden
+erfahrungsgemäss Schwierigkeiten zubereitet, 
+behandelt dieses Kapitel die wichtigsten Prinzipien
+logistischer Regression.
+
+\section{Das lineare Wahrscheinlichkeitsmodell}
+Man kann binäre outcomes im allgemeinen linearen Modell
+analysieren, indem man eine Ausprägung der Variable als 0 und die andere
+als 1 kodiert und dann wie gehabt weiterfährt. Man spricht in diesem
+Fall vom linearen Wahrscheinlichkeitsmodell (\textit{linear probability model}).
+Insbesondere bei der Analyse von Experimenten, in denen die Prädiktoren
+auch kategoriell sind, hat dieser Ansatz seine VertreterInnen 
+\citep[z.B.~][]{Hellevik2009,Huang2019}.
+
+Einiger möglicher Probleme mit dem linearen Wahrscheinlichkeitsmodell
+sollte man sich dennoch bewusst sein \citep[siehe][]{Jaeger2008}.
+Ein besonders auffälliges Problem ist, dass
+ein lineares Modell mit kontinuierlichen Prädiktoren
+unmögliche Daten vorhersagen kann, nämlich
+Werte unter 0 oder grösser als 1. Auch die Konfidenzintervalle
+um modellierte Wahrscheinlichkeiten können teilweise ausserhalb
+des Intervalls [0, 1] liegen, während Wahrscheinlichkeiten immer
+in diesem Intervall liegen.
+
+Um diese Probleme zu lösen, kann man das
+allgemeine lineare Modell so anpassen, dass es auch
+mit nicht-kontinuierlichen outcomes umgehen kann.
+Dies ergibt das verallgemeinerte lineare Modell
+(\textit{generalized linear model}).
+Das verallgemeinerte lineare Modell
+hat mehrere Erscheinungsformen, die wir hier nicht alle behandeln
+werden (siehe \citealp{Faraway2006}). Für binäre Daten ist
+die wohl gängigste Erscheinungsform das logistische Regressionsmodell,
+dem die Einführung in diesem Kapitel gewidmet ist.
+Referenzen zu weiterführender Literatur finden Sie im nächsten
+Kapitel.
+
+\section{Ein kategorischer Prädiktor}
+\citet{Tversky1981} legten ihren Versuchspersonen
+ein hypothetisches Szenario vor und baten sie,
+zwischen zwei möglichen Aktionen zu wählen:
+\begin{quote}
+ ``Imagine that the U.S. is preparing for the outbreak of a
+ an unusual Asian disease, which is expected to kill 600 people.
+ Two alternative programs to combat the disease have been proposed.
+ Assume that the exact scientific estimate of the consequences
+ of the programs are as follows:''
+\end{quote}
+
+Bei etwa der Hälfte der Versuchspersonen
+wurden die Konsequenzen der Programme wie folgt
+formuliert (\textit{gain framing}):
+\begin{quote}
+``If Program A is adopted, 200 people will be saved.
+
+If Program B is adopted, there is a 1/3 probability
+that 600 people will be saved, and a 2/3 probability
+that no people will be saved.''
+\end{quote}
+
+Bei den anderen Versuchspersonen war die Formulierung wie
+folgt (\textit{loss framing}):
+\begin{quote}
+``If Program A is adopted, 400 people will die.
+
+If Program B is adopted, there is a 1/3 probability
+that nobody will die, and a 2/3 probability
+that 600 people will die.''
+\end{quote}
+
+Die Konsequenz von Programm A ist, egal wie
+sie formuliert wird, identisch, und das gleiche gilt
+für Programm B. Ausserdem sind die Erwartungswerte
+von Programmen A und B einander gleich:
+Im Schnitt sterben jeweils 400 Leute.
+
+Die Ergebnisse waren wie folgt:
+<<>>=
+d <- tibble(
+  Framing = c("gain", "loss"),
+  ProgrammA = c(109, 34),
+  ProgrammB = c(43, 121)
+)
+d
+@
+
+Die Frage ist nun, ob sich die Präferenzen
+der Versuchspersonen für Programm A oder B
+ändern, wenn diese Konsequenzen dieser
+Programme anders (aber logisch identisch)
+beschrieben werden.
+
+\subsection{Proportionen und Wahrscheinlichkeiten}
+Berechnen wir für die beiden Konditionen
+die Proportion der Entscheide
+für das Programm, das Sicherheit bietet (Programm A):
+<<>>=
+d <- d |> 
+  mutate(prop_sicher = ProgrammA / (ProgrammA + ProgrammB))
+d
+@
+
+Diese Proportionen können wir natürlich auch grafisch darstellen:
+<<eval = FALSE>>=
+# Grafik nicht im Skript
+ggplot(d, aes(x = Framing, y = prop_sicher)) +
+  geom_point() +
+  ylim(0, 1) +
+  ylab("Proportion Wahl für sicheres Ergebnis") +
+  coord_flip()
+@
+
+Wenn wir über keine weiteren Informationen verfügen,
+sind diese Proportionen unsere besten Schätzungen
+der Wahrscheinlichkeit, zu der die \textit{gain}-
+bzw.\ die \textit{loss}-Formulierung eine Wahl
+für das Programm A auslöst. Es sind aber lediglich
+Schätzungen: Eine andere Stichprobe würde andere
+Proportionen ergeben.
+ 
+\subsection{Chancen und Chancenverhältnisse}
+Statt in Proportionen kann man die Daten auch
+in Chancen (\textit{odds}) ausdrücken. Eine Chance sagt, wie
+viel wahrscheinlicher ein Ergebnis als ein anderes
+ist. Auf der Basis dieser Stichprobe können
+wir schätzen, dass eine Wahl für Programm A
+beim \textit{gain}-Framing etwa 2.5 Mal
+so wahrscheinlich ist als eine Wahl für Programm B:
+$\frac{109}{43} = 2.53$. Anders gesagt: für
+jede Wahl für Programm B gibt es 2.5 Wahlen für
+Programm A.
+Beim \textit{loss}-Framing ist eine
+Wahl für A etwa 0.3 Mal so wahrscheinlich als eine
+Wahl für B: $\frac{34}{121} = 0.28$. Anders gesagt,
+für jede Wahl für B gibt es nur etwa 0.3 Wahlen für
+A.
+<<>>=
+d <- d |> 
+  mutate(odds = prop_sicher / (1 - prop_sicher))
+d
+@
+
+Die Chance, dass man A statt B wählt,
+ist beim \textit{gain}-Framing also
+etwa 9 Mal so gross als beim \textit{loss}-Framing
+($\frac{2.53}{0.28} = 9.0$).
+Diese Zahl nennt man das Chancenverhältnis (\textit{odds ratio}).
+Umgekehrt gilt, dass die Chance, dass man A statt B wählt,
+beim \textit{loss}-Framing etwa 0.11 Mal so gross
+ist als beim \textit{gain}-Framing:
+($\frac{0.28}{2.53} = 0.11$).
+
+In diesem Beispiel kann man all diese Zahlen leicht von Hand berechnen.
+Bei etwas komplizierteren Datensätzen (z.B.\ in Datensätzen mit
+kontinuierlichen Prädiktoren) ist dies aber nicht mehr der Fall;
+dazu braucht man dann ein statistisches Modell.
+Darum schauen wir jetzt, wie wir mit einem logistischen Regressionsmodell
+diese Proportionen, Chancen und Chancenverhältnisse berechnen können.
+
+\subsection{Logistische Regression: Möglichkeit 1}
+Für einfache Datensätze kann man einen Datensatz konstruieren,
+der die Antwortmuster pro Kondition zusammenfasst. Dies haben
+wir oben schon gemacht. Diese Daten können wie folgt in ein
+logistisches Regressionsmodell gegossen werden:
+
+<<>>=
+tversky.glm <- glm(cbind(ProgrammA, ProgrammB) ~ Framing,
+                   data = d, family = binomial(link = "logit"))
+@
+
+Statt \texttt{lm()} wird \texttt{glm()} (\textit{generalized linear model})
+verwendet. Vor der Tilde kommen die Namen der Spalten,
+die die Anzahl Beobachtungen der beiden Ausprägungen enthalten;
+diese werden mit \texttt{cbind()} kombiniert. Die Prädiktoren
+kommen wie üblich nach der Tilde.
+
+Neu ist, dass ein \texttt{family}-Parameter
+spezifiziert werden muss.
+Wir gehen hier davon aus, dass die Daten aus
+einer Binomialverteilung stammen. Das Kästchen
+erklärt, was dies bedeutet. Was die Einstellung
+\texttt{link = "logit"} bedeutet, wird in Kürze erklärt.
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: Binomialverteilungen.}
+Wenn die Wahrscheinlichkeit, zu der sich eine
+Versuchsperson in der Studie von \citet{Tversky1981}
+für Programm A entscheidet, bei $p = 0.4$ läge,
+wie wahrscheinlich wäre es dann, dass von vier
+Versuchspersonen genau drei sich für Programm A entscheiden?
+($p$ hat hier übrigens nichts mit den $p$-Werten von
+Signifikanztests zu tun.)
+
+Es gibt vier Möglichkeiten, wie sich dieses Szenario
+ereignen kann. Jede dieser vier Möglichkeiten ist gleich
+wahrscheinlich:
+\begin{itemize}
+  \item Person 1: A, Person 2: A, Person 3: A, Person 4: B: $0.4 \cdot 0.4 \cdot 0.4 \cdot (1-0.4) = 0.4^3 \cdot (1-0.4)^1 = 0.0384.$
+  \item Person 1: A, Person 2: A, Person 3: B, Person 4: A: $0.4 \cdot 0.4 \cdot (1-0.4) \cdot 0.4 = 0.4^3 \cdot (1-0.4)^1 = 0.0384.$
+  \item Person 1: A, Person 2: B, Person 3: A, Person 4: A: $0.4 \cdot (1-0.4) \cdot 0.4 \cdot 0.4 = 0.4^3 \cdot (1-0.4)^1 = 0.0384.$
+  \item Person 1: B, Person 2: A, Person 3: A, Person 4: A: $(1-0.4) \cdot 0.4 \cdot 0.4 \cdot 0.4 = 0.4^3 \cdot (1-0.4)^1 = 0.0384.$
+\end{itemize}
+Die Wahrscheinlichkeit, zu der irgendeine dieser Möglichkeiten
+zutrifft, liegt also bei $4 \cdot 0.4^3 \cdot (1-0.4)^1 = 0.1536$.
+
+Machen wir die gleiche Übung für ein anderes Szenario:
+Wenn $p = 0.7$, wie wahrscheinlich wäre es dann, dass genau 3 von
+5 Personen sich für Programm A entscheiden?
+Eine Möglichkeit, wie sich dieses Szenario ereignen kann, ist diese:
+\begin{itemize}
+  \item Person 1: A, Person 2: A, Person 3: A, Person 4: B, Person 5: B: $0.7 \cdot 0.7 \cdot 0.7 \cdot (1-0.7) \cdot (1-0.7) = 0.7^3 \cdot (1-0.7)^2 \approx 0.031.$
+\end{itemize}
+Jede andere Möglichkeit ist gleich wahrscheinlich, sodass wir
+dieses Ergebnis ($0.7^3 \cdot (1-0.7)^2$) nur mit der Anzahl
+Möglichkeiten zu multiplizieren haben. Diese Anzahl lässt sich
+wie folgt berechnen:
+<<>>=
+choose(n = 5, k = 3)
+@
+
+Die \texttt{choose()}-Funktion berechnet, wie viele Möglichkeiten
+es gibt, $k$ unterschiedliche Elemente aus $n$ Elementen zu ziehen.
+Die Berechnung, die hinter ihr liegt, ist diese:
+\begin{equation*}
+\frac{n!}{k!(n-k)!} = \frac{n \cdot (n-1) \cdot (n-2) \cdot \dots \cdot 1}{(k \cdot (k-1) \dots \cdot 1)((n-k) \cdot (n-k-1) \cdot \dots \cdot 1)}.
+\end{equation*}
+
+Für $n = 5$ und $k = 3$ ergibt dies
+\[
+\frac{5 \cdot 4 \cdot 3 \cdot 2 \cdot 1}{(3 \cdot 2 \cdot 1) (2 \cdot 1)} = 10.
+\]
+Insgesamt liegt die Wahrscheinlichkeit, zu der
+drei aus fünf Personen Programm A wählen (wenn $p = 0.7$)
+also bei $10 \cdot 0.7^3 \cdot (1-0.7)^2 = 0.3087$.
+
+Aus diesen Beispielen können wir eine allgemeine Regel distillieren:
+Um die Wahrscheinlichkeit (`$\textrm{Pr}$'),
+dass ein Ereignis genau $k$ von $n$ Mal zutrifft,
+wenn jedes Ereignis unabhängig von den anderen eine Wahrscheinlichkeit von $p$ hat, zu erhalten,
+multipliziert man die Anzahl Möglichkeiten, dass dies passieren kann,
+mit der Wahrscheinlichkeit dieser Möglichkeiten:
+\begin{equation*}
+ \textrm{Pr}(k; n, p) = \frac{n!}{k!(n-k)!} \cdot p^k \cdot (1-p)^{(n-k)}.
+\end{equation*}
+
+Die Binomialverteilung drückt für alle Möglichkeiten für $k$
+die Wahrscheinlichkeit \textrm{Pr}(k; n, p) aus. Mit der
+R-Funktion \texttt{dbinom()} können wir diese schnell berechnen:
+<<>>=
+dbinom(x = 3, size = 4, prob = 0.4)
+dbinom(x = 3, size = 5, prob = 0.7)
+@
+
+Abbildung \vref{fig:binomialdistribution} zeigt sechs
+Beispiele von Binomialverteilungen mit unterschiedlichen $p$-
+und $n$-Werten.
+
+Bemerken Sie, dass wir in diesen Beispielen davon ausgehen,
+dass $p$ konstant ist und die Ereignisse voneinander unabhängig sind.
+Wenn es etwa so gewesen wäre, dass die Wahl von Person 2 von der
+Wahl von Person 1 abhängt, dann wären beide Ereignisse nicht länger
+unabhängig voneinander.
+
+\end{framed}
+
+<<echo = FALSE, out.width = ".9\\textwidth", fig.width = 9, fig.height = 1.5*3.5, fig.cap = "\\textit{Obere Zeile:} Drei Binomialverteilungen mit $n = 10$. \\textit{Untere Zeile:} Drei Binomialverteilungen mit $n = 83$.\\label{fig:binomialdistribution}">>=
+size <- 10
+prob <- 0.5
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p1 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 2)) +
+  ylab("Wahrscheinlichkeit") +
+  xlab("") +
+  ggtitle("p = 0.5, n = 10")
+
+size <- 10
+prob <- 0.2
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p2 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 2))  +
+  ylab("") +
+  xlab("Anzahl Erfolge (k)") +
+  ggtitle("p = 0.2, n = 10")
+
+size <- 10
+prob <- 0.87
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p3 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 2))  +
+  ylab("") + xlab("") +
+  ggtitle("p = 0.87, n = 10")
+
+size <- 83
+prob <- 0.5
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p4 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 10)) +
+  ylab("Wahrscheinlichkeit") +
+  xlab("") +
+  ggtitle("p = 0.5, n = 83")
+
+size <- 83
+prob <- 0.2
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p5 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 10))  +
+  ylab("") +
+  xlab("Anzahl Erfolge (k)") +
+  ggtitle("p = 0.2, n = 83")
+
+size <- 83
+prob <- 0.87
+df <- data.frame(x = 0:size,
+                 prob = dbinom(0:size, size, prob = prob))
+p6 <- ggplot(data=df, aes(x = x,y = prob)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, size, by = 10))  +
+  ylab("") + xlab("") +
+  ggtitle("p = 0.87, n = 83")
+
+gridExtra::grid.arrange(p1, p2, p3,
+                        p4, p5, p6, ncol = 3)
+@
+
+\medskip
+
+Die Parameterschätzung des Modells und ihre geschätzten Standardfehler
+können wie gehabt abgerufen werden:
+<<>>=
+summary(tversky.glm)$coefficients
+@
+
+Diesmal werden keine $t$-Werte, sondern $z$-Werte gezeigt.
+Diese werden aber identisch berechnet; der feine Unterschied
+ist lediglich, dass die $p$-Werte in der letzten Spalte
+nicht auf $t$-Verteilungen, sondern auf der Standardnormalverteilung
+(einer Normalverteilung mit $\mu = 0$ und $\sigma^2 = 1$) basieren.
+Insbesondere bei kleinen Stichproben verstehen sich diese $p$-Werte
+als Annäherungen.\footnote{Je komplexer die Modelle, desto
+approximativer die Inferenzen:
+\begin{quote}
+``[I]t is striking that as model flexibility increases, so that the models
+become better able to describe the reality that we believe generated a
+set of data, so the methods for inference become less well founded.
+The linear model class is quite restricted, but within it, hypothesis
+testing and interval estimation are exact, while estimation is
+unbiased. For the larger class of GLMs this exactness is generally lost
+in favour of \dots large sample approximations \dots, while estimators
+themselves are consistent, but not necessarily unbiased.'' \citep[][xvi--xvii]{Wood2006}
+\end{quote}
+}
+ 
+Auf dem ersten Blick haben die geschätzten Parameter aber
+nichts mit den Zahlen, die wir oben berechnet haben, zu tun.
+Der Grund dafür ist, dass diese Parameter in \textbf{log-odds}
+ausgedrückt werden. Log-odds sind logarithmisch transformierte
+Wahrscheinlichkeitsquoten:\footnote{$\ln$ ist die Kürzel für den sog.\ natürlichen Logarithmus, d.h., $\log_{e}$, wo $e \approx 2.71828$.}
+\begin{equation}\label{eq:logodds}
+\textrm{log-odds} = \ln \left(\textrm{odds}\right) = \ln \left(\frac{\textrm{Proportion A}}{\textrm{Proportion B}}\right) = \ln \left(\frac{\textrm{Proportion A}}{1 - \textrm{Proportion A}}\right).
+\end{equation}
+Diese Funktion---die Proportionen zu log-odds transformiert---heisst 
+die logit-Funktion: $\textrm{logit}(x) = \ln \left(\frac{x}{1-x}\right)$,
+was das \texttt{link = "logit"} im \texttt{glm()}-Befehl
+erklärt.
+
+Log-odds vereinfachen das Rechnen hinter den Kulissen erheblich,
+sind aber schwieriger zu interpretieren.
+Abbildung \ref{fig:logodds} zeigt die
+Zusammenhänge zwischen Wahrscheinlichkeiten,
+Odds und log-odds. Diese Grafiken können
+wir verwenden, um herauszufinden, was die
+Parameterschätzungen genau bedeuten.
+
+<<echo = FALSE, out.width=".8\\textwidth",fig.width = 7, fig.height = 5, fig.cap = "Odds, log-odds und Wahrscheinlichkeiten zueinander konvertieren.\\label{fig:logodds}">>=
+p_to_odds <- function(x) {
+  x/(1-x)
+}
+
+p1 <- ggplot(data.frame(x = c(0.01, 0.99)),
+       aes(x = x)) +
+  stat_function(fun = p_to_odds) +
+  xlab("Wahrscheinlichkeit (p)") +
+  ylab(bquote("Odds" ~ (frac(p, 1-p)))) +
+  ggtitle("Wahrscheinlichkeit vs. Odds")
+
+p_to_logodds <- function(x) {
+  log(x/(1-x))
+}
+p2 <- ggplot(data.frame(x = c(0.01, 0.99)),
+       aes(x = x)) +
+  stat_function(fun = p_to_logodds) +
+  xlab("Wahrscheinlichkeit (p)") +
+  ylab("Log-odds"  ~ "(ln" ~ frac(p, 1-p) ~ ")") +
+    ggtitle("Wahrscheinlichkeit vs. Log-odds")
+
+p4 <- ggplot(data.frame(x = c(-5, 2)),
+       aes(x = x)) +
+  stat_function(fun = exp) +
+   ylab(bquote("Odds" ~ (frac(p, 1-p)))) +
+  xlab("Log-odds"  ~ "(ln" ~ frac(p, 1-p) ~ ")")  +
+    ggtitle("Log-odds vs. Odds")
+
+p3 <- ggplot(data.frame(x = c(-5, 5)),
+       aes(x = x)) +
+  stat_function(fun = plogis) +
+  ylab("Wahrscheinlichkeit (p)") +
+  xlab("Log-odds"  ~ "(ln" ~ frac(p, 1-p) ~ ")")  +
+    ggtitle("Log-odds vs. Wahrscheinlichkeit")
+
+#gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+cowplot::plot_grid(p1, p2, p4, p3, ncol = 2, align = "h")
+@
+
+\begin{itemize}
+ \item Die Parameterschätzung des Intercepts beträgt 0.93
+ log-odds. Der Grafik links unten in Abbildung \ref{fig:logodds}
+ können wir entnehmen, dass dies odds von etwa 2.5 entspricht.
+ Der genaue Wert kann mit \texttt{exp()} berechnen werden;
+ dies ist die Umkehrfunktion der logarithmischen Funktion:
+<<>>=
+exp(0.93)
+@
+
+Oben hatten wir schon berechnet, dass
+es bei der \textit{gain}-Framing 2.5 Wahlen
+für Programm A für jede Wahl für Programm B gab.
+Diese Parameterschätzung betrifft also die Präferenzen
+in der \textit{gain}-Framing-Kondition.
+Das Intercept betrifft die \textit{gain}-Framing-Kondition,
+da diese alphabetisch vor der \textit{loss}-Framing-Kondition
+kommt (siehe Seite \pageref{sec:alphabet}),
+und die Zahl betrifft jeweils die Wahl für Programm A
+statt für Programm B, da wir zuerst die Spalte
+\texttt{ProgrammA} ins Modell eingetragen haben.
+
+\item Eine Chance von 2.5-zu-1 bzw.\ log-odds von 0.93
+entsprechen einer Wahrscheinlichkeit von etwa 0.72.
+Diese Zahl kann man mit der \texttt{plogis()}-Funktion berechnen:
+<<>>=
+plogis(0.93)
+@
+
+Dies ist die oben berechnete geschätzte Wahrscheinlichkeit,
+dass sich eine Versuchsperson in der \textit{gain}-Framing-Kondition
+für Programm A entscheidet.
+
+\item Die Parameterschätzung für \texttt{Framingloss}
+beträgt $-2.2$ log-odds. Konvertiert zu odds ergibt dies
+0.11:
+<<>>=
+exp(-2.2)
+@
+Dies ist das Chancenverhältnis, das wir oben berechnet haben:
+Das Modell schätzt, dass die Chance, dass sich jemand in der
+\textit{loss}-Kondition für Programm A entscheidet,
+0.11 so gross ist wie die Chance, dass sich jemand in der
+\textit{gain}-Kondition für Programm A entscheidet.
+
+\item Eine Chance kann man zwar zu einer Wahrscheinlichkeit
+konvertieren, ein Chancen\emph{verhältnis} jedoch nicht.
+
+\item In log-odds ausgedrückt beträgt die `Wahrscheinlichkeit',
+dass sich jemand in der \textit{loss}-Kondition für Programm
+A entscheidet $0.93 + (-2.2) = -1.27$. Hierzu muss man nur die
+Parameterschätzungen beieinander aufzählen, genauso wie wir
+bei linearen Modellen gemacht haben.
+
+\item In odds ausgedrückt ergibt dies 0.28. Dies
+ist der gleiche Wert, den wir schon von Hand berechnet haben:
+<<>>=
+exp(0.93 - 2.2)
+@
+
+\item Dies entspricht einer modellierten Wahrscheinlichkeit von 0.22;
+das hatten wir auch schon von Hand berechnet.
+<<>>=
+plogis(0.93 - 2.2)
+@
+\end{itemize}
+
+Der Mehrwert von logistischer Regression ist vorübergehend minimal,
+denn all diese Schätzungen können auch von Hand berechnet werden.
+Was nützlich ist, ist, dass das Modell auch Standardfehler
+schätzt und das Berechnen von Konfidenzintervallen ermöglicht:\footnote{Wenn diese Zahlen bei Ihnen leicht anders aussehen, müssen Sie noch das \texttt{MASS}-Paket installieren. Sie brauchen es aber nicht zu laden.}
+<<message = FALSE, warning = FALSE>>=
+tversky_ki <- confint(tversky.glm)
+tversky_ki
+@
+
+Verlieren Sie aber nicht aus dem Auge, dass auch diese
+Standardfehler und Konfidenzintervalle in \emph{log-odds} ausgedrückt
+werden. In Tat und Wahrheit kann kaum jemand solche log-odds
+direkt interpretieren. Am besten berichten Sie
+die Ergebnisse eines logistischen Regressionsmodell daher
+auch in odds und/oder in Wahrscheinlichkeiten!
+
+Das 95\%-Konfidenzintervall für das Chancenverhältnis von 0.11
+können wir leicht berechnen, indem wir das betreffende
+Konfidenzintervall zu odds konvertieren:
+<<>>=
+exp(tversky_ki[2, ])
+@
+Wenn sich die Antwortpräferenz nicht zwischen den
+Konditionen unterscheiden sollte (was meistens der
+Nullhypothese entspricht), wäre dieses Chancenverhältnis
+etwa 1. Diese Daten deuten aber sehr stark darauf hin,
+dass sich das Chancenverhältnis von 1 unterscheidet.
+
+Das Chancenverhältnis ist wohl die wichtigste Erkenntnis
+der Studie, aber wenn wir wollen, können wir auch
+das 95\%-Konfidenzintervall für die Chance
+von 2.5 (Präferenz der \textit{gain}-Gruppe) berechnen:
+<<>>=
+exp(tversky_ki[1, ])
+@
+
+Mit \texttt{plogis()} kann auch das Konfidenzintervall
+für die geschätzte Wahrscheinlichkeit von 0.72 berechnet werden:
+<<>>=
+plogis(tversky_ki[1, ])
+@
+
+\paragraph{Aufgabe.}
+Das Konfidenzintervall um die geschätzten Präferenzen
+der Versuchspersonen in der \textit{loss}-Kondition
+(sowohl für die Chance als auch für die Wahrscheinlichkeit)
+können nicht direkt aus diesem Modell hergeleitet werden.
+Dazu müssten Sie dafür sorgen, dass die \textit{loss}-
+statt der \textit{gain}-Kondition vom Intercept erfasst wird.
+Versuchen Sie, dies hinzukriegen.
+
+\subsection{Logistische Regression: Möglichkeit 2}
+Wenn man die Daten nicht in einem Datensatz wie \texttt{d}
+zusammengefasst hat oder sie nicht so zusammenfassen kann
+(z.B.\ weil kontinuierliche Prädiktoren mit im Spiel sind),
+kann man die logistische Regression oberflächlich leicht
+anders berechnen. Der Datensatz \texttt{d\_anders},
+den wir unten kreieren, enthält die genau gleichen Informationen
+wie Datensatz \texttt{d}, nur listet er die individuellen
+Wahlen auf:
+
+<<>>=
+d_anders <- tibble(
+  Framing = c(rep("gain", 109 + 43),
+              rep("loss", 34 + 121)),
+  Wahl = c(rep("ProgrammA", 109), rep("ProgrammB", 43),
+           rep("ProgrammA", 34), rep("ProgrammB", 121))
+)
+# 1, wenn Programm A; 0, wenn Programm B
+d_anders$sicher <- ifelse(d_anders$Wahl == "ProgrammA", 1, 0)
+# zur Kontrolle zufällige Auswahl anzeigen
+d_anders |> 
+  slice_sample(n = 12)
+@
+
+Statt \texttt{glm()} zwei Spalten mit Anzahlen
+zu füttern, reicht es jetzt, einfach die Spalte mit
+Nullen und Einsen als outcome zu definieren:
+<<>>=
+tversky.glm <- glm(sicher ~ Framing,
+                   data = d_anders, family = binomial(link = "logit"))
+summary(tversky.glm)$coefficients
+@
+Was die Parameterschätzungen betrifft, ist dieses
+Modell dem Modell aus dem letzten Abschnitt gleich.
+
+\subsection{Lineares Wahrscheinlichkeitsmodell}
+Die Analyse mit dem linearen Wahrscheinlichkeitsmodell führt man wie folgt aus.
+Sie zeigt, dass beim \textit{loss}-Framing die Präferenz fürs sichere Programm
+$50 \pm 5$ Prozentpunkte tiefer liegt als beim \textit{gain}-Framing.
+<<>>=
+tversky.lm <- lm(sicher ~ Framing, data = d_anders)
+summary(tversky.lm)$coefficients
+@
+Das 95\%-Konfidenzintervall um diese Schätzung können wir wie gehabt 
+ausrechnen. Das Resultat ist ein 95\%-Konfidenzintervall von [-60, -40] Prozent\-punkten.
+<<>>=
+confint(tversky.lm)
+@
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: Prozente und Prozentpunkte.}
+Unterschiede zwischen Prozentzahlen drückt man am besten in
+Prozent\emph{punkten} und nicht in Prozenten aus. So könnte
+man die Behauptung, dass die Präferenz fürs sichere Programm
+beim \textit{loss}-Framing 50\% niedriger als beim \textit{gain}-Framing ist, auch so interpretieren,
+dass die Präferenz beim \textit{loss}-Framing nur 50\% so hoch ist
+wie beim \textit{gain}-Framing, also $0.5 \cdot 0.72 = 36\%$.
+Dies stimmt aber nicht: Sie liegt bei $0.72 - 0.5 = 22\%$.
+\end{framed}
+
+\section{Mehrere kategorische Prädiktoren}
+
+<<echo = FALSE>>=¨
+set.seed(123)
+options(digits = 3)
+@
+
+\citet[][Experiment 1a]{Keysar2012} verwendeten die gleiche Aufgabe
+wie \citet{Tversky1981}, legten aber etwa der Hälfte
+der Versuchspersonen das Dilemma in ihrer Muttersprache
+(Englisch) und der anderen Hälfte in der Fremdsprache
+Japanisch vor. Sie interessierten sich dafür, ob
+der (logisch irrelevante) Unterschied in der Formulierung
+zwischen den \textit{gain}- und \textit{loss}-Konditionen
+einen kleineren Einfluss auf die Wahl der Versuchspersonen
+ausübt, wenn das Dilemma in einer Fremdsprache vorliegt.
+Wir lesen den Datensatz ein und lassen 12 willkürliche Zeilen
+anzeigen:
+<<warning = FALSE, message = FALSE>>=
+d <- read_csv(here("data", "Keysar2012_Exp1a.csv"))
+d |> 
+  slice_sample(n = 12)
+@
+
+\subsection{Numerische Zusammenfassung und Grafik}
+Um die Anzahl Wahlen für die Programme bzw.\ die Proportion Wahlen für Programm A zu berechnen,
+verwenden wir einen kleinen Trick: Der Ausdruck
+\texttt{Wahl == ``sicher''} ergibt 1, wenn bei der Variable
+\texttt{Wahl} der Wert \texttt{sicher} vorliegt und sonst 0.
+Wenn wir diese Werte addieren, erhalten wir also die Gesamtanzahl
+sichere Wahlen. Wenn wir ihr Mittel berechnen, erhalten
+wir die Proportion sichere Wahlen.
+<<>>=
+d_summary <- d |> 
+  group_by(Sprache, Formulierung) |> 
+  summarise(n = n(),
+            n_sicher = sum(Wahl == "sicher"),
+            n_unsicher = sum(Wahl == "unsicher"),
+            prop_sicher = mean(Wahl == "sicher"),
+            .groups = "drop")
+d_summary
+@
+
+Ein erster Versuch, die Proportionen grafisch darzugestellen,
+klappt nicht ganz und wir erhalten eine Mitteilung:
+``geom\_path: Each group consists of only one observation. Do you need to adjust the
+group aesthetic?''
+<<fig.width = 3, fig.height = 2, eval = FALSE>>=
+# Grafik: 1. Versuch; Grafik nicht gezeigt
+ggplot(d_summary,
+       aes(x = Formulierung, y = prop_sicher,
+           linetype = Sprache, shape = Sprache)) +
+  geom_point() +
+  geom_line() +
+  ylim(0, 1)
+@
+
+Die Warnung erklärt, wieso keine Linie zwischen den
+Punkten gezeichnet wurde: Die Funktion versteht nicht,
+zwischen welchen Punkten genau eine Linie gezeichnet werden soll,
+und braucht etwas Hilfe in der Form des \texttt{group}-Parameters 
+(Abbildung \ref{fig:keysar}):
+<<fig.width = 1.1*4, fig.height = 1.1*2, eval = TRUE, fig.cap="Präferenz für das Programm, das Sicherheit bietet (Programm A), je nach Formulierung und Sprache.\\label{fig:keysar}", out.width = ".6\\textwidth">>=
+# Grafik: 2. Versuch
+ggplot(d_summary,
+       aes(x = Formulierung, y = prop_sicher,
+           linetype = Sprache, shape = Sprache,
+           group = Sprache)) +
+  geom_point() +
+  geom_line() +
+  ylim(0, 1) +
+  ylab("Proportion Wahlen fürs\nsichere Programm")
+@
+
+Man kann natürlich auch die Faktoren Sprache und Formulierung
+in der Grafik umwechseln:
+<<fig.width = 3, fig.height = 2, eval = FALSE>>=
+# Grafik nicht gezeigt
+ggplot(d_summary,
+       aes(x = Sprache, y = prop_sicher,
+           linetype = Formulierung, shape = Formulierung,
+           group = Formulierung)) +
+  geom_point() +
+  geom_line() +
+  ylim(0, 1) +
+  ylab("Proportion Wahlen fürs\nsichere Programm")
+@
+
+\subsection{Was man \emph{nicht} machen soll}
+\citet{Keysar2012} analysierten diese Daten mit
+zwei Signifikanztests. Der eine Test zeigte, dass
+es bei den Versuchspersonen, die die Aufgabe auf Englisch
+erledigten, einen signifikanten Unterschied
+zwischen den \textit{gain}- und \textit{loss}-Konditionen gab,
+bei denen, die den Test auf Japanisch erledigten, jedoch nicht.
+Es ist aber eine äusserst schlechte Idee, Daten so zu analysieren,
+denn, wie \citet{Gelman2006} es auf den Punkt bringen,
+``The difference between `significant'
+and `not significant' is not itself
+statistically significant.''
+Siehe auch \href{https://janhove.github.io/analysis/2014/10/28/assessing-differences-of-significance}{\textit{Assessing differences of significance}} (28.10.2014) und \citet{Nieuwenhuis2011}.
+Die Lösung besteht darin, sämtliche Daten in \emph{einem}
+Modell zu analysieren.
+Diese Bemerkung gilt übrigens nicht nur für binäre outcomes.
+
+\subsection{Logistische Regression: Erster Versuch}
+Wir fügen zuerst dem Datensatz eine Variable hinzu,
+die $1$ ist, wenn die Versuchsperson sich für die sichere Option
+entschieden hat, und $0$, wenn nicht. Die beiden Prädiktoren
+werden dann im gleichen Modell berücksichtigt.
+
+<<message = FALSE, warning = FALSE>>=
+d$Sicher <- ifelse(d$Wahl == "sicher", 1, 0)
+keysar.glm1 <- glm(Sicher ~ 1 + Formulierung + Sprache,
+                   data = d, family = binomial(link = "logit"))
+summary(keysar.glm1)$coefficients
+confint(keysar.glm1)
+@
+
+Die Parameterschätzungen sind wie folgt zu interpretieren:
+\begin{itemize}
+ \item Das Intercept erfasst die Präferenzen der Versuchspersonen,
+ die die Referenzgruppe ausmachen. Hier handelt es sich um die Versuchspersonen
+ in der \textit{gain framing}-Kondition, die die Aufgabe auf Englisch erledigten.
+ Dem Modell zufolge ist es $2.41$ Mal so wahrscheinlich, dass diese
+ sich für die sichere Option entscheiden als dass sie sich für die unsichere
+ Option entscheiden. Bei dieser Zahl handelt es sich also nicht um
+ ein Chancenverhältnis, sondern um eine Chance.
+<<>>=
+exp(0.88)
+@
+
+  \item Der geschätzte Koeffizient für \texttt{SpracheJapanisch}
+  erfasst den Unterschied zwischen den Präferenzen der Versuchspersonen,
+  die die Aufgabe auf Japanisch erledigten, und denen der Versuchspersonen,
+  die die Aufgabe auf Englisch erledigten. Der Koeffizient ($-0.86$) wird
+  in log-odds ausgedrückt. Exponiert man diese Zahl, erhält man das entsprechende
+  Chancenverhältnis:
+<<>>=
+exp(-0.86)
+@
+  Dem Modell zufolge ist es also $0.42$ Mal so wahrscheinlich,
+  dass jemand in der Japanischgruppe die sichere Option wählt
+  als dass jemand in der Englischgruppe die sichere Option wählt.
+  Oder umgekehrt: Es ist $\exp(0.86) = 2.36$ Mal so wahrscheinlich, dass
+  jemand in der Englischgruppe die sichere Option wählt als
+  dass jemand der Japanischgruppe die sichere Option wählt.
+
+ \item Der geschätzte Koeffizient für \texttt{FormulierungVerlust}
+  erfasst den Unterschied zwischen den Präferenzen der Versuchspersonen
+  in der \textit{loss framing}-Kondition und denen der Versuchspersonen
+  in der \textit{gain framing}-Kondition. Das Chancenverhältnis beträgt:
+<<>>=
+exp(-0.73)
+@
+  Dem Modell zufolge ist es also $0.48$ Mal so wahrscheinlich,
+  dass jemand in der \textit{loss framing}-Kondition die sichere Option wählt
+  als dass jemand in der \textit{gain framing}-Kondition die sichere Option wählt.
+\end{itemize}
+
+Das Modell \texttt{keysar.glm1} hilft uns bei der Beantwortung
+unserer Forschungsfrage leider keinen Schritt weiter:
+Wir wollten wissen, ob sich der Einfluss von \textit{gain}-
+vs.\ \textit{loss}-Framing ändert, wenn die Aufgabe in einer
+Fremdsprache statt in der Erstsprache vorliegt. Wir interessieren
+uns also für die Interaktion zwischen Sprache und Framing, sodass
+wir diese mitmodellieren müssen.
+
+\subsection{Logistisches Modell: Zweiter Versuch}
+Wir fügen dem Modell die Interaktion zwischen Sprache und
+Formulierung hinzu.
+<<message = FALSE, warning = FALSE>>=
+keysar.glm2 <- glm(Sicher ~ 1 + Formulierung + Sprache +
+                     Formulierung:Sprache,
+                   data = d, family = binomial(link = "logit"))
+summary(keysar.glm2)$coefficients
+confint(keysar.glm2)
+@
+
+Die Parameterschätzungen sind wie folgt zu interpretieren:
+\begin{itemize}
+\item Das Intercept erfasst die Präferenzen der Versuchspersonen,
+ die die Referenzgruppe ausmachen. Hier handelt es sich um die Versuchspersonen
+ in der \textit{gain framing}-Kondition, die die Aufgabe auf Englisch erledigten.
+ Dem Modell zufolge ist es $3.42$ Mal so wahrscheinlich, dass diese
+ sich für die sichere Option entscheiden als dass sie sich für die unsichere
+ Option entscheiden. Bei dieser Zahl handelt es sich also nicht um
+ ein Chancenverhältnis, sondern um eine Chance.
+<<>>=
+exp(1.2321)
+@
+
+\item Der geschätzte Koeffizient für \texttt{FormulierungVerlust}
+vergleicht die Referenzgruppe (`Englisch und Gewinn')
+mit der Gruppe `Englisch und Verlust'.
+Das Chancenverhältnis beträgt:
+<<>>=
+exp(-1.3657)
+@
+  Dem Modell zufolge ist es also $0.26$ Mal so wahrscheinlich,
+  dass jemand in der Gruppe `Englisch und Verlust' die sichere Option wählt
+  als dass jemand in der Gruppe `Englisch und Gewinn' die sichere Option wählt.
+  Die gleiche Zahl erhalten wir, wenn wir uns Tabelle \texttt{d\_summary}
+  anschauen:
+  \[
+    \frac{14\Big/16}{24\Big/7} = 0.26.
+  \]
+
+  \item Der geschätzte Koeffizient für \texttt{SpracheJapanisch}
+vergleicht die Referenzgruppe (`Englisch und Gewinn')
+mit der Gruppe `Japanisch und Verlust'.
+Das Chancenverhältnis beträgt:
+<<>>=
+exp(-1.5004)
+@
+  Dem Modell zufolge ist es also $0.22$ Mal so wahrscheinlich,
+  dass jemand in der Gruppe `Japanisch und Gewinn' die sichere Option wählt
+  als dass jemand in der Gruppe `Englisch und Gewinn' die sichere Option wählt.
+  Die gleiche Zahl erhalten wir, wenn wir uns Tabelle \texttt{d\_summary}
+  anschauen:
+  \[
+    \frac{13\Big/17}{24\Big/7} = 0.22.
+  \]
+
+\item Der geschätzte Interaktionskoeffizient drückt aus,
+wie stark sich der Einfluss des Framings je nach der Sprache
+unterscheidet. (Oder, anders ausgedrückt, aber mathematisch identisch:
+wie stark sich der Einfluss der Sprache je nach dem Framing unterscheidet.)
+In log-odds ausgedrückt ist dieser Koeffizient schwierig zu interpretieren,
+sodass wir auch diese Zahl exponieren:
+<<>>=
+exp(1.2285)
+@
+
+Was heisst nun diese $3.42$? Den Einfluss des Framings bei den Versuchspersonen,
+die die Aufgabe auf Englisch erledigten, können wir in einem Chancenverhältnis
+(odds ratio; OR) ausdrücken:
+\[
+  \textrm{OR für Englisch} = \frac{14\Big/16}{24\Big/7} = 0.2552083.
+  \]
+Ich runde dieses Zwischenergebnis hier nicht ab, sodass das Endergebnis nicht
+vom Rundungsfehler betroffen wird.
+
+Ebenso können wir den Einfluss des Framings bei den Versuchspersonen,
+die die Aufgabe auf Japanisch erledigten, in einem Chancenverhältnis ausdrücken:
+\[
+  \textrm{OR für Japanisch} = \frac{12\Big/18}{13\Big/17} = 0.8717949.
+  \]
+
+Das Verhältnis dieser Verhältnisse sagt uns, wie viel stärker der Einfluss
+des Framings auf Japanisch als auf Englisch ist:
+\[
+  \frac{\textrm{OR für Japanisch}}{\textrm{OR für Englisch}} = \frac{0.8717949}{0.2552083} = 3.42.
+\]
+Dies ist die Zahl, die wir erhalten, wenn wir den Interaktionskoeffizienten exponieren.
+Wenn sich das Chancenverhältnis nicht je nach Sprache unterscheidet, soll das Verhältnis
+dieser Verhältnisse bei 1 liegen. Auf der Basis des 95\%-Konfidenzintervalls um
+diese $3.42$ herum ([$0.77$, $15.9$]) können wir noch nicht schlussfolgern, dass
+die Daten nicht mit einem identischen Chancenverhältnis für beide Sprachen kompatibel sind.
+<<>>=
+exp(confint(keysar.glm2)[4, ])
+@
+\end{itemize}
+
+Die Interpretation der geschätzten Regressionskoeffizienten
+gestaltet sich bei logistischen Regressionsmodellen also deutlich
+schwieriger als beim allgemeinen linearen Modell, insbesondere
+wenn auch noch Interaktionen mit im Spiel sind.
+Für kommentierte Beispiele mit dreifachen Interaktionen und
+Interaktionen mit kontinuierlichen Prädiktoren, siehe
+\citet{Jaccard2001}.
+
+<<echo = FALSE, out.width = ".8\\textwidth", fig.width = 5, fig.height = 4.5, fig.cap="Ob man schlussfolgert, dass eine Interaktion vorliegt, hängt in diesen drei Beispielen davon ab, wie man die Daten ausdrückt: als Proportionen, als Odds (Chancen) oder als Log-Odds.\\label{fig:interactionlogistic}">>=
+df <- expand.grid(
+  AB = c("A", "B"),
+  CD = c("C", "D")
+)
+df$Total <- 1000
+df$Erfolg <- c(475, 525, 900, 950)
+df <- df %>%
+  mutate(Proportion = Erfolg/Total,
+         Odds = Erfolg / (Total - Erfolg),
+         LogOdds = log(Odds))
+p1 <- df %>%
+  gather(key = Expression, value = Wert,
+         Proportion, Odds, LogOdds) %>%
+  ggplot(aes(x = AB, y = Wert,
+             linetype = CD,
+             colour = CD,
+             group = CD)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~ factor(Expression, levels = c("Proportion", "Odds", "LogOdds"),
+                      labels = c("Proportion", "Odds", "Log-odds")),
+             scales = "free_y")
+
+df <- expand.grid(
+  AB = c("A", "B"),
+  CD = c("C", "D")
+)
+df$Total <- 1000
+#d$Erfolg <- c(475, 525, 900, 950)
+df$Odds <- c(1, 2, 3, 4)
+df <- df %>%
+  mutate(LogOdds = log(Odds),
+         Proportion = plogis(LogOdds))
+p2 <- df %>%
+  gather(key = Expression, value = Wert,
+         Proportion, Odds, LogOdds) %>%
+  ggplot(aes(x = AB, y = Wert,
+             linetype = CD, colour = CD, group = CD)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~ factor(Expression, levels = c("Proportion", "Odds", "LogOdds"),
+                      labels = c("Proportion", "Odds", "Log-odds")),
+             scales = "free_y")
+
+df <- expand.grid(
+  AB = c("A", "B"),
+  CD = c("C", "D")
+)
+df$Total <- 1000
+#d$Erfolg <- c(475, 525, 900, 950)
+df$LogOdds <- c(0.1, 0.2, 0.9, 1)
+df <- df %>%
+  mutate(Odds = exp(LogOdds),
+         Proportion = plogis(LogOdds))
+p3 <- df %>%
+  gather(key = Expression, value = Wert,
+         Proportion, Odds, LogOdds) %>%
+  ggplot(aes(x = AB, y = Wert,
+             linetype = CD, colour = CD, group = CD)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~ factor(Expression, levels = c("Proportion", "Odds", "LogOdds"),
+                      labels = c("Proportion", "Odds", "Log-odds")),
+             scales = "free_y")
+
+gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
+@
+
+\medskip
+
+\begin{framed}
+\textbf{Einschub: Interaktionen in verallgemeinerten linearen Modellen.}
+Interaktionen sachlogisch zu interpretieren
+ist nicht so einfach, wie man manchmal vermutet
+\citep[siehe][]{Wagenmakers2012}.
+Bei logistischen Regressionsmodellen zeigt sich, wieso
+dies der Fall ist.
+
+Die drei Grafiken auf der oberen Zeile von Abbildung
+\vref{fig:interactionlogistic}
+zeigen drei Mal das gleiche Datenmuster, aber jeweils anders ausgedrückt.
+Ausgedrückt in Proportionen sieht man zwei parallele Linien
+(rot: 0.475--0.525, blau: 0.900--0.950), die zeigen, dass der Unterschied
+zwischen $A$ und $B$ in beiden Fällen 5 Prozentpunkte beträgt.
+Ausgedrückt in Proportionen liegt also keine Interaktion vor.
+Drückt man diese Proportionen aber in Chancen (odds) aus, dann ergeben
+sich nicht-parallele Linien, die auf die Existenz einer Interaktion
+hindeuten. Auch ausgedrückt als Log-Odds ergibt sich eine Interaktion.
+
+Die drei Grafiken auf der mittleren Reihe sowie auch die
+drei Grafiken auf der unteren Reihe zeigen, dass es auch die umgekehrte
+Situationen geben kann: Auf der mittleren Reihe gibt es keine Interaktion,
+was die Chancen betrifft, aber schon was die Proportionen und Log-Odds betrifft;
+auf der unteren Reihe gibt es keine Interaktion, was die Log-Odds betrifft,
+aber schon was die Proportionen und Chancen betrifft.
+
+Siehe \href{https://janhove.github.io/analysis/2019/08/07/interactions-logistic}{\textit{Interactions in logistic regression models}} (7.8.2019).
+\end{framed}
+
+\subsection{Lineares Wahrscheinlichkeitsmodell}
+Eine Analyse mit dem linearen Wahrscheinlichkeitsmodell zeigt,
+dass der Unterschied zwischen den beiden Framings etwa $27 \pm 18$ Prozentpunkte
+kleiner ist, wenn das Dilemma auf Japanisch vorlegt wird als wenn
+es auf Englisch vorgelegt wird. Das 95\%-Konfidenzintervall ($[-7\textrm{~p.p.}, 62\textrm{p.p.}]$) zeigt aber,
+dass die Unsicherheit über diese Interaktion derart gross ist, dass
+eine Interaktion in die gegengestellte Richtung mit den Daten kompatibel sind.
+Diese Analyse führt also zum gleichen Schluss als die Analyse mit dem
+logistischen Regressionsmodell: Die Unsicherheit über die Interaktion
+zwischen Framing und Sprache ist zu gross, um zuversichtliche Aussagen
+über ihre Richtung machen zu können.
+<<>>=
+keysar.lm <- lm(Sicher ~ Formulierung*Sprache, data = d)
+summary(keysar.lm)$coefficients
+confint(keysar.lm)
+@
+
+\section{Kontinuierliche Prädiktoren}
+Auch kontinuierliche Prädiktoren können in einem logistischen
+Modell berücksichtigt werden. Für dieses Beispiel verwenden
+wir die Daten einer einzigen Versuchspersonen aus der Studie
+von \citet{Vanhove2013b}. Sie versuchte 181 Wörter aus
+den germanischen Sprachen Niederländisch, Friesisch, Dänisch
+und Schwedisch ins Deutsche zu übersetzen. Die Spalte
+\texttt{Korrekt} zeigt für jedes Wort, ob ihr dies gelungen ist;
+die Spalte \texttt{OrthOverlap} zeigt, was die orthografische
+Überlappung zwischen dem zu übersetzenden Wort und seiner
+Übersetzung ist (0 = keine Überlappung; 10 = vollständige Überlappung).
+Wir möchten wissen, wie stark die Erfolgsquote beim Übersetzen
+von der orthografischen Überlappung abhängt.
+
+<<message = FALSE>>=
+d <- read_csv(here("data", "VanhoveBerthele2013_eineVpn.csv"))
+
+# Neue Variable mit 1 und 0
+d$Richtig <- ifelse(d$Korrekt == "richtig", 1, 0)
+@
+
+Um eine erste Idee über den Zusammenhang zwischen
+dem Prädiktor und der Richtigkeit der Übersetzung
+zu erhalten, können wir ein Streudiagramm mit einer
+Trendlinie zeichnen (Abbildung \ref{fig:continuouslogistic}).
+Die Trendlinie geht davon aus,
+dass die abhängige Variable kontinuierlich ist, was
+hier natürlich nicht der Fall ist. Eine Konsequenz
+dieser Annahme ist, dass die Trendlinie vermuten lässt,
+dass die durchschnittliche Proportion richtiger Antworten
+bei Wörtern mit niedriger orthografischer Überlappung
+negativ ist.
+
+<<warning = FALSE, message = FALSE, fig.width = 4, fig.height = 2, fig.cap = "Ein Streudiagramm mit einer Trendlinie, die davon ausgeht, dass die abhängige Variable kontinuierlich (statt binär) ist. Immerhin zeigt sie, dass einen \\emph{monotonen} Zusammenhang zwischen den beiden Variablen gibt.\\label{fig:continuouslogistic}">>=
+ggplot(data = d,
+       aes(x = OrthOverlap,
+           y = Richtig)) +
+  geom_point(shape = 1,
+             # Die Punkte leicht vertikal verschieben, um sie
+             # besser sichtbar zu machen.
+             position = position_jitter(width = 0, height = 0.02)) +
+  # se = FALSE schaltet das Konfidenzband aus
+  geom_smooth(se = FALSE)
+@
+
+Die Grafik hat trotzdem ihren Nutzen:
+Sie deutet darauf hin, dass der Zusammenhang zwischen
+dem Prädiktor und der abhängigen Variablen \emph{monoton} ist:
+Wenn die orthografische Überlappung grösser wird, steigt
+die Erfolgsquote. Es ist zum Beispiel nicht so, dass
+die Erfolgsquote zuerst ansteigt und dann konstant bleibt oder senkt.
+
+Der kontinuierliche Prädiktor kann wie gehabt
+dem Modell hinzugefügt werden:
+<<>>=
+vanhove.glm <- glm(Richtig ~ OrthOverlap,
+                   data = d, family = binomial(link = "logit"))
+summary(vanhove.glm)$coefficients
+@
+
+Zur Interpretation der geschätzten Parameter:
+\begin{itemize}
+ \item Das Intercept zeigt die modellierte Erfolgsquote
+ (in log-odds!) für Fälle, in denen alle Prädiktoren den
+ Wert 0 haben. In unserem Fall hiesse das also die modellierte
+ Erfolgsquote bei Wörtern mit einer orthografischen Überlappung
+ von 0. (Diese gibt es in diesem Datensatz übrigens nicht.)
+ Konvertiert zu einer Chance:
+<<>>=
+exp(-3.31)
+@
+  Laut dem Modell ist eine richtige Antwort bei Wörtern
+  ohne orthografische Überlappung also 0.037 Mal so wahrscheinlich
+  wie eine falsche Antwort. (Oder umgekehrt: Eine falsche ist
+  27.4 Mal so wahrscheinlich wie eine richtige.)
+
+  In Wahrscheinlichkeiten: Die Wahrscheinlichkeit, dass ein Wort
+  ohne orthografische Überlappung richtig übersetzt wird, liegt bei
+  $3.5$\%.
+<<>>=
+plogis(-3.31)
+@
+
+\item Der geschätzte Parameter für \texttt{OrthOverlap} drückt aus,
+wie sich die Erfolgsquote (in log-odds!) laut dem Modell ändert,
+wenn \texttt{OrthOverlap} um eine Einheit ansteigt. Konvertiert
+zu einem Chancenverhältnis zeigt sich, dass es bei einem Wort
+mit einer orthografischen Überlappung von $x$ 1.8 Mal so
+wahrscheinlich ist, eine richtige Antwort zu geben, als bei einem
+Wort mit einer orthografischen Überlappung von $x - 1$:
+<<>>=
+exp(0.594)
+@
+
+\item Ein konkreteres Beispiel: Die modellierte Erfolgsquote
+bei einem Wort mit einer orthografischen Überlappung von 5.4 beträgt,
+ausgedrückt in einem Chancenverhältnis, $0.90$.
+<<>>=
+exp(-3.31 + 0.594 * 5.4)
+@
+
+Ausgedrückt in einer Wahrscheinlichkeit beträgt sie $47.4$\%.
+<<>>=
+plogis(-3.31 + 0.594 * 5.4)
+@
+
+Bei einem Wort mit einer orthografischen Überlappung von
+6.4 erhält man die folgenden Werte:
+<<>>=
+exp(-3.31 + 0.594 * 6.4)
+@
+($\frac{1.63}{0.90} = 1.8$.)
+<<>>=
+plogis(-3.31 + 0.594 * 6.4)
+@
+
+\end{itemize}
+
+Um die Ergebnisse des Modells zu berichten, ist es sinnvoll,
+diese grafisch darzustellen. In der Regel stellt man hierbei dar,
+wie sich die modellierte Wahrscheinlichkeit mit den kontinuierlichen
+Prädiktoren ändert (siehe Abbildung \ref{fig:logisticmodel}):
+<<fig.width = 1.2*3, fig.height = 1.2*2, fig.cap = "Der modellierte Zusammenhang zwischen der orthografischen Überlappung und der Wahrscheinlichkeit, zu der ein Wort richtig übersetzt wurde.\\label{fig:logisticmodel}">>=
+# Datensatz, in dem der Prädiktor
+# zwischen ihrem Mindest- und Höchstwert variiert
+df_pred <- tibble(OrthOverlap = seq(from = min(d$OrthOverlap),
+                                        to = max(d$OrthOverlap),
+                                        length.out = 100))
+
+# Modellierte Wahrscheinlichkeiten ("response") hinzufügen
+df_pred$Wahrscheinlichkeit <- predict(vanhove.glm, newdata = df_pred,
+                                      type = "response")
+
+# Zeichnen
+ggplot(df_pred,
+       aes(x = OrthOverlap,
+           y = Wahrscheinlichkeit)) +
+  geom_line() +
+  ylim(0, 1) +
+  xlab("orthografische Überlappung (0-10)") +
+  ylab("Wahrscheinlichkeit\nrichtige Übersetzung")
+@
+
+%Beispiel: \citet{Vanhove2015b}
+
+Für mehr Info siehe
+\href{https://janhove.github.io/reporting/2017/05/12/visualising-models-2}{\textit{Tutorial: Adding confidence bands to effect displays}} (12.5.2017)
+und \url{https://janhove.github.io/visualise_uncertainty}.
+
+\medskip
+
+\begin{framed}
+\textbf{Merksatz: Nicht-Linearitäten nicht überinterpretieren!}
+Abbildung \ref{fig:logisticmodel} zeigt, dass es
+\emph{laut dem Modell}
+einen nicht-linearen Zusammenhang zwischen
+dem Grad an orthografischer Überlappung und der
+Erfolgswahrscheinlichkeit gibt.
+Dies ist nicht erstaunlich: Wir haben diesen
+Zusammenhang zwar linear, aber in log-odds modelliert.
+Wenn wir ihn dann in Wahrscheinlichkeiten ausdrücken,
+ergibt sich eine nicht-lineare Kurve statt einer Geraden.
+Wir hätten gar keinen linearen Zusammenhang
+zwischen dem Prädiktor und der Erfolgswahrscheinlichkeit
+finden \emph{können}.
+\end{framed}

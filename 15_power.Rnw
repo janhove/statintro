@@ -1,0 +1,295 @@
+\chapter{Powerberechnungen}\label{ch:poweranalysis}
+Auch wenn es tatsächlich einen Unterschied zwischen zwei Gruppen
+oder einen Zusammenhang zwischen einigen Variablen auf der Populationsebene
+gibt, ist es möglich, dass man in einer Stichprobe diesen Unterschied
+oder diesen Zusammenhang nicht mit einem Signifikanztest belegen kann.
+Ebenso ist es in Experimenten mit zufälliger Zuordnung möglich,
+dass man einen tatsächlich existierenden Interventionseffekt nicht aufdecken kann.
+Diese Tatsache wird in Abbildung \vref{fig:power} illustriert.
+Die Wahrscheinlichkeit, zu der ein Signifikanztest ein tatsächlich
+vorhandenes Muster belegt, nennt man seine \textbf{power}.
+Fürs Planen von Studien kann es nützlich sein, 
+diese power in Erwägung zu ziehen. In diesem
+Kapitel wird daher gezeigt, wovon die power eines Tests
+abhängt und wie man diese berechnen kann.
+
+Der Ehrlichkeit halber
+füge ich dem hinzu, dass ich selber selten Powerberechnungen ausführe.
+Der erste Grund hierfür ist, dass, wie Sie in diesem
+Kapitel sehen werden, eine sinnvolle Powerberechnung voraussetzt,
+dass man bereits über viele Informationen über das Problem verfügt;
+siehe aber auch
+\href{http://jakewestfall.org/blog/index.php/2015/06/16/dont-fight-the-power-analysis/}{\textit{Don't fight the power (analysis)}} 
+unter \url{http://jakewestfall.org}.
+Der zweite Grund ist, dass Powerberechnungen vor allem dann nützlich sind, wenn man
+seine Schlussfolgerungen hauptsächlich auf $p$-Werten basiert,
+was ich immer mehr zu vermeiden versuche.
+
+<<cache = TRUE, echo = FALSE, out.width=".7\\textwidth", fig.pos = "tp", fig.width = 7, fig.height = 3.5, fig.cap = "\\textit{Obere Zeile:} Zwei Normalverteilungen mit $\\sigma = 2$. Das Mittel der blauen Normalverteilung liegt bei $0$; das Mittel der roten bei $0.7$. \\textit{Untere Zeile:} Aus diesen Normalverteilungen wurden drei Mal jeweils Zufallsstichproben mit 32 Beobachtungen gezogen. Obwohl es in der Population einen Unterschied zwischen den Mitteln dieser Verteilungen gibt, kann es durchaus vorkommen, dass man keinen signifikanten Unterschied zwischen den Stichprobenmitteln feststellt. Die Wahrscheinlichkeit, zu der man einen signifikanten Unterschied feststellt, wenn es in der Population tatsächlich einen Unterschied gibt, nennt man die power eines Signifikanztests.\\label{fig:power}">>=
+set.seed(314)
+p1 <- ggplot(data.frame(x=c(0-6, 0.7+6)),
+                aes(x)) +
+  stat_function(fun = function(x) (dnorm(x, 0, sd = 2)), col = "blue") +
+  stat_function(fun = function(x) (dnorm(x, 0.7, sd = 2)), col = "red") +
+  geom_vline(xintercept = 0, linetype = 2, col = "blue") +
+  geom_vline(xintercept = 0.7, linetype = 2, col = "red") +
+  ylab("Wsk.-Dichte") +
+  ggtitle("Verteilungen in der Population")
+
+df1 <- data.frame(
+  gruppe = factor(rep(c("blau", "rot"), times = c(32, 32))),
+  x = c(rnorm(32, 0, sd = 2),
+        rnorm(32, 0.7, sd = 2))
+)
+df1p <- format(t.test(x ~ gruppe, df1, var.equal = TRUE)$p.value, digits = 2)
+
+df2 <- data.frame(
+  gruppe = factor(rep(c("blau", "rot"), times = c(32, 32))),
+  x = c(rnorm(32, 0, sd = 2),
+        rnorm(32, 0.7, sd = 2))
+)
+df2p <- format(t.test(x ~ gruppe, df2, var.equal = TRUE)$p.value, digits = 2)
+
+df3 <- data.frame(
+  gruppe = factor(rep(c("blau", "rot"), times = c(32, 32))),
+  x = c(rnorm(32, 0, sd = 2),
+        rnorm(32, 0.7, sd = 2))
+)
+df3p <- format(t.test(x ~ gruppe, df3, var.equal = TRUE)$p.value, digits = 2)
+
+p_a <- ggplot(df1,
+              aes(x = gruppe,
+                  y = x)) +
+  geom_boxplot(outlier.shape = NA,
+               colour = c("blue", "red")) +
+  geom_point(position = position_jitter(width = 0.2, height = 0), shape = 1) +
+  ggtitle(paste("p = ", df1p, sep = "")) +
+  xlab("Gruppe")
+
+p_b <- ggplot(df2,
+              aes(x = gruppe,
+                  y = x)) +
+  geom_boxplot(outlier.shape = NA,
+               colour = c("blue", "red")) +
+  geom_point(position = position_jitter(width = 0.2, height = 0), shape = 1)+
+  ggtitle(paste("p = ", df2p, sep = ""))  +
+  xlab("Gruppe")
+
+p_c <- ggplot(df3,
+              aes(x = gruppe,
+                  y = x)) +
+  geom_boxplot(outlier.shape = NA,
+               colour = c("blue", "red")) +
+  geom_point(position = position_jitter(width = 0.2, height = 0), shape = 1) +
+  ggtitle(paste("p = ", df3p, sep = "")) +
+  xlab("Gruppe")
+
+lay <- rbind(c(1,1,1),
+             c(2, 3, 4))
+gridExtra::grid.arrange(p1, p_a + coord_flip(), p_b + coord_flip(), p_c + coord_flip(),
+                        layout_matrix = lay)
+@
+
+\section{Power mit Simulationen berechnen}
+Um die power des in Abbildung \ref{fig:power} illustrierten
+Szenarios zu berechnen, können wir eine Simulation schreiben.
+Der Simulationscode unten bewirkt das folgende:
+\begin{enumerate}
+ \item Wir definieren die Standardabweichung der zwei Populationen.
+ In dieser Simulationen ist die Standardabweichung $\sigma = 2$ für beide Populationen.
+ Übrigens sind beide Verteilungen normalverteilt, da dies eine Annahme
+ des $t$-Tests ist, die für die Analyse verwendet wird.
+ (Hier gehen wir von Zufallsstichproben aus Populationen aus;
+ wir könnten die Simulation auch so gestalten, dass wir von einem Experiment
+ mit zufälliger Zuordnung ausgingen, aber die praktischen Unterschiede sind unerheblich.)
+ 
+ \item Wir definieren den Unterschied zwischen den Mitteln der beiden
+ Normalverteilung. Hier $\mu_B - \mu_A = 0.7$.
+ 
+ \item Wir legen die Anzahl Beobachtungen pro Stichprobe fest. Hier $n_A = n_B = 32$.
+ 
+ \item Wir ziehen 10'000 Mal eine Stichprobe aus jeder Population.
+ 
+ \item Diese Stichproben werden in einem allgemeinen linearen Modell modelliert
+ und der $p$-Wert des Unterschieds (basierend auf einer $t$-Verteilung) wird gespeichert.
+ Für diesen letzten Schritt könnte man auch die \texttt{t.test()}-Funktion
+ verwenden, aber den jetzigen Code kann man einfacher anpassen, um komplizierteren
+ Designs gerecht zu werden.
+ 
+ \item Die Verteilung der $p$-Werte wird dargestellt (Abbildung \ref{fig:pwertesimulationpower}).
+ 
+ \item Die Proportion der signifikanten $p$-Werte ($p < 0.05$) wird berechnet.
+\end{enumerate}
+
+<<cache = TRUE>>=
+# Merkmale der Population; rumspielen!
+sd_gruppe <- 2
+unterschied <- 0.7
+
+# Stichprobengrössen; rumspielen!
+n_gruppeA <- 32
+n_gruppeB <- 32
+
+# Simulationseinstellungen
+n_runs <- 10000
+p_werte <- vector(length = n_runs)
+
+# Zufallsdaten generieren und analysieren
+for (i in 1:n_runs) {
+  df <- tibble(
+    gruppe = rep(c("A", "B"), times = c(n_gruppeA, n_gruppeB)),
+    outcome = c(rnorm(n = n_gruppeA, mean = 0, sd = sd_gruppe),
+                rnorm(n = n_gruppeB, mean = unterschied, sd = sd_gruppe))
+  )
+  
+  mod.lm <- lm(outcome ~ gruppe, data = df)
+
+  p_werte[[i]] <- summary(mod.lm)$coefficients[2, 4]
+}
+
+# Proportion signifikanter p-Werte
+mean(p_werte < 0.05)
+@
+
+<<cache = TRUE, echo = FALSE, fig.width = 3, fig.height = 2, fig.cap = "Die Verteilung der $p$-Werte in der Powersimulation.\\label{fig:pwertesimulationpower}">>=
+tibble(p_werte) |> 
+  ggplot(aes(x = p_werte,
+           y = ..density..)) +
+  geom_histogram(breaks = seq(0, 1, by = 0.025), 
+                 color = "black", fill = "lightgrey") +
+  geom_vline(xintercept = 0.05, linetype = 2, col = "red") +
+  xlab("p-Wert") +
+  ylab("Wsk.-Dichte")
+@
+
+Schlussfolgerung: Wenn die Populationen normalverteilt
+mit $\sigma = 2$ sind und es einen Unterschied von $0.7$ zwischen
+ihren Mitteln gibt, dann gibt es eine Wahrscheinlichkeit
+von (nur!) etwa 27\%, dass man einen signifikanten
+Unterschied feststellt, wenn man Zufallsstichproben
+von je 32 Beobachtungen zieht.
+Der Signifikanztest hier ist ein zweiseitiger $t$-Test
+unter Annahme von gleichen Varianzen.
+
+\paragraph{Aufgabe 1.} 
+Wie ändert sich die power in diesem
+Beispiel, wenn die Normalverteilungen Standardabweichungen von $\sigma = 3$
+statt von $\sigma = 2$ hätten?
+
+\paragraph{Aufgabe 2.} 
+Wie ändert sich die power in diesem
+Beispiel, wenn wir statt 32 Beobachtungen in jeder Stichprobe,
+54 Beobachtungen in einer Stichprobe und 10 in den anderen hätten?
+
+\paragraph{Aufgabe 3.} 
+Wie viel power hätte man, wenn
+der Unterschied zwischen den zwei Populationen infinitesimal ist?
+Versuchen Sie, diese Frage zunächst ohne Simulation zu beantworten.
+Überprüfen Sie dann Ihre Antwort mit einer Simulation.
+
+\section{Analytisch Powerberechnung}
+Für ein paar Signifikanztests, darunter $t$-Tests, kann man
+die power auch analytisch berechnen. Die Formeln
+dazu werden hier nicht gezeigt, aber sie sind in der 
+\texttt{power.t.test()}-Funktion
+implementiert worden. Für einen Unterschied von 0.7 Einheiten
+zwischen Normalverteilungen mit $\sigma = 2$ und
+Stichproben mit je 32 Beobachtungen, kann man die power
+so berechnen:
+<<>>=
+power.t.test(n = 32, delta = 0.7, sd = 2)
+@
+
+Der Vorteil dieser Funktion ist, dass man die erwünschte power
+einstellen kann, dafür die Anzahl Beobachtungen leer lassen kann, um zu
+erfahren, wie viele Beobachtungen man pro Stichprobe bräuchte,
+um die erwünschte power zu erreichen:
+<<>>=
+power.t.test(delta = 0.7, sd = 2, power = 0.90)
+@
+
+173 Beobachtungen pro Stichprobe bräuchte man also, um 
+zu einer Wahrscheinlichkeit von 90\% 
+einen signifikanten Unterschied zu finden, auch wenn die
+Populationen um $0.7$ Einheiten voneinander abweichen und
+eine Standardabweichung von $2$ haben.
+
+Man kann auch die anderen Parameter leer lassen:
+<<>>=
+power.t.test(n = 40, sd = 2, power = 0.75)
+@
+
+Wenn man 75\% power haben möchte, 40 Beobachtungen pro Gruppe
+hat und davon ausgeht, dass die Populationen eine Standardabweichung
+von $2$ haben, muss man also hoffen, dass der Unterschied zwischen
+den Populationsmitteln mindestens $1.2$ Einheiten beträgt.
+
+Um eine Powerberechnung durchzuführen, muss man über 
+genau drei der vier folgenden Informationen verfügen:
+\begin{itemize}
+  \item Die Anzahl Beobachtungen.
+  
+  \item Die Effektgrösse in der Population 
+  (hier: Unterschied zwischen den Populationsmitteln).
+  Dies kann die erwartete oder verhoffte Effektgrösse sein,
+  aber auch die kleinste Effektgrösse, die man selber
+  für relevant halten würde.
+  
+  \item Die Variabilität in der Population 
+  (hier: Standardabweichung der Verteilungen).\footnote{Im Prinzip ist 
+  nur das Verhältnis zwischen der Effektgrösse
+  und der Variabilität relevant; siehe \citet{Cohen1977,Cohen1992}.}
+ 
+  \item Die erwünschte power.
+\end{itemize}
+
+Abbildung \vref{fig:powerdeterminants} illustriert, wie diese
+vier Faktoren zusammenhängen. 
+Meines Erachtens ist es übrigens nicht sehr sinnvoll, 
+über \emph{die} power eines Tests zu sprechen:
+Sinnvoller wäre es, zu sagen, dass ein Test unter bestimmten Annahmen (betreffend
+den eigentlichen Unterschied, die Variabilität innerhalb der Gruppen
+und die Verteilung der Residuen) eine gewisse power hätte und unter anderen
+Annahmen eine andere. Abbildung \ref{fig:powerdeterminants} bringt
+dies m.E.\ auf den Punkt.
+
+<<echo = TRUE, out.width = ".9\\textwidth", fig.width = 7, fig.height = 4, fig.cap = "Die power eines Tests hängt von der Effektgrösse (hier: dem Unterschied zwischen den Mitteln in der Population), der Fehlervarianz (hier gezeigt als die Standardabweichung des Restfehlers) und der Datenmenge ab.\\label{fig:powerdeterminants}">>=
+# Kombinationen von Stichprobengrössen, Unterschieden
+# und Standardabweichungen generieren, für die man die power
+# berechnen will.
+power.df <- expand.grid(
+  Stichprobengroesse = seq(from = 2, to = 100, by = 1),
+  Delta = seq(0.3, 1.5, by = 0.3),
+  SD = c(0.5, 1, 1.5, 2)
+)
+
+# Power berechnen und speichern
+power.df$Power <- power.t.test(n = power.df$Stichprobengroesse,
+                               delta = power.df$Delta,
+                               sd = power.df$SD)$power
+
+# Text hinzufügen
+power.df$SD <- paste("Standardabweichung Restfehler:\n", power.df$SD)
+
+# Grafik zeichnen
+ggplot(power.df,
+       aes(x = Stichprobengroesse,
+           y = Power,
+           colour = factor(Delta))) +
+  geom_line() +
+  ylim(0, 1) +
+  facet_wrap(vars(SD)) +
+  xlab("Stichprobengrösse (pro Gruppe)") +
+  scale_colour_discrete(name = "Unterschied zw. Mitteln\nin Population")
+@
+
+\section{Weiterführende Literatur}
+Eine kurze Einführung in die Powerberechnung ist \citet{Cohen1992}.
+Ein weiterer lesenswerter Artikel ist \citet{Kelley2003}.
+Zwei Blogeinträge zum Thema sind
+\href{https://janhove.github.io/design/2017/07/14/OtherRoadsToPower}{\textit{Abandoning standardised effect sizes and opening up other roads to power
+}} (14.7.2017)
+und
+\href{https://janhove.github.io/analysis/2017/10/24/increasing-power-precision}{\textit{Increasing power and precision using covariates}} (24.10.2017).
+Fortgeschrittenere Litatur, aber relevant für Experimente in den Sprachwissenschaften,
+ist \citet{Westfall2014}.

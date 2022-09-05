@@ -1,0 +1,150 @@
+\chapter{Fragwürdige Forschungspraktiken}\label{ch:QRP}
+Wenn man mit Signifikanztests umgeht---sei es, weil man
+sie selber verwendet oder weil man sie beim Lesen der
+Forschungsliteratur oft antrifft---, sollte man sich
+einiger häufiger Fehlanwendungen bewusst sein,
+die dazu führen, dass $p$-Werte nicht länger ihre
+angebliche Bedeutung haben.
+Das übergreifende Problem hinter all diesen fragwürdigen
+Forschungspraktiken ist grundsätzlich, dass Forschende
+und Herausgeber bestimmte Ergebnisse (lies: signifikante
+Ergebnisse) bevorzugen und dass der Forschungs- und
+Publikationsprozess daher auf das Produzieren und Publizieren
+von solchen Ergebnissen ausgerichtet ist.
+Wenn man bei der Datenerhebung, Analyse und Veröffentlichung
+aber flexibel genug vorgeht, ist es äusserst einfach,
+signifikante Muster zu finden und zu berichten, ohne
+dass diese `Befunde' einigermassen der Realität entsprechen.
+
+Damit Sie sich selbst über fragwürdige, mit Signifikanztests
+verknüpfte Forschungspraktiken informieren können, werden
+hier einige einschlägige Artikel vorgestellt.
+Gute Übersichten über diese Probleme in Buchform
+sind \citet[][\textit{The seven deadly sins of psychology}]{Chambers2017}
+und \citet[][\textit{Science fictions}]{Stuart2021}.
+
+\section{\citet{Sterling1995} zu \textit{publication bias}}
+\citet[][4 Seiten Text]{Sterling1995} zählten,
+wie oft Signifikanztests in 
+medizinischen und psychologischen Fachzeitschriften einen
+signifikanten $p$-Wert ergaben. In den medizinischen Zeitschriften
+wurde die Nullhypothese in 85\% der Fälle abgelehnt,
+in den Psychologiezeitschriften sogar in satten 96\%.
+Wie \citeauthor{Sterling1995} erklären, zeigen diese Zahlen,
+dass Forschende und Herausgeber gegen nicht-signifikante
+Befunde diskriminieren, denn sogar wenn die Nullhypothese
+nie stimmen würde, wäre es unmöglich, dass so viele Tests
+signifikante Ergebnisse aufweisen. Ihre Vermutung ist,
+dass Forschende dazu neigen, Artikel zu signifikanten
+(statt zu nicht-signifikanten) Befunden zu schreiben,
+und dass Herausgeber dazu neigen, Artikel mit nicht-signifikanten
+Befunden abzulehnen.
+Dieses \textit{publication bias} kann dazu führen,
+dass die Literatur die Evidenz und die Stärke eines
+bestimmten Effekts (etwa `Zweisprachigkeit führt
+zu kognitiven Vorteilen.') überschätzt
+\citep[siehe auch][]{DeBruin2015}.
+
+\section{\citet{Kerr1998} zu \textit{hypothesizing after the results are known}}
+\citet[][20 Seiten Text]{Kerr1998} bespricht Gründe
+und Nachteile einer häufig vorkommenden Praxis beim
+Schreiben wissenschaftlicher Artikel: Die Forschenden
+suchen in ihren Daten nach interessanten Mustern,
+aber anstatt dass sie ihre Befunde darstellen als
+das Ergebnis einer exploratorischen Analyse, wird 
+der Bericht geschrieben, als ob sie das beobachtete
+Muster vorhergesagt hätten. Diese Praxis bezeichnet
+\citeauthor{Kerr1998} als \textsc{hark}ing -- \textit{hypothesizing
+after the results are known}. Als Kosten von \textsc{hark}ing
+sieht er unter anderen die folgenden (S.~211):
+
+\begin{itemize}
+ \item ``Translating Type I errors into hard-to-eradicate theory.''
+ \item ``Disguising post hoc explanations as a priori explanations
+ (when the former tend also be more ad hoc, and consequently, less useful).''
+ \item ``Not communicating valuable information about what did not work.''
+ \item ``Encouraging retention of too-broad, disconfirmable old theory.''
+ \item ``Inhibiting identification of plausible alternative hypotheses.''
+ \item ``Implicitly violating basic ethical principles.''
+\end{itemize}
+
+\textsc{hark}ing ist eng verknüpft mit Rosinenpickerei (\textit{cherry picking}).
+Hierbei schaut man sich (explizit aber auch implizit!) unterschiedliche
+Muster an (Muster könnten hier etwa Gruppenunterschiede oder Korrelationen sein)
+und berichtet dann nur die stärksten oder anderswie auffälligsten. Das Problem
+hiermit wird im xkcd-Cartoon in Abbildung \ref{fig:xkcd_significant}
+auf den Punkt gebracht.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width = .5\textwidth]{figs/significant}
+\caption{Quelle: \url{https://xkcd.com/882/}.}
+\label{fig:xkcd_significant}
+\end{center}
+\end{figure}
+
+Diese und verwandte Probleme werden auch auf verständliche
+Art und Weise von \citet[][ursprünglich veröffentlicht auf Niederländisch im Jahr 1956; 3.5 Seiten Text + 3 Seiten Kommentar]{DeGroot2014} 
+besprochen. Siehe auch \citet{Berthele2019} zu ähnlichen Problemen
+in der angewandten Linguistik.
+
+\section{\citet{Simmons2011} zu intransparenter Flexibilität beim Erheben und Analysieren von Daten}
+\citet[][7 Seiten Text]{Simmons2011} zeigen mit einem
+eigenen echten Beispiel und anhand von Simulationen, dass
+die Verwendung einiger geläufiger Praktiken dazu führen
+kann, dass man die Nullhypothese zu einer sehr hohen
+Wahrscheinlichkeit ablehnt, auch wenn diese stimmt.
+Die untersuchten Praktiken sind:
+
+\begin{itemize}
+ \item mehrere outcomes analysieren und
+ dann eben nur denjenigen, der für die `besten'
+ Ergebnisse sorgt, berichten;
+ 
+ \item nach der ersten Welle der Datenerhebung
+ schauen, ob es schon ein signifikantes Ergebnis
+ gibt; wenn nicht, weitere Daten erheben;\footnote{Wenn man dies selber vorhat, sollte man sich bei etwa \citet{Lakens2014} darüber schlau machen, wie man die Daten zu analysieren hat. Die relevanten Entscheidungen müssen übrigens vor der Datenerhebung getroffen werden, nicht erst nachher!}
+ 
+ \item Kontrollvariablen erst in der Analyse berücksichtigen,
+ wenn das Ergebnis ohne sie nicht-signifikant ist;\footnote{Das Problem hierbei ist nicht, dass Kontrollvariablen in der Analyse
+ berücksichtigt werden, sondern dass man sie nur dann verwendet, wenn sie zu einem signifikanten Ergebnis führen. Wichtige Kontrollvariablen
+ in der Analyse zu berücksichtigen, ist eine gute Idee, nur soll die Entscheidung, welche Kontrollvariablen man berücksichtigt, nicht von
+ den Ergebnissen abhängen.}
+ 
+ \item im Design mehrere Konditionen haben, aber einige davon weglassen,
+ wenn dies zu `besseren' Ergebnissen führt.
+\end{itemize}
+
+Selbstverständlich gibt es noch andere Praktiken, die die Fehlerquote
+noch erhöhen können -- zum Beispiel einen lockeren Umgang mit Ausreissern.
+Das übergreifende Problem in all diesen Fällen ist,
+dass man signifikante Ergebnisse als `gut' oder `informativ'
+und nicht-signifikante Ergebnisse als `schlecht' oder `nicht informativ' betrachtet.
+Daher betrachtet man dann wiederum Entscheide in der Datenerhebung oder Analyse, die zu signifikanten
+Ergebnissen führen (z.B.\ das Weglassen bzw.\ das Hinzufügen einer
+Kontrollvariable oder das Weglassen bzw.\ Behalten einiger Ausreisser),
+als verteidigbar oder logisch, während man dies vielleicht nicht gemacht hätte,
+wenn diese Entscheide zu nicht-signifikanten Ergebnissen geführt hätten.
+
+Es sei hier noch darauf hingewiesen, dass
+die Autoren mittlerweile nicht mehr hinter
+ihrer zweiten Empfehlung stehen (\textit{Authors must
+collect at least 20 observations per cell or else provide a
+compelling cost-of-data-collection justification});
+siehe \citet{Simmons2018}.
+
+Komplimentär zu diesem Artikel sind die Artikel
+von \citet{Gelman2013} und \citet{Steegen2016},
+in denen gezeigt wird, wie viel Flexibilität
+Forschende bei der Auswertung überhaupt haben
+(siehe auch \citealp{Poarch2018}). Wissenschaftliche
+Theorien können meistens mehreren statistischen Hypothesen
+entsprechen. Diese Flexibilität kann dazu
+führen, dass sich Forschende (auch unbewusst) auf jene
+Muster in den Daten fokussieren, die sie als kompatibel
+mit ihrer Theorie betrachten. Dabei können sie dann
+aber aus dem Auge verlieren, dass es andere
+Auswertungsmöglichkeiten geben dürfte, die zu
+Ergebnissen führen, die nicht mit der Theorie kompatibel
+sind. Ähnliches wird auch in einer ethnografischen
+Studie von \citet{Peterson2016} aufgezeigt.
