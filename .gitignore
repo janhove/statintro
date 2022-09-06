@@ -5,8 +5,8 @@ assignments/
 .RData
 .Ruserdata
 .Rproj
-.bbl
-.tex
-.gz
-.toc
-.log
+*.bbl
+*.tex
+*.gz
+*.toc
+*.log
