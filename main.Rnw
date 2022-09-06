@@ -56,7 +56,7 @@ Departement für Mehrsprachigkeitsforschung und Fremdsprachendidaktik
 \href{mailto:jan.vanhove@unifr.ch}{\texttt{jan.vanhove@unifr.ch}}\\
 \href{http://janhove.github.io}{\texttt{https://janhove.github.io}}}
 
-\date{letzte Änderung: August 2022}
+\date{letzte Änderung: September 2022}
 
 % KNITR options -----------------------------------
 <<setup, include=FALSE, cache=FALSE>>=

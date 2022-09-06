@@ -1,4 +1,12 @@
+cache/
+assignments/
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+.Rproj
+.bbl
+.tex
+.gz
+.toc
+.log

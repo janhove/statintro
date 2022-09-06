@@ -39,7 +39,7 @@ library(tidyverse)
 d <- read_csv(here("data", "dekeyser2010.csv"))
 @
 
-\paragraph{Aufgabe}
+\paragraph{Aufgabe.}
 Der Datensatz \texttt{dekeyser2010.csv} enthält
 die AOA- und GJT-Daten der russischen MigrantInnen
 in Nordamerika.
@@ -371,7 +371,7 @@ kann der Bootstrap also nützliche, wenn auch imperfekte,
 Informationen über
 die Unsicherheit einer Parameterschätzung liefern.
 
-<<echo = FALSE, cache = TRUE, warning = FALSE, fig.cap = "Die Verteilung der gebootstrappten Mittel auf der Basis von fünf Stichproben.\\label{fig:bootstrapdistributions}", echo = FALSE, fig.width = 3, fig.height = 8, out.width = ".5\\textwidth">>=
+<<echo = FALSE, cache = TRUE, warning = FALSE, fig.cap = "Die Verteilung der gebootstrappten Mittel auf der Basis von fünf Stichproben.\\label{fig:bootstrapdistributions}", echo = FALSE, fig.width = 1.2*3, fig.height = 1.2*8, out.width = ".5\\textwidth">>=
 
 df1 <- data.frame(means = bootstrap_1)
 df2 <- data.frame(means = bootstrap_2)
